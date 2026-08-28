@@ -1,0 +1,22 @@
+appId: com.monolithworks.webclone
+productName: WebClone Studio
+copyright: "Copyright © 2026 Monolith Works / MonarchDevLab"
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - "out/**/*"
+  - "!**/.env*"
+  - "!**/*.pem"
+  - "!**/*.key"
+  - "!**/*.md"
+win:
+  target:
+    - target: portable
+      arch: [x64]
+  icon: resources/icon.ico
+portable:
+  artifactName: "WebClone-Studio-Portable.exe"
+  requestExecutionLevel: user
+  unpackDirName: "WebCloneStudio"
+npmRebuild: false
