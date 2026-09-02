@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+/* Inter — offline gömülü değişken font (latin + latin-ext, ağırlık 400-700 tek dosyada) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* JetBrains Mono — offline gömülü değişken font (latin + latin-ext, ağırlık 400-500) */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@theme {
+  /* Yüzeyler (Yönetim Merkezi teması — KARAR-007) */
+  --color-canvas: #08090C;
+  --color-surface-1: #0B0D13;
+  --color-surface-2: #10131B;
+  --color-surface-3: #181C28;
+  --color-overlay: #141724;
+
+  /* Resmi 5 renkli semantik palet: accent (siyan) + secondary (mor) + success/warning/error */
+  --color-accent: #06B6D4;
+  --color-accent-hover: #22D3EE;
+  --color-secondary: #A855F7;
+  --color-secondary-hover: #C084FC;
+  --color-success: #10B981;
+  --color-success-hover: #34D399;
+  --color-warning: #F59E0B;
+  --color-warning-hover: #FBBF24;
+  --color-error: #F43F5E;
+  --color-error-hover: #FB7185;
+  --color-info: #06B6D4;
+
+  --color-text-primary: #F4F4F5;
+  --color-text-secondary: #A1A1AA;
+  --color-text-muted: #71717A;
+  --color-text-dim: #52525B;
+  --color-border-subtle: rgba(255, 255, 255, 0.07);
+  --color-border-medium: rgba(255, 255, 255, 0.12);
+  --color-border-focus: rgba(6, 182, 212, 0.50);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Sadece başlık çubuğu sürüklenebilir */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+/* Electron başlık çubuğu üst padding */
+.app-content {
+  padding-top: 36px;
+}
+
+/* Scrollbar gizleme / sleek koyu stil */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* Sürüklenemez alanlar */
+button, input, select, textarea, a, [role="button"], .no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Monospace tabular nums */
+.font-mono { font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Klavye odağı: her etkileşimli kontrol görünür bir halka bırakmalı (WCAG 2.2 AA Focus Not Obscured) */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Hareket azaltma tercihi: tüm animasyon/geçişleri kısalt (UX Pro Max Priority 7) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
