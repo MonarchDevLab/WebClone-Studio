@@ -14,7 +14,7 @@ Ouroboros v6.0 & Ponytail Ultra zırhlama ve hata giderme operasyonu tamamlandı
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Durum:** Ouroboros v6.0 & Ponytail Ultra zırhlama tamamlandı; commit mühürlemesine hazır.
+- **Son Commit:** `3506367` fix(core): harden engine architecture, resolve memory leaks and polish ui
 - **Planlanan:** Yeni kullanıcı direktifleri.
 
 ## Riskler
