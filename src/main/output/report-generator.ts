@@ -4,17 +4,27 @@ import { AnalyzeResult, TechSignature, ColorToken, TypoToken } from '../../share
  * _meta/tech-report.html için bağımsız, CSS ve JS gömülü, modern bir görsel rapor sayfası üretir.
  */
 export class ReportGenerator {
+  private static escapeHtml(str: string): string {
+    return (str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   public static generateHtmlReport(result: AnalyzeResult, domain: string): string {
+    const safeDomain = this.escapeHtml(domain);
     const techCards = result.technologies.map((t: TechSignature) => `
       <div class="tech-card">
         <div class="tech-header">
-          <span class="tech-name">${t.name}</span>
+          <span class="tech-name">${this.escapeHtml(t.name)}</span>
           <span class="tech-badge">%${t.confidence}</span>
         </div>
-        <div class="tech-category">${t.category}</div>
-        ${t.version ? `<div class="tech-version">Sürüm: ${t.version}</div>` : ''}
+        <div class="tech-category">${this.escapeHtml(t.category)}</div>
+        ${t.version ? `<div class="tech-version">Sürüm: ${this.escapeHtml(t.version)}</div>` : ''}
         <div class="signals-list">
-          ${t.signals.map(s => `<span class="signal-tag">${s}</span>`).join('')}
+          ${t.signals.map(s => `<span class="signal-tag">${this.escapeHtml(s)}</span>`).join('')}
         </div>
       </div>
     `).join('');
@@ -42,7 +52,7 @@ export class ReportGenerator {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teknoloji & Tasarım Raporu — ${domain}</title>
+  <title>Teknoloji & Tasarım Raporu — ${safeDomain}</title>
   <style>
     :root {
       --bg: #08090A;
@@ -129,9 +139,9 @@ export class ReportGenerator {
     <section>
       <h2>Site Meta & Güvenlik Özeti</h2>
       <div class="meta-box">
-        <div class="meta-item"><span class="meta-label">Başlık:</span><span class="meta-value">${result.meta?.title || '—'}</span></div>
-        <div class="meta-item"><span class="meta-label">Açıklama:</span><span class="meta-value">${result.meta?.description || '—'}</span></div>
-        <div class="meta-item"><span class="meta-label">Dil / Encoding:</span><span class="meta-value">${result.meta?.language || '—'} / ${result.meta?.encoding || '—'}</span></div>
+        <div class="meta-item"><span class="meta-label">Başlık:</span><span class="meta-value">${this.escapeHtml(result.meta?.title || '—')}</span></div>
+        <div class="meta-item"><span class="meta-label">Açıklama:</span><span class="meta-value">${this.escapeHtml(result.meta?.description || '—')}</span></div>
+        <div class="meta-item"><span class="meta-label">Dil / Encoding:</span><span class="meta-value">${this.escapeHtml(result.meta?.language || '—')} / ${this.escapeHtml(result.meta?.encoding || '—')}</span></div>
         <div class="meta-item"><span class="meta-label">HTTPS:</span><span class="meta-value">${result.security?.https ? '✓ Aktif' : '✗ Pasif'}</span></div>
         <div class="meta-item"><span class="meta-label">HSTS:</span><span class="meta-value">${result.security?.hsts ? '✓ Var' : '✗ Yok'}</span></div>
         <div class="meta-item"><span class="meta-label">CSP:</span><span class="meta-value">${result.security?.csp ? '✓ Tanımlı' : '✗ Yok'}</span></div>

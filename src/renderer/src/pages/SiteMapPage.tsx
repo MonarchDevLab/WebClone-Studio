@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GitFork, ChevronRight, ChevronDown, FileCode, Globe, ExternalLink, HardDrive } from 'lucide-react';
+import { GitFork, ChevronRight, ChevronDown, FileCode, Loader2 } from 'lucide-react';
 import { useAnalyzeStore } from '../stores/analyze-store';
 import { SiteMapNode } from '@shared/types';
 import { formatBytes } from '../lib/utils';
@@ -81,7 +81,21 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, level = 0 }) => {
 };
 
 export const SiteMapPage: React.FC = () => {
-  const { analyzeResult, url } = useAnalyzeStore();
+  const { analyzeResult, isAnalyzing } = useAnalyzeStore();
+
+  if (isAnalyzing) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[460px] text-center p-8 text-text-muted animate-in fade-in duration-200">
+        <div className="w-14 h-14 rounded-2xl bg-surface-2 border border-accent/30 flex items-center justify-center mb-3 text-accent-hover shadow-lg shadow-accent/10">
+          <Loader2 size={28} className="animate-spin text-accent-hover" />
+        </div>
+        <h3 className="text-base font-bold text-text-primary mb-1">Site Haritası Çıkarılıyor</h3>
+        <p className="text-xs text-text-muted max-w-sm font-mono">
+          İç bağlantılar ve dizin hiyerarşisi taranıyor...
+        </p>
+      </div>
+    );
+  }
 
   if (!analyzeResult || !analyzeResult.siteMap) {
     return (

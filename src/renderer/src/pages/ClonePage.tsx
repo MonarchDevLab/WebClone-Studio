@@ -1,7 +1,6 @@
-import React from 'react';
 import { 
-  Play, Pause, Square, FolderOpen, ExternalLink, Activity, 
-  CheckCircle2, AlertCircle, Clock, HardDrive, ArrowDown, FileCode, Check, FileText, Globe, AlertTriangle
+  Play, Pause, Square, FolderOpen, Activity, 
+  CheckCircle2, Clock, HardDrive, ArrowDown, FileCode, Globe, AlertTriangle, RotateCcw
 } from 'lucide-react';
 import { useCloneStore } from '../stores/clone-store';
 import { useUiStore } from '../stores/ui-store';
@@ -134,6 +133,17 @@ export const ClonePage: React.FC = () => {
                 >
                   <FolderOpen size={15} />
                   <span>Klasörü Aç</span>
+                </button>
+                <button
+                  onClick={() => {
+                    reset();
+                    openCloneModal();
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-surface-2 hover:bg-surface-3 text-text-secondary hover:text-text-primary border border-white/[0.08] rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+                  title="Yeni bir klonlama işlemi başlat"
+                >
+                  <RotateCcw size={14} />
+                  <span>Yeni Klon</span>
                 </button>
               </div>
             ) : (

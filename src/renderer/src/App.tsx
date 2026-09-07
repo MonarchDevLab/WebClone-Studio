@@ -55,7 +55,7 @@ export default function App() {
           toggleBottomPanel();
         } else if (e.key.toLowerCase() === 'l') {
           e.preventDefault();
-          const urlInput = document.querySelector<HTMLInputElement>('input[type="url"], input[placeholder*="https://"]');
+          const urlInput = document.getElementById('url-input-field') as HTMLInputElement | null;
           urlInput?.focus();
           urlInput?.select();
         }

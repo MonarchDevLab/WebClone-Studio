@@ -20,8 +20,18 @@ import { PreviewServer } from './server/preview-server';
 
 // Aktif çalışan klonlama işlerini tutar
 const activeJobs = new Map<string, CrawlerEngine>();
+const analyzeCache = new Map<string, { result: AnalyzeResult; screenshot?: Buffer }>();
 let lastAnalyzeResult: AnalyzeResult | null = null;
 let lastAnalyzeScreenshot: Buffer | null = null;
+
+function normalizeUrlKey(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.origin}${u.pathname}`.replace(/\/+$/, '').toLowerCase();
+  } catch {
+    return url.trim().replace(/\/+$/, '').toLowerCase();
+  }
+}
 
 function getDynamicFolder(name: 'downloads' | 'documents' | 'desktop'): string {
   try {
@@ -134,6 +144,10 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
       };
 
       lastAnalyzeResult = result;
+      analyzeCache.set(normalizeUrlKey(url), {
+        result,
+        screenshot: lastAnalyzeScreenshot || undefined,
+      });
       return result;
     } catch (error: any) {
       console.error('[IPC] Analiz Hatası:', error);
@@ -170,11 +184,13 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
 
       const parsedDomain = new URL(url).hostname;
       const finalProjectName = projectName?.trim() || parsedDomain;
-      const technologies = lastAnalyzeResult?.technologies || [];
 
-      // Analiz aşamasında çekilmiş ekran görüntüsü varsa statik mod thumbnail'i olarak devral
-      const isSameAnalyzedUrl = lastAnalyzeResult?.siteMap?.url === url;
-      const seedScreenshot = isSameAnalyzedUrl ? lastAnalyzeScreenshot || undefined : undefined;
+      // URL bazlı önbellekten analiz sonucunu ve ekran görüntüsünü devral
+      const cachedAnalysis = analyzeCache.get(normalizeUrlKey(url));
+      const isSameAnalyzedUrl = cachedAnalysis || (lastAnalyzeResult?.siteMap?.url && normalizeUrlKey(lastAnalyzeResult.siteMap.url) === normalizeUrlKey(url));
+      const targetAnalyzeResult = cachedAnalysis?.result || (isSameAnalyzedUrl ? lastAnalyzeResult : null);
+      const technologies = targetAnalyzeResult?.technologies || [];
+      const seedScreenshot = cachedAnalysis?.screenshot || (isSameAnalyzedUrl ? lastAnalyzeScreenshot || undefined : undefined);
 
       console.log(`[IPC] Klonlama başlatılıyor. Job: ${jobId}, URL: ${url}, Proje: ${finalProjectName}`);
 
@@ -184,7 +200,7 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
         finalOutputDir,
         finalProjectName,
         technologies,
-        lastAnalyzeResult || undefined,
+        targetAnalyzeResult || undefined,
         seedScreenshot
       );
 
@@ -209,10 +225,10 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
 
       crawler.on('complete', (data) => {
         try {
-          if (lastAnalyzeResult) {
+          if (targetAnalyzeResult) {
             const metaDir = path.join(finalOutputDir, '_meta');
             if (!fs.existsSync(metaDir)) fs.mkdirSync(metaDir, { recursive: true });
-            const systemMapMd = SystemMapGenerator.generate(lastAnalyzeResult);
+            const systemMapMd = SystemMapGenerator.generate(targetAnalyzeResult);
             fs.writeFileSync(path.join(metaDir, 'SYSTEM_MAP.md'), systemMapMd, 'utf-8');
           }
         } catch (err) {
@@ -234,7 +250,12 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
       crawler.start().catch((err) => {
         console.error('[IPC] Crawler başlatma hatası:', err);
         if (!sender.isDestroyed()) {
-          sender.send(IpcChannel.CLONE_ERROR, { error: err.message || 'Klonlama motoru başlatılamadı' });
+          sender.send(IpcChannel.CLONE_ERROR, {
+            url,
+            message: err.message || 'Klonlama motoru başlatılamadı',
+            code: 'CRAWLER_INIT_FAILED',
+            retryCount: 0,
+          });
         }
       });
 

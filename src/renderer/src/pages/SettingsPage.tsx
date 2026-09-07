@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Folder, Globe, Zap, Clock, HardDrive, CheckCircle2 } from 'lucide-react';
+import { Settings, Save, Folder, Globe, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const SettingsPage: React.FC = () => {
@@ -25,6 +25,8 @@ export const SettingsPage: React.FC = () => {
         } finally {
           setIsLoading(false);
         }
+      } else {
+        setIsLoading(false);
       }
     };
     loadSettings();
@@ -52,6 +54,28 @@ export const SettingsPage: React.FC = () => {
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6 max-w-4xl mx-auto animate-pulse">
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.07]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-white/[0.05] rounded-xl" />
+            <div className="space-y-1.5">
+              <div className="w-36 h-4 bg-white/[0.06] rounded" />
+              <div className="w-48 h-3 bg-white/[0.03] rounded" />
+            </div>
+          </div>
+          <div className="w-28 h-8 bg-white/[0.05] rounded-lg" />
+        </div>
+        <div className="space-y-5">
+          <div className="h-28 bg-surface-2 border border-white/[0.07] rounded-xl" />
+          <div className="h-28 bg-surface-2 border border-white/[0.07] rounded-xl" />
+          <div className="h-44 bg-surface-2 border border-white/[0.07] rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto animate-in fade-in duration-200">

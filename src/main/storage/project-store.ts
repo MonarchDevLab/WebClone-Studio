@@ -75,8 +75,28 @@ export class ProjectStore {
 
   public async deleteProject(projectPath: string): Promise<boolean> {
     try {
-      if (fs.existsSync(projectPath)) {
-        await fs.promises.rm(projectPath, { recursive: true, force: true });
+      const settings = SettingsStore.getInstance().get();
+      const baseDir = path.resolve(settings.defaultOutputDir);
+      const targetDir = path.resolve(projectPath);
+
+      // Kök dizin silme engeli
+      if (targetDir === path.parse(targetDir).root) {
+        console.error('[ProjectStore] Güvenlik engeli: Kök sürücü silinemez:', projectPath);
+        return false;
+      }
+
+      // BaseDir sınır kontrolü veya doğrulanmış WebClone manifest.json kontrolü
+      const relative = path.relative(baseDir, targetDir);
+      const isInsideBase = !relative.startsWith('..') && !path.isAbsolute(relative);
+      const hasManifest = fs.existsSync(path.join(targetDir, 'manifest.json'));
+
+      if (!isInsideBase && !hasManifest) {
+        console.error('[ProjectStore] Güvenlik engeli: Yetkisiz proje silme girişimi reddedildi:', projectPath);
+        return false;
+      }
+
+      if (fs.existsSync(targetDir)) {
+        await fs.promises.rm(targetDir, { recursive: true, force: true });
         return true;
       }
       return false;

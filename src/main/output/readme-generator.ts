@@ -60,11 +60,10 @@ ${fileIndexList}
 
 ## 📑 Raporlar ve Ek Dosyalar
 
-- **JSON Manifest:** \`manifest.json\`
-- **Teknoloji Raporu:** \`_meta/tech-report.html\` & \`_meta/tech-report.json\`
-- **Tasarım Token'ları:** \`_meta/design-tokens.json\`
-- **Site Haritası:** \`_meta/sitemap.json\`
-- **İndirme Günlüğü:** \`_meta/clone-log.jsonl\`
+- **Proje Manifestosu:** \`manifest.json\`
+- **Görsel Teknoloji & Tasarım Raporu:** \`_meta/tech-report.html\`
+- **Mimari Sistem Haritası & Şartname:** \`_meta/SYSTEM_MAP.md\`
+- **Hata ve İstisna Günlüğü:** \`_meta/errors.log\`
 
 ---
 *WebClone Studio v1.0.0 — Monolith Works / MonarchDevLab tarafından geliştirilmiştir.*

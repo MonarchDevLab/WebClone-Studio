@@ -1,6 +1,5 @@
 import React from 'react';
 import { APP_NAME } from '../lib/constants';
-// @ts-ignore: Asset import handled by Vite
 import logoUrl from '../assets/logo.png';
 import { useUiStore } from '../stores/ui-store';
 

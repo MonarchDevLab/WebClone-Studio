@@ -90,6 +90,8 @@ export const useCloneStore = create<CloneState>((set, get) => ({
         set({ isCloning: false });
         throw err;
       }
+    } else {
+      set({ isCloning: false });
     }
   },
   
@@ -118,9 +120,15 @@ export const useCloneStore = create<CloneState>((set, get) => ({
   },
   
   updateProgress: (progress) => set({ progress }),
-  addFile: (file) => set((state) => ({ files: [...state.files, file] })),
-  addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
-  addError: (error) => set((state) => ({ errors: [...state.errors, error] })),
+  addFile: (file) => set((state) => ({
+    files: state.files.length >= 200 ? [...state.files.slice(1), file] : [...state.files, file]
+  })),
+  addLog: (log) => set((state) => ({
+    logs: state.logs.length >= 500 ? [...state.logs.slice(1), log] : [...state.logs, log]
+  })),
+  addError: (error) => set((state) => ({
+    errors: state.errors.length >= 100 ? [...state.errors.slice(1), error] : [...state.errors, error]
+  })),
   setComplete: (result) => set({ isCloning: false, isPaused: false, outputPath: result?.outputPath || get().outputPath }),
   clearLogs: () => set({ logs: [] }),
   
@@ -132,6 +140,7 @@ export const useCloneStore = create<CloneState>((set, get) => ({
     logs: [],
     errors: [],
     jobId: null,
+    outputPath: '',
     openFolderOnComplete: true,
   })
 }));

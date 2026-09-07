@@ -4,6 +4,7 @@ import { CloneSettings } from '../shared/types';
 
 // Olay dinleyici callback tipleri
 type Callback<T = any> = (event: IpcRendererEvent, ...args: T[]) => void;
+const subscriptionMap = new Map<Callback, (_event: IpcRendererEvent, ...args: any[]) => void>();
 
 /**
  * Ana süreç ile Renderer süreci arasında güvenli bir köprü (API) oluşturur.
@@ -14,10 +15,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
   on: (channel: string, callback: Callback) => {
     const subscription = (_event: IpcRendererEvent, ...args: any[]) => callback(_event, ...args);
+    subscriptionMap.set(callback, subscription);
     ipcRenderer.on(channel, subscription);
-    return () => ipcRenderer.removeListener(channel, subscription);
+    return () => {
+      ipcRenderer.removeListener(channel, subscription);
+      subscriptionMap.delete(callback);
+    };
   },
-  removeListener: (channel: string, callback: Callback) => ipcRenderer.removeListener(channel, callback),
+  removeListener: (channel: string, callback: Callback) => {
+    const sub = subscriptionMap.get(callback);
+    if (sub) {
+      ipcRenderer.removeListener(channel, sub);
+      subscriptionMap.delete(callback);
+    } else {
+      ipcRenderer.removeListener(channel, callback);
+    }
+  },
   
   // Analiz işlemleri
   analyze: (url: string) => ipcRenderer.invoke(IpcChannel.ANALYZE_START, url),

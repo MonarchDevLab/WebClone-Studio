@@ -282,4 +282,14 @@ export interface SizeEstimate {
   estimatedPages: number;
   estimatedAssets: number;
   estimatedSizeBytes: number;
+  freeSpaceBytes?: number;
+  hasSufficientDisk?: boolean;
+}
+
+/** Uygulama yapılandırma ve kullanıcı tercihleri */
+export interface AppSettings {
+  defaultOutputDir: string;
+  userAgent: string;
+  defaultThreads: number;
+  defaultRateLimit: number;
 }

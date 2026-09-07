@@ -47,7 +47,8 @@ export class TechDetector {
       }
     }
 
-    const cookiesHeader = headers['set-cookie'] || [];
+    const rawCookies = headers['set-cookie'];
+    const cookiesHeader: string[] = Array.isArray(rawCookies) ? rawCookies : (typeof rawCookies === 'string' ? [rawCookies] : []);
     const $ = cheerio.load(htmlBody || '');
 
     // Meta etiketlerini topla

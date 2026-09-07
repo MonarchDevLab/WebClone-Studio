@@ -3,12 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
-export interface AppSettings {
-  defaultOutputDir: string;
-  userAgent: string;
-  defaultThreads: number;
-  defaultRateLimit: number;
-}
+import { AppSettings } from '../../shared/types';
+export type { AppSettings };
 
 function resolveDefaultDownloadDir(): string {
   try {

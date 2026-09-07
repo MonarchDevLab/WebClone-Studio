@@ -81,10 +81,25 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
             concurrentDownloads: s.defaultThreads || prev.concurrentDownloads,
             rateLimit: s.defaultRateLimit ?? prev.rateLimit,
           }));
+          if (s.defaultOutputDir) {
+            setOutputPath(prev => prev ? prev : s.defaultOutputDir);
+          }
         })
         .catch(() => {});
     }
   }, [isOpen]);
+
+  // Escape tuşu ile modalı kapatma desteği
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

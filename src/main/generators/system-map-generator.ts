@@ -1,4 +1,4 @@
-import { AnalyzeResult, SiteMapNode, ColorToken, TypoToken, ComponentBlueprint } from '../../shared/types';
+import { AnalyzeResult, SiteMapNode } from '../../shared/types';
 
 /**
  * Hedef web sitesinin tüm mimarisini, tasarım sistemini, CSS tokenlarını,
@@ -74,7 +74,7 @@ export class SystemMapGenerator {
       lines.push('|---|---|---|---|---|');
       result.technologies.forEach((tech) => {
         const versionStr = tech.version ? `\`${tech.version}\`` : '_Belirlenemedi_';
-        const confidenceStr = `%${Math.round(tech.confidence * 100)}`;
+        const confidenceStr = `%${Math.round(tech.confidence)}`;
         const signalsStr = (tech.signals || []).map(s => `\`${this.escapeMd(s)}\``).join(', ') || '_Genel imza eşleşmesi_';
         lines.push(`| **${tech.category}** | **${tech.name}** | ${versionStr} | \`${confidenceStr}\` | ${signalsStr} |`);
       });
@@ -454,8 +454,9 @@ export class SystemMapGenerator {
   /**
    * Site haritasını ASCII ağaç formatında oluşturur.
    */
-  private static buildAsciiTree(node: SiteMapNode, prefix: string, isLast: boolean, lines: string[]): void {
-    if (!node) return;
+  private static buildAsciiTree(node: SiteMapNode, prefix: string, isLast: boolean, lines: string[], visited = new Set<string>()): void {
+    if (!node || !node.url || visited.has(node.url)) return;
+    visited.add(node.url);
 
     let path = node.url;
     try {
@@ -470,7 +471,7 @@ export class SystemMapGenerator {
 
     children.forEach((child, index) => {
       const childIsLast = index === children.length - 1;
-      this.buildAsciiTree(child, newPrefix, childIsLast, lines);
+      this.buildAsciiTree(child, newPrefix, childIsLast, lines, visited);
     });
   }
 

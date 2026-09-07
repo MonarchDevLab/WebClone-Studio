@@ -24,7 +24,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // Otomatik kaydırma
   useEffect(() => {
     if (autoScroll && isBottomPanelOpen) {
-      logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      logEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [logs.length, autoScroll, isBottomPanelOpen]);
 

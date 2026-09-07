@@ -152,7 +152,8 @@ export class FileOrganizer {
       };
     } catch {
       // Güvenli Fallback
-      const safeFallback = sanitizeFilename(assetUrl.replace(/[^a-zA-Z0-9.-]/g, '_')).slice(0, 50);
+      const cleanFallback = sanitizeFilename(assetUrl.replace(/[^a-zA-Z0-9.-]/g, '_')).slice(0, 50).replace(/^\.+$/, '');
+      const safeFallback = cleanFallback || `asset_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
       const typeFolder = assetType === 'image' ? 'images' : (assetType !== 'html' ? assetType : 'html');
       const absolutePath = path.join(this.folders.siteDir, 'assets', typeFolder, safeFallback);
       return {

@@ -164,10 +164,13 @@ export class PageProcessor {
 
     const parseSrcset = (srcsetStr: string | undefined) => {
       if (!srcsetStr) return;
-      srcsetStr.split(',').forEach(item => {
-        const candidate = item.trim().split(/\s+/)[0];
-        if (candidate) addAsset(candidate, 'image');
-      });
+      const re = /\s*(data:[^,]+,[^\s,]+|\S+)(?:\s+[\d.]+[wx])?\s*(?:,|$)/gi;
+      let match: RegExpExecArray | null;
+      while ((match = re.exec(srcsetStr)) !== null) {
+        if (match[1] && !match[1].startsWith('data:')) {
+          addAsset(match[1], 'image');
+        }
+      }
     };
 
     // 1. Sayfa Linkleri (a[href], area[href])

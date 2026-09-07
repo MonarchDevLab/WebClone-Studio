@@ -123,8 +123,9 @@ export const UrlInput: React.FC = () => {
     }
   };
 
-  const isHttps = inputValue.startsWith('https://');
-  const isHttp = inputValue.startsWith('http://') && !isHttps;
+  const lowerInput = inputValue.trim().toLowerCase();
+  const isHttps = lowerInput.startsWith('https://');
+  const isHttp = lowerInput.startsWith('http://') && !isHttps;
 
   return (
     <div ref={containerRef} className="relative flex items-center gap-2.5 w-full max-w-5xl no-drag">
@@ -150,6 +151,8 @@ export const UrlInput: React.FC = () => {
 
         {/* Ana URL Girdisi */}
         <input
+          id="url-input-field"
+          aria-label="Web sitesi URL adresi"
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

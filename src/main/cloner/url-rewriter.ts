@@ -51,18 +51,27 @@ export class UrlRewriter {
   }
 
   /**
+   * İki mutlak dosya yolu arasındaki web uyumlu göreceli yolu hesaplar.
+   * Windows farklı sürücü ve kök farklılıklarını güvenle ele alır.
+   */
+  public static resolveRelativePath(fromDir: string, targetLocalAbsPath: string): string {
+    const fromRoot = path.parse(fromDir).root.toLowerCase();
+    const targetRoot = path.parse(targetLocalAbsPath).root.toLowerCase();
+    if (fromRoot && targetRoot && fromRoot !== targetRoot) {
+      return targetLocalAbsPath.split(path.sep).join('/');
+    }
+    let rel = path.relative(fromDir, targetLocalAbsPath);
+    rel = rel.split(path.sep).join('/');
+    return rel.startsWith('.') ? rel : `./${rel}`;
+  }
+
+  /**
    * HTML içeriğindeki tüm link, görsel, script, font, video, svg ve stil referanslarını offline yollara çevirir.
    */
   public static rewriteHtml(html: string, context: UrlRewriteContext): string {
     const $ = cheerio.load(html);
     const currentDir = path.dirname(context.currentLocalFilePath);
-
-    const resolveRelativePath = (targetLocalAbsPath: string): string => {
-      let rel = path.relative(currentDir, targetLocalAbsPath);
-      // Windows ters slash'leri web standardı düz slash'e çevir
-      rel = rel.split(path.sep).join('/');
-      return rel.startsWith('.') ? rel : `./${rel}`;
-    };
+    const resolveRelativePath = (targetLocalAbsPath: string) => UrlRewriter.resolveRelativePath(currentDir, targetLocalAbsPath);
 
     // 0. <base href="..."> Etiketini Etkisizleştir (Offline göreceli linkleri kırmaması için zorunlu)
     $('base[href]').each((_, elem) => {
@@ -128,27 +137,30 @@ export class UrlRewriter {
       const srcset = $(elem).attr(attrName);
       if (!srcset) return;
 
-      const newSrcset = srcset
-        .split(',')
-        .map(entry => {
-          const parts = entry.trim().split(/\s+/);
-          const rawUrl = parts[0];
-          const descriptor = parts[1] || '';
+      const entries: string[] = [];
+      const re = /\s*(data:[^,]+,[^\s,]+|\S+)(?:\s+([\d.]+[wx]))?\s*(?:,|$)/gi;
+      let match: RegExpExecArray | null;
+      while ((match = re.exec(srcset)) !== null) {
+        const rawUrl = match[1];
+        const descriptor = match[2] || '';
+        if (!rawUrl || rawUrl.startsWith('data:')) {
+          entries.push(descriptor ? `${rawUrl} ${descriptor}` : rawUrl);
+          continue;
+        }
 
-          if (!rawUrl || rawUrl.startsWith('data:')) return entry.trim();
+        try {
+          const absoluteUrl = new URL(rawUrl, context.currentPageUrl).href;
+          const mappedLocalPath = UrlRewriter.findMappedLocalPath(context.urlMap, absoluteUrl);
+          if (mappedLocalPath) {
+            const rel = resolveRelativePath(mappedLocalPath);
+            entries.push(descriptor ? `${rel} ${descriptor}` : rel);
+            continue;
+          }
+        } catch {}
+        entries.push(descriptor ? `${rawUrl} ${descriptor}` : rawUrl);
+      }
 
-          try {
-            const absoluteUrl = new URL(rawUrl, context.currentPageUrl).href;
-            const mappedLocalPath = UrlRewriter.findMappedLocalPath(context.urlMap, absoluteUrl);
-            if (mappedLocalPath) {
-              const rel = resolveRelativePath(mappedLocalPath);
-              return `${rel} ${descriptor}`.trim();
-            }
-          } catch {}
-          return entry.trim();
-        })
-        .join(', ');
-
+      const newSrcset = entries.join(', ');
       $(elem).attr(attrName, newSrcset);
       if (attrName === 'data-srcset' && !$(elem).attr('srcset')) {
         $(elem).attr('srcset', newSrcset);
@@ -213,12 +225,7 @@ export class UrlRewriter {
    */
   public static rewriteCss(css: string, context: UrlRewriteContext): string {
     const currentDir = path.dirname(context.currentLocalFilePath);
-
-    const resolveRelativePath = (targetLocalAbsPath: string): string => {
-      let rel = path.relative(currentDir, targetLocalAbsPath);
-      rel = rel.split(path.sep).join('/');
-      return rel.startsWith('.') ? rel : `./${rel}`;
-    };
+    const resolveRelativePath = (targetLocalAbsPath: string) => UrlRewriter.resolveRelativePath(currentDir, targetLocalAbsPath);
 
     // 1. @import "..." veya @import url("...") dönüşümü
     const importPattern = /@import\s+(?:url\(['"]?([^'")]+)['"]?\)|['"]([^'"]+)['"])([^;]*);/gi;

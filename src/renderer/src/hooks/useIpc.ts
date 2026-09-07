@@ -1,28 +1,44 @@
 import { useEffect } from 'react';
 import { useCloneStore } from '../stores/clone-store';
 import { useProjectStore } from '../stores/project-store';
-import { CloneProgress, FileAddedEvent, CloneLogEntry, CloneCompleteEvent, CloneErrorEvent } from '@shared/types';
+import { 
+  CloneProgress, 
+  FileAddedEvent, 
+  CloneLogEntry, 
+  CloneCompleteEvent, 
+  CloneErrorEvent,
+  AnalyzeResult,
+  CloneSettings,
+  SizeEstimate,
+  ProjectInfo,
+  AppSettings
+} from '@shared/types';
 import { toast } from 'sonner';
 
 declare global {
   interface Window {
     electronAPI?: {
-      analyze: (url: string) => Promise<any>;
-      clone: (url: string, settings: any, outputPath: string, projectName?: string) => Promise<any>;
+      send?: (channel: string, ...args: any[]) => void;
+      invoke?: (channel: string, ...args: any[]) => Promise<any>;
+      on?: (channel: string, callback: (event: any, ...args: any[]) => void) => () => void;
+      removeListener?: (channel: string, callback: (event: any, ...args: any[]) => void) => void;
+
+      analyze: (url: string) => Promise<AnalyzeResult>;
+      clone: (url: string, settings: CloneSettings, outputPath: string, projectName?: string) => Promise<{ success: boolean; jobId: string; outputPath: string }>;
       pauseClone: (jobId: string) => Promise<boolean>;
       resumeClone: (jobId: string) => Promise<boolean>;
       cancelClone: (jobId: string) => Promise<boolean>;
       selectDirectory: () => Promise<string | null>;
       openFolder: (folderPath: string) => Promise<boolean>;
       openBrowser: (filePath: string) => Promise<boolean>;
-      getEstimate: (url: string, depth: number) => Promise<any>;
-      listProjects: () => Promise<any[]>;
+      getEstimate: (url: string, depth: number) => Promise<SizeEstimate>;
+      listProjects: () => Promise<ProjectInfo[]>;
       deleteProject: (projectPath: string) => Promise<boolean>;
       openProject: (projectPath: string) => Promise<boolean>;
-      getSettings: () => Promise<any>;
-      saveSettings: (settings: any) => Promise<any>;
+      getSettings: () => Promise<AppSettings>;
+      saveSettings: (settings: AppSettings) => Promise<AppSettings>;
       
-      exportSystemMap: (result?: any) => Promise<string>;
+      exportSystemMap: (result?: AnalyzeResult) => Promise<string>;
       saveSystemMapFile: (content: string, defaultName?: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean }>;
       startPreviewServer: (targetPath: string) => Promise<{ success: boolean; url?: string; error?: string }>;
       stopPreviewServer: () => Promise<{ success: boolean }>;
@@ -85,6 +101,7 @@ export function useIpc() {
 
     const unsubError = api.onError?.((_, data) => {
       addError(data);
+      toast.error(data.message || 'Klonlama sırasında bir hata oluştu');
     });
 
     return () => {

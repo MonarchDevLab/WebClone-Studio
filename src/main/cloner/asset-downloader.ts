@@ -104,6 +104,14 @@ export class AssetDownloader {
         }
       });
 
+      let downloadedBytes = 0;
+      downloadStream.on('data', (chunk: Buffer) => {
+        downloadedBytes += chunk.length;
+        if (maxSizeBytes && downloadedBytes > maxSizeBytes) {
+          downloadStream.destroy(new Error(`Dosya boyutu kümülatif sınırı (${maxSizeBytes} bytes) aşıyor.`));
+        }
+      });
+
       const fileStream = fs.createWriteStream(destinationPath);
       await pipeline(downloadStream, fileStream);
 

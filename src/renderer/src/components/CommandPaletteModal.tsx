@@ -104,7 +104,7 @@ export const CommandPaletteModal: React.FC = () => {
       icon: Globe,
       action: () => {
         closeCommandPalette();
-        const el = document.querySelector('input[placeholder*="Web"]') as HTMLInputElement;
+        const el = document.getElementById('url-input-field') as HTMLInputElement | null;
         if (el) { el.focus(); el.select(); }
       },
       shortcut: 'Ctrl+L',

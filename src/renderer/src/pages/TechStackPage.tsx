@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
-import { Search, Layers, CheckCircle2, ShieldCheck, Tag, ExternalLink, Cpu } from 'lucide-react';
+import { Search, Layers, ShieldCheck, Tag, Loader2 } from 'lucide-react';
 import { useAnalyzeStore } from '../stores/analyze-store';
-import { TechCategory } from '@shared/types';
 
 export const TechStackPage: React.FC = () => {
-  const { analyzeResult, url } = useAnalyzeStore();
+  const { analyzeResult, isAnalyzing } = useAnalyzeStore();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  if (isAnalyzing) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[460px] text-center p-8 text-text-muted animate-in fade-in duration-200">
+        <div className="w-14 h-14 rounded-2xl bg-surface-2 border border-accent/30 flex items-center justify-center mb-3 text-accent-hover shadow-lg shadow-accent/10">
+          <Loader2 size={28} className="animate-spin text-accent-hover" />
+        </div>
+        <h3 className="text-base font-bold text-text-primary mb-1">Teknolojiler Taranıyor</h3>
+        <p className="text-xs text-text-muted max-w-sm font-mono">
+          Hedef sitenin script, meta ve ağ yanıt imzaları çözümleniyor...
+        </p>
+      </div>
+    );
+  }
 
   if (!analyzeResult || !analyzeResult.technologies || analyzeResult.technologies.length === 0) {
     return (
