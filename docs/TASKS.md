@@ -10,13 +10,8 @@
 - [!] Yok.
 
 ## TAMAMLANDI
-- [x] 2026-09-08 - build(portable): package WebClone-Studio-Portable.exe (77.6MB, zero errors, electron-builder portable target verified at 09:50)
-- [x] 2026-09-08 - feat(cloner): intelligent SPA client-render fallback (dynamic browser rendering for React/Vue/Next shells)
-- [x] 2026-09-08 - fix(downloader): add SSL tolerance (rejectUnauthorized: false) and resilient retry backoff to downloadToBuffer
-- [x] 2026-09-08 - fix(rewriter): strip CSP, refresh, and origin-trial meta tags in rewriteHtml for offline execution
-- [x] 2026-09-08 - feat(preview): support clean URLs, trailing slash directory mapping and SPA route fallback
-- [x] 2026-09-08 - fix(cloner): complete site download engine overhaul (subdomain isolation, Google Fonts CSS parsing, preload/data-bg asset discovery, robots.txt asset bypass, zero emojis / strictly Lucide icons)
-- [x] 2026-09-08 - build(portable): package WebClone-Studio-Portable.exe (77.6MB, zero errors, electron-builder portable target verified)
+- [x] 2026-09-08 (e47a95f) - fix(cloner): overhaul engine for lossless cloning (SPA client fallback, SSL tolerance, CSP elimination, clean URL preview, zero emojis & strictly Lucide icons)
+- [x] 2026-09-08 (e47a95f) - build(portable): package WebClone-Studio-Portable.exe (77.6MB, zero errors, electron-builder portable target verified)
 - [x] 2026-09-08 - fix(audit): comprehensive 4-phase codebase remediation (ReDoS, IPC safety, memory leaks, XSS, strict typing, build verified)
 - [x] 2026-09-07 (3506367) - fix(core): execute Ouroboros v6.0 & Ponytail Ultra remediation plan (10 core bugs, memory leak, UI jank & a11y, zero type errors, portable build)
 - [x] 2026-09-03 (1f97276) - feat(ipc): connect inter-process bridges, Windows path virtualization and documentation

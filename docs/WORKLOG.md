@@ -1,15 +1,25 @@
 # WORKLOG
 
 ## Aktif Oturum
-- **Hedef:** Ouroboros v6.0 ve Ponytail Ultra prensipleriyle tüm codebase analizi; çekirdek, motor, güvenlik, bellek ve arayüz eksiklerinin sıfırlanması.
+- **Hedef:** Sıfır emoji standartının uygulanması, sitelerin kayıpsız/eksiksiz indirilmesini sağlayan motor revizyonları (SPA fallback, SSL toleransı, CSP temizliği, preload/data-bg varlık keşfi, temiz URL önizleme) ve Windows Portable paketin derlenmesi.
 - **Yapılanlar:**
-  1. 10 çekirdek hata ve güvenlik açığı giderildi (güven skoru, Windows relative path, srcset parser, byte sayacı, XSS, EISDIR, silme sınır kontrolü, cookie array, izole analiz önbelleği).
-  2. Bellek sızıntıları ve UI jank çözüldü (preload subscriptionMap, sliding window cap: 200 files / 500 logs / 100 errors, behavior: auto).
-  3. UI/UX ve erişilebilirlik iyileştirildi (Ctrl+L odaklama, nested button semantik düzeltmesi, yeni klon butonu, yükleme iskeletleri, canlı tarama durumları, Escape ile modal kapatma).
-  4. Ambient tip bildirimleri (`env.d.ts`) eklenerek `@ts-ignore` kaldırıldı, `tsc --noEmit` sıfır hataya ulaştırıldı.
-  5. Taşınabilir Windows paketi (`dist/WebClone-Studio-Portable.exe`) derlendi ve doğrulandı.
+  1. Kod tabanındaki tüm emojiler temizlendi; arayüz ve raporlar yalnızca Lucide SVG ikonlarına dönüştürüldü.
+  2. Klonlama motoru zırhlandı (kök domain izolasyonu, Google Fonts /css2 ve CSS @import, preload ve data-bg varlık keşfi).
+  3. Statik modda indirilen boş React/Vue/Next iskeletleri için dahili Chromium motoru (`PageRenderer`) ile hibrit SPA kurtarma fallback'i eklendi.
+  4. İndirme istemcisine SSL toleransı (`rejectUnauthorized: false`) ve 3 kademeli retry backoff entegre edildi.
+  5. İndirilen HTML sayfalarından offline engelleyici CSP ve yönlendirme meta etiketleri temizlendi.
+  6. Önizleme sunucusuna uzantısız temiz URL, trailing slash ve SPA rota fallback desteği sağlandı.
+  7. TypeScript derlemesi 0 hata ile doğrulandı ve `dist/WebClone-Studio-Portable.exe` (77.6 MB) paketlendi.
 
 ## Mimari Kararlar
+- **[KARAR-023] Sıfır Emoji Standartı, Kayıpsız Klonlama Motoru ve Hibrit SPA Kurtarma:**
+  1) Kod tabanı, rapor şablonları (`system-map-generator.ts`, `report-generator.ts`, `readme-generator.ts`), log konsolları ve UI bileşenlerindeki tüm emojiler temizlendi; arayüzde yalnızca Lucide SVG ikonları ve kurumsal tipografi bırakıldı.
+  2) `PageProcessor` kök domain eşleşmesi (`getRootDomain`, `isInternalDomain`) ile güçlendirildi; `www.` yönlendirmelerinde iç linklerin atlanması engellendi; harici sosyal linkler kuyruktan izole edildi; CSS `@import` ve Google Fonts `/css2` ayrıştırması güçlendirildi; `<link rel="preload" as="image">`, `data-bg`, `data-background`, `data-background-image` ve `video[poster]` seçicileri varlık keşfine dahil edildi.
+  3) `AssetDownloader` içerisindeki `downloadToFile` ve `downloadToBuffer` metodlarına `rejectUnauthorized: false` ve 3 denemeli exponential backoff döngüsü eklendi; süresi dolmuş veya geçersiz SSL sertifikalı sunuculardan indirme kesintisi önlendi.
+  4) `UrlRewriter` içerisinden offline stil ve betik çalıştırmayı engelleyen `Content-Security-Policy`, `refresh` ve `origin-trial` meta etiketleri temizlendi.
+  5) `CrawlerEngine` içerisine akıllı SPA / istemci render tespiti (`isSpaShell`) ve dinamik Chromium fallback (`PageRenderer`) eklendi; statik modda bile boş React/Vue/Next iskeletleri gerçek DOM içeriğiyle indirildi.
+  6) `PreviewServer` içerisine temiz URL (`.html` uzantısız linkler), trailing slash dizin çözümlemesi ve SPA istemci yönlendirmeleri için kök `index.html` fallback eklendi.
+  7) `dist/WebClone-Studio-Portable.exe` (77.6 MB) 0 hata ile paketlendi.
 - **[KARAR-022] Ouroboros v6.0 & Ponytail Ultra Kapsamlı Sistem İyileştirmesi ve Zırhlama:**
   1) `system-map-generator.ts`: [BUG-01] Güven skoru `tech.confidence` formatlama hatası düzeltildi; `buildAsciiTree` metoduna döngüsel ağaç referansları için `visited = new Set<string>()` cycle detection eklendi; kullanılmayan importlar temizlendi.
   2) `preload/index.ts`: [BUG-02] `subscriptionMap` eklenerek `removeListener`'ın `on` ile sarmalanan IPC dinleyicilerini sızdırmadan temizlemesi sağlandı.

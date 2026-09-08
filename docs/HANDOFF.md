@@ -17,7 +17,8 @@ Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra &
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Commit:** `3506367` fix(core): harden engine architecture, resolve memory leaks and polish ui
+- **Son Commit:** `e47a95f` fix(cloner): overhaul engine for lossless cloning, eliminate emojis, and enhance offline preview
+- **Önceki Commit:** `3506367` fix(core): harden engine architecture, resolve memory leaks and polish ui
 - **Planlanan:** Yeni kullanıcı direktifleri.
 
 ## Riskler
