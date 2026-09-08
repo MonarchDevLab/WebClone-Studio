@@ -23,7 +23,7 @@ export function createWindow(): BrowserWindow {
     backgroundColor: '#08090C',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false
     }

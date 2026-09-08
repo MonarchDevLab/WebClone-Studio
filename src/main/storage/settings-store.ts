@@ -72,7 +72,16 @@ export class SettingsStore {
       if (fs.existsSync(this.settingsFilePath)) {
         const raw = fs.readFileSync(this.settingsFilePath, 'utf-8');
         const parsed = JSON.parse(raw);
-        return { ...DEFAULT_SETTINGS, ...parsed };
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...DEFAULT_SETTINGS,
+            ...parsed,
+            defaultThreads: typeof parsed.defaultThreads === 'number' ? Math.max(1, Math.min(parsed.defaultThreads, 20)) : DEFAULT_SETTINGS.defaultThreads,
+            defaultRateLimit: typeof parsed.defaultRateLimit === 'number' ? Math.max(0, Math.min(parsed.defaultRateLimit, 5000)) : DEFAULT_SETTINGS.defaultRateLimit,
+            userAgent: typeof parsed.userAgent === 'string' && parsed.userAgent.trim().length > 0 ? parsed.userAgent.trim() : DEFAULT_SETTINGS.userAgent,
+            defaultOutputDir: typeof parsed.defaultOutputDir === 'string' && parsed.defaultOutputDir.trim().length > 0 ? parsed.defaultOutputDir.trim() : DEFAULT_SETTINGS.defaultOutputDir,
+          };
+        }
       }
     } catch (e) {
       console.warn('[SettingsStore] Ayarlar okunamadı, varsayılanlar kullanılıyor:', e);
@@ -90,11 +99,9 @@ export class SettingsStore {
       ...newSettings,
     };
 
-    try {
-      fs.writeFileSync(this.settingsFilePath, JSON.stringify(this.currentSettings, null, 2), 'utf-8');
-    } catch (e) {
-      console.error('[SettingsStore] Ayarlar kaydedilemedi:', e);
-    }
+    // Asenkron ve bloke etmeyen disk kaydı
+    fs.promises.writeFile(this.settingsFilePath, JSON.stringify(this.currentSettings, null, 2), 'utf-8')
+      .catch((e) => console.error('[SettingsStore] Ayarlar kaydedilemedi:', e));
 
     return { ...this.currentSettings };
   }

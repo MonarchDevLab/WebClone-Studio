@@ -34,7 +34,7 @@ export class ManifestGenerator {
   public static generate(options: ManifestOptions): ProjectManifest {
     const parsedUrl = new URL(options.targetUrl);
     const dateStr = new Date().toISOString();
-    const slug = `${parsedUrl.hostname.replace(/[^a-zA-Z0-9.-]/g, '_')}_${dateStr.split('T')[0]}`;
+    const slug = `${parsedUrl.hostname.replace(/[^a-zA-Z0-9.-]/g, '_')}_${dateStr.substring(0, 10)}`;
     
     const avgSpeedBps = options.stats.durationSeconds > 0 
       ? Math.round(options.stats.totalSizeBytes / options.stats.durationSeconds) 

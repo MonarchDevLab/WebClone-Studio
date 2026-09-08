@@ -1,7 +1,5 @@
 import { TechCategory } from '../../shared/types';
 
-export type { TechCategory };
-
 export interface TechSignatureRule {
   name: string;
   version?: string;

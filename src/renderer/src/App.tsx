@@ -14,6 +14,7 @@ import { useUiStore, TabType } from './stores/ui-store';
 import { useAnalyzeStore } from './stores/analyze-store';
 import { useCloneStore } from './stores/clone-store';
 import { useIpc } from './hooks/useIpc';
+import { SiteMapNode } from '@shared/types';
 import { LayoutDashboard, Cpu, Network, CloudDownload, Settings } from 'lucide-react';
 
 /** Sekme tanımları */
@@ -72,7 +73,7 @@ export default function App() {
     }
     if (tabId === 'sitemap' && analyzeResult?.siteMap) {
       let pageCount = 0;
-      const walk = (node: any) => { pageCount++; (node.children || []).forEach(walk); };
+      const walk = (node: SiteMapNode) => { pageCount++; (node.children || []).forEach(walk); };
       walk(analyzeResult.siteMap);
       return pageCount > 0 ? `${pageCount}` : null;
     }

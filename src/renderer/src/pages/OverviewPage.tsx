@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Globe, Shield, CheckCircle2, XCircle, Layers, Palette,
-  Type, ExternalLink, Cpu, Download, ArrowRight, Activity, Zap, Smartphone,
+  Type, ExternalLink, Cpu, Download, Activity, Zap, Smartphone,
   FileText, Copy, FileDown
 } from 'lucide-react';
 import { useAnalyzeStore } from '../stores/analyze-store';
@@ -175,8 +175,9 @@ export const OverviewPage: React.FC = () => {
       if (res.success && res.filePath) {
         toast.success(`Sistem Haritası kaydedildi: ${res.filePath.split(/[\\/]/).pop()}`);
       }
-    } catch (e: any) {
-      toast.error(`Dışa aktarma hatası: ${e.message}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Dışa aktarma başarısız';
+      toast.error(`Dışa aktarma hatası: ${msg}`);
     }
   };
 
@@ -189,8 +190,9 @@ export const OverviewPage: React.FC = () => {
       const md = await window.electronAPI.exportSystemMap(analyzeResult);
       await navigator.clipboard.writeText(md);
       toast.success('Ultra Detaylı Sistem Haritası (.md) panoya kopyalandı!');
-    } catch (e: any) {
-      toast.error(`Kopyalama hatası: ${e.message}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Kopyalama başarısız';
+      toast.error(`Kopyalama hatası: ${msg}`);
     }
   };
 

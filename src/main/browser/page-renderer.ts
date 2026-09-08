@@ -59,10 +59,24 @@ export class PageRenderer {
       },
     });
 
-    // Güvenlik: Dış pencere açılmalarını ve yönlendirmeleri kilitler
+    // Güvenlik: Dış pencere açılmalarını kilitler; aynı kök domain yönlendirmelerine (http->https, www) izin verir
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    win.webContents.on('will-navigate', (event) => {
-      event.preventDefault();
+    win.webContents.on('will-navigate', (event, navigationUrl) => {
+      try {
+        const navParsed = new URL(navigationUrl);
+        const initialParsed = new URL(url);
+        if (!['http:', 'https:'].includes(navParsed.protocol)) {
+          event.preventDefault();
+          return;
+        }
+        const navHost = navParsed.hostname.toLowerCase().replace(/^www\./, '');
+        const initialHost = initialParsed.hostname.toLowerCase().replace(/^www\./, '');
+        if (navHost !== initialHost) {
+          event.preventDefault();
+        }
+      } catch {
+        event.preventDefault();
+      }
     });
 
     let isDestroyed = false;
@@ -70,7 +84,9 @@ export class PageRenderer {
       if (!isDestroyed) {
         isDestroyed = true;
         try {
-          win.destroy();
+          if (!win.isDestroyed()) {
+            win.destroy();
+          }
         } catch {}
       }
     };
@@ -84,8 +100,8 @@ export class PageRenderer {
 
         win.webContents.once('did-finish-load', () => {
           clearTimeout(timer);
-          // SPA'ların ilk render sabitlemesi için kısa bekleme (500ms)
-          setTimeout(resolve, 500);
+          // SPA'ların ilk render ve lazy-load sabitlemesi için bekleme (1000ms)
+          setTimeout(resolve, 1000);
         });
 
         win.webContents.once('did-fail-load', (_, errorCode, errorDescription) => {

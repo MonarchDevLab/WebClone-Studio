@@ -9,7 +9,7 @@ import {
 } from '../../shared/types';
 import { FileOrganizer } from './file-organizer';
 import { AssetDownloader } from './asset-downloader';
-import { PageProcessor, DiscoveredAsset } from './page-processor';
+import { PageProcessor, DiscoveredAsset, isInternalDomain } from './page-processor';
 import { UrlRewriter } from './url-rewriter';
 import { ManifestGenerator } from '../output/manifest-generator';
 import { ReadmeGenerator } from '../output/readme-generator';
@@ -22,6 +22,25 @@ interface QueueItem {
   depth: number;
   type: DiscoveredAsset['type'];
   isPage: boolean;
+}
+
+function escapeWildcardToRegExp(pattern: string): RegExp {
+  const trimmed = pattern.trim();
+  const escaped = trimmed.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(escaped, 'i');
+}
+
+function isSpaShell(html: string): boolean {
+  if (!html) return true;
+  const hasSpaMount = /id=["'](?:root|app|__next|__nuxt)["']\s*>\s*<\//i.test(html) ||
+                      /<app-root\b[^>]*>\s*<\/app-root>/i.test(html);
+  const hasNoScriptWarning = /enable JavaScript/i.test(html) || /JavaScript is required/i.test(html);
+  const bodyText = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                       .replace(/<[^>]+>/g, ' ')
+                       .replace(/\s+/g, ' ')
+                       .trim();
+  return (hasSpaMount || hasNoScriptWarning) && bodyText.length < 350;
 }
 
 export class CrawlerEngine extends EventEmitter {
@@ -39,6 +58,7 @@ export class CrawlerEngine extends EventEmitter {
   private pageRenderer = new PageRenderer();
 
   private queue: QueueItem[] = [];
+  private queueHead = 0;
   private visitedUrls = new Set<string>();
   private urlToLocalPathMap = new Map<string, string>(); // assetUrl -> absoluteLocalPath
   private pagesToRewrite: Array<{ url: string; localPath: string; html: string }> = [];
@@ -175,13 +195,13 @@ export class CrawlerEngine extends EventEmitter {
     this.emitLog('error', 'Klonlama kullanıcı tarafından iptal edildi.');
   }
 
-  private isUrlAllowed(urlStr: string): boolean {
+  private isUrlAllowed(urlStr: string, isPage: boolean = false): boolean {
     try {
       const urlObj = new URL(urlStr);
       const pathname = urlObj.pathname;
 
-      // 1. robots.txt kontrolü
-      if (this.robotsChecker && !this.robotsChecker.isAllowed(urlStr, this.settings.userAgent || 'WebCloneStudio')) {
+      // 1. robots.txt kontrolü SADECE sayfalar için geçerlidir; CSS/görsel/font varlıkları engellenmez
+      if (isPage && this.settings.respectRobotsTxt && this.robotsChecker && !this.robotsChecker.isAllowed(urlStr, this.settings.userAgent || 'WebCloneStudio')) {
         return false;
       }
 
@@ -189,8 +209,7 @@ export class CrawlerEngine extends EventEmitter {
       if (this.settings.excludedPatterns && this.settings.excludedPatterns.length > 0) {
         for (const pattern of this.settings.excludedPatterns) {
           if (!pattern.trim()) continue;
-          const regexStr = pattern.trim().replace(/\*/g, '.*');
-          const regex = new RegExp(regexStr, 'i');
+          const regex = escapeWildcardToRegExp(pattern);
           if (regex.test(pathname) || regex.test(urlStr)) {
             return false;
           }
@@ -204,8 +223,7 @@ export class CrawlerEngine extends EventEmitter {
           let matched = false;
           for (const pattern of this.settings.includedPatterns) {
             if (!pattern.trim()) continue;
-            const regexStr = pattern.trim().replace(/\*/g, '.*');
-            const regex = new RegExp(regexStr, 'i');
+            const regex = escapeWildcardToRegExp(pattern);
             if (regex.test(pathname) || regex.test(urlStr)) {
               matched = true;
               break;
@@ -221,6 +239,20 @@ export class CrawlerEngine extends EventEmitter {
     }
   }
 
+  private get queueLength(): number {
+    return Math.max(0, this.queue.length - this.queueHead);
+  }
+
+  private dequeueItem(): QueueItem | undefined {
+    if (this.queueHead >= this.queue.length) return undefined;
+    const item = this.queue[this.queueHead++];
+    if (this.queueHead > 200 && this.queueHead * 2 >= this.queue.length) {
+      this.queue = this.queue.slice(this.queueHead);
+      this.queueHead = 0;
+    }
+    return item;
+  }
+
   /**
    * Asenkron indirme havuzu (Promise.race tabanlı kuyruk yönetimi).
    */
@@ -229,7 +261,7 @@ export class CrawlerEngine extends EventEmitter {
     const maxConcurrency = Math.max(1, Math.min(this.settings.concurrentDownloads || 5, 15));
     const inFlight = new Set<Promise<void>>();
 
-    while ((this.queue.length > 0 || inFlight.size > 0) && this.isRunning && !this.isCancelled) {
+    while ((this.queueLength > 0 || inFlight.size > 0) && this.isRunning && !this.isCancelled) {
       if (this.isPaused) {
         await new Promise<void>((resolve) => {
           this.resumeResolver = resolve;
@@ -244,11 +276,11 @@ export class CrawlerEngine extends EventEmitter {
       }
 
       // Havuz kapasitesi kadar işi eşzamanlı başlat
-      while (this.queue.length > 0 && inFlight.size < maxConcurrency && !this.isPaused && !this.isCancelled) {
-        const item = this.queue.shift();
+      while (this.queueLength > 0 && inFlight.size < maxConcurrency && !this.isPaused && !this.isCancelled) {
+        const item = this.dequeueItem();
         if (!item || this.visitedUrls.has(item.url)) continue;
 
-        if (!this.isUrlAllowed(item.url)) {
+        if (!this.isUrlAllowed(item.url, item.isPage)) {
           this.emitLog('debug', `Filtre dışı URL atlandı: ${item.url}`);
           continue;
         }
@@ -328,6 +360,34 @@ export class CrawlerEngine extends EventEmitter {
         statusCode = staticRes.statusCode;
         sizeBytes = staticRes.sizeBytes;
         finalUrl = staticRes.finalUrl || item.url;
+
+        // Akıllı SPA / İstemci Render Kurtarma: Sayfa boş iskeletse Chromium render motorunu devreye sok
+        if (isSpaShell(htmlStr)) {
+          this.emitLog('info', `İstemci render iskeleti tespit edildi (${item.url}), dinamik tarayıcı render uygulanıyor...`);
+          try {
+            const rendered = await this.dynamicLimiter.schedule(() =>
+              this.pageRenderer.render(item.url, { timeoutMs: 25000 })
+            );
+            if (rendered.html && rendered.html.length > htmlStr.length) {
+              htmlStr = rendered.html;
+              sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
+              if (!this.screenshotBuffer && rendered.screenshot) {
+                this.screenshotBuffer = rendered.screenshot;
+              }
+            }
+          } catch (spaErr: any) {
+            this.emitLog('debug', `SPA fallback tamamlanamadı: ${spaErr.message}`);
+          }
+        }
+      }
+
+      // Başlangıç sayfası yönlendirildiyse hedef URL ve kök origin'i güncelle
+      if (item.depth === 0 && finalUrl && finalUrl !== item.url) {
+        try {
+          const finalParsed = new URL(finalUrl);
+          origin = finalParsed.origin;
+          this.targetUrl = finalUrl;
+        } catch {}
       }
 
       this.registerUrlMapping(item.url, mapping.absolutePath, finalUrl);
@@ -335,11 +395,11 @@ export class CrawlerEngine extends EventEmitter {
       // Varlıkları ve alt sayfaları keşfet
       const processed = PageProcessor.process(htmlStr, item.url, this.settings, origin);
 
-      // Derinlik filtresi: Sayfalar derinlik sınırına tabi tutulurken varlıklar (CSS, JS, medya) eksiksiz indirilir
+      // Derinlik ve domain filtresi: Sayfalar iç domain ve derinlik sınırına tabi tutulurken varlıklar eksiksiz indirilir
       for (const asset of processed.discoveredAssets) {
         if (!this.visitedUrls.has(asset.url)) {
           if (asset.isPage) {
-            if (item.depth + 1 <= this.settings.maxDepth) {
+            if (item.depth + 1 <= this.settings.maxDepth && isInternalDomain(asset.url, origin)) {
               this.queue.push({
                 url: asset.url,
                 depth: item.depth + 1,
@@ -515,7 +575,7 @@ export class CrawlerEngine extends EventEmitter {
       this.isRunning = false;
       this.emitLog('info', isCancelled 
         ? `Klonlama durduruldu. Kısmi proje dizini: ${projectDir}`
-        : `🎉 Klonlama başarıyla tamamlandı! Proje dizini: ${projectDir}`);
+        : `Klonlama başarıyla tamamlandı! Proje dizini: ${projectDir}`);
 
       const completeEvent: CloneCompleteEvent = {
         totalFiles: this.stats.totalFiles,
@@ -593,7 +653,7 @@ export class CrawlerEngine extends EventEmitter {
     }
 
     const downloaded = this.stats.totalFiles;
-    const queued = this.queue.length;
+    const queued = this.queueLength;
     const total = downloaded + queued;
     const remainingFiles = queued;
     const eta = this.stats.currentSpeedBps > 0 && remainingFiles > 0

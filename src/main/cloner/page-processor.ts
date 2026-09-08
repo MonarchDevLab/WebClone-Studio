@@ -14,6 +14,37 @@ export interface ProcessedPageResult {
   discoveredPages: string[];
 }
 
+export function getRootDomain(hostname: string): string {
+  const cleanHost = hostname.toLowerCase().trim();
+  const parts = cleanHost.split('.');
+  if (parts.length <= 2) return cleanHost;
+  const commonDoubleExts = ['com.tr', 'edu.tr', 'gov.tr', 'org.tr', 'net.tr', 'co.uk', 'org.uk', 'com.au', 'co.nz'];
+  const lastTwo = parts.slice(-2).join('.');
+  if (commonDoubleExts.includes(lastTwo) && parts.length > 2) {
+    return parts.slice(-3).join('.');
+  }
+  return parts.slice(-2).join('.');
+}
+
+export function isInternalDomain(targetUrl: string, baseOriginUrl: string): boolean {
+  try {
+    const target = new URL(targetUrl);
+    const base = new URL(baseOriginUrl);
+    if (target.origin === base.origin) return true;
+    const targetHost = target.hostname.toLowerCase();
+    const baseHost = base.hostname.toLowerCase();
+
+    // www. vs non-www
+    if (targetHost.replace(/^www\./, '') === baseHost.replace(/^www\./, '')) {
+      return true;
+    }
+    // Kök domain eşleşmesi (örn: cdn.site.com, blog.site.com, site.com)
+    return getRootDomain(targetHost) === getRootDomain(baseHost);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Bir HTML sayfasını veya CSS içeriğini parse ederek içindeki tüm alt sayfaları,
  * görselleri, fontları, stilleri, scriptleri ve medya varlıklarını eksiksiz çıkarır.
@@ -45,26 +76,27 @@ export class PageProcessor {
         seenUrls.add(cleanUrl);
 
         const parsed = new URL(cleanUrl);
-        const isInternalDomain = parsed.origin === baseOrigin;
+        const isInternal = isInternalDomain(cleanUrl, baseOrigin);
 
         // Harici varlık ayar kontrolü
-        if (!isInternalDomain && !settings.downloadExternalAssets) {
+        if (!isInternal && !settings.downloadExternalAssets) {
           return;
         }
 
-        const ext = parsed.pathname.split('.').pop()?.toLowerCase() || '';
+        const pathname = parsed.pathname.toLowerCase();
+        const ext = pathname.split('.').pop() || '';
         let type: DiscoveredAsset['type'] = 'other';
 
         if (['woff', 'woff2', 'ttf', 'otf', 'eot'].includes(ext)) {
           if (!settings.downloadFonts) return;
           type = 'font';
-        } else if (['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'avif', 'ico'].includes(ext)) {
+        } else if (['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'avif', 'ico', 'bmp'].includes(ext)) {
           if (!settings.downloadImages) return;
           type = 'image';
         } else if (['mp4', 'webm', 'ogg', 'mp3', 'wav'].includes(ext)) {
           if (!settings.downloadMedia) return;
           type = 'media';
-        } else if (ext === 'css') {
+        } else if (ext === 'css' || parsed.hostname.includes('fonts.googleapis.com') || pathname.includes('css')) {
           type = 'css';
         }
 
@@ -76,17 +108,20 @@ export class PageProcessor {
       } catch {}
     };
 
+    // CSS yorumlarını (/* ... */) temizle
+    const cleanCss = cssContent.replace(/\/\*[\s\S]*?\*\//g, '');
+
     // 1. url(...) kalıpları
     const urlPattern = /url\(\s*(['"]?)(.*?)\1\s*\)/gi;
     let match;
-    while ((match = urlPattern.exec(cssContent)) !== null) {
+    while ((match = urlPattern.exec(cleanCss)) !== null) {
       addCssAsset(match[2]);
     }
 
     // 2. @import kalıpları (@import "style.css"; veya @import url("style.css");)
     const importPattern = /@import\s+(?:url\(['"]?([^'")]+)['"]?\)|['"]([^'"]+)['"])/gi;
     let importMatch;
-    while ((importMatch = importPattern.exec(cssContent)) !== null) {
+    while ((importMatch = importPattern.exec(cleanCss)) !== null) {
       addCssAsset(importMatch[1] || importMatch[2]);
     }
 
@@ -103,7 +138,7 @@ export class PageProcessor {
     const discoveredPages: string[] = [];
     const seenUrls = new Set<string>();
 
-    const addAsset = (rawUrl: string | undefined, type: DiscoveredAsset['type'], isPage: boolean = false) => {
+    const addAsset = (rawUrl: string | undefined, initialType: DiscoveredAsset['type'], initialIsPage: boolean = false) => {
       if (!rawUrl || rawUrl.startsWith('#') || rawUrl.startsWith('javascript:') || rawUrl.startsWith('data:') || rawUrl.startsWith('mailto:') || rawUrl.startsWith('tel:')) {
         return;
       }
@@ -116,19 +151,22 @@ export class PageProcessor {
         seenUrls.add(cleanUrl);
 
         const parsed = new URL(cleanUrl);
-        const isInternalDomain = parsed.origin === baseOrigin;
+        const isInternal = isInternalDomain(cleanUrl, baseOrigin);
 
         const ext = parsed.pathname.split('.').pop()?.toLowerCase() || '';
         const nonPageExtensions = new Set([
           'pdf', 'zip', 'rar', '7z', 'tar', 'gz', 'dmg', 'exe', 'apk',
-          'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif',
+          'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif', 'bmp',
           'mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v',
           'docx', 'xlsx', 'pptx', 'csv', 'xml', 'json'
         ]);
 
+        let type = initialType;
+        let isPage = initialIsPage;
+
         if (isPage && nonPageExtensions.has(ext)) {
           isPage = false;
-          if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif'].includes(ext)) {
+          if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif', 'bmp'].includes(ext)) {
             type = 'image';
           } else if (['mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v'].includes(ext)) {
             type = 'media';
@@ -137,8 +175,13 @@ export class PageProcessor {
           }
         }
 
-        // Harici domain varlıkları filtre kontrolü
-        if (!isInternalDomain && !settings.downloadExternalAssets && !isPage) {
+        // Sayfa linkleri için: Dış domain sayfaları (Twitter, Facebook vb.) ASLA klonlama kuyruğuna sayfa olarak eklenmez!
+        if (isPage && !isInternal) {
+          return;
+        }
+
+        // Harici domain varlıkları (CDN CSS, JS, Font, Resim) filtre kontrolü
+        if (!isInternal && !settings.downloadExternalAssets && !isPage) {
           return;
         }
 
@@ -154,7 +197,7 @@ export class PageProcessor {
         });
 
         // Sayfa ise ve aynı kök domaindeyse sayfa kuyruğuna da ekle
-        if (isPage && isInternalDomain) {
+        if (isPage && isInternal) {
           discoveredPages.push(cleanUrl);
         }
       } catch {
@@ -191,10 +234,18 @@ export class PageProcessor {
       addAsset($(el).attr('href'), 'js');
     });
 
-    // 4. Resimler (src, srcset, data-src, data-srcset, lazy-loading)
+    // 4. Preload & Prefetch Resimler ve Fontlar
+    $('link[rel="preload"][as="image"][href], link[rel="prefetch"][as="image"][href]').each((_, el) => {
+      addAsset($(el).attr('href'), 'image');
+    });
+    $('link[rel="preload"][as="font"][href], link[rel="prefetch"][as="font"][href]').each((_, el) => {
+      addAsset($(el).attr('href'), 'font');
+    });
+
+    // 5. Resimler (src, srcset, data-src, data-srcset, data-original, data-lazy-src, data-bg)
     $('img').each((_, el) => {
       const src = $(el).attr('src');
-      const dataSrc = $(el).attr('data-src') || $(el).attr('data-original') || $(el).attr('data-lazy-src');
+      const dataSrc = $(el).attr('data-src') || $(el).attr('data-original') || $(el).attr('data-lazy-src') || $(el).attr('data-url') || $(el).attr('data-hi-res-src');
       const srcset = $(el).attr('srcset');
       const dataSrcset = $(el).attr('data-srcset');
 
@@ -202,6 +253,16 @@ export class PageProcessor {
       if (dataSrc) addAsset(dataSrc, 'image');
       parseSrcset(srcset);
       parseSrcset(dataSrcset);
+    });
+
+    // Slider ve Banner arka plan resimleri (data-bg, data-background)
+    $('[data-bg], [data-background], [data-background-image]').each((_, el) => {
+      const bg = $(el).attr('data-bg') || $(el).attr('data-background') || $(el).attr('data-background-image');
+      if (bg && !bg.startsWith('data:')) {
+        const urlMatch = bg.match(/url\(\s*(?:['"]?)(.*?)(?:['"]?)\s*\)/i);
+        const cleanBg = urlMatch ? urlMatch[1] : bg;
+        addAsset(cleanBg, 'image');
+      }
     });
 
     // Picture element source[srcset] ve source[src]
@@ -212,7 +273,7 @@ export class PageProcessor {
       if (src) addAsset(src, 'image');
     });
 
-    // 5. Favicon, Apple Touch Icon ve Manifest
+    // 6. Favicon, Apple Touch Icon ve Manifest
     $('link[rel*="icon"][href], link[rel="apple-touch-icon"][href], link[rel="apple-touch-startup-image"][href]').each((_, el) => {
       addAsset($(el).attr('href'), 'image');
     });
@@ -220,20 +281,18 @@ export class PageProcessor {
       addAsset($(el).attr('href'), 'other');
     });
 
-    // 6. Font Dosyaları (link[as="font"][href])
-    $('link[as="font"][href]').each((_, el) => {
-      addAsset($(el).attr('href'), 'font');
-    });
-
-    // 7. Video, Ses ve Medya (poster dahil)
+    // 7. Video, Ses ve Medya (poster ve data-poster dahil)
     $('video').each((_, el) => {
       const src = $(el).attr('src');
-      const poster = $(el).attr('poster');
+      const poster = $(el).attr('poster') || $(el).attr('data-poster');
       if (src) addAsset(src, 'media');
       if (poster) addAsset(poster, 'image');
     });
-    $('video source[src], audio source[src], track[src]').each((_, el) => {
-      addAsset($(el).attr('src'), 'media');
+    $('video source, audio source, track[src]').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) addAsset(src, 'media');
+      const srcset = $(el).attr('srcset');
+      if (srcset) parseSrcset(srcset);
     });
     $('audio[src]').each((_, el) => {
       addAsset($(el).attr('src'), 'media');

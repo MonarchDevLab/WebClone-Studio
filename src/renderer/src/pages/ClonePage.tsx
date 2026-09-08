@@ -1,6 +1,7 @@
 import { 
   Play, Pause, Square, FolderOpen, Activity, 
-  CheckCircle2, Clock, HardDrive, ArrowDown, FileCode, Globe, AlertTriangle, RotateCcw
+  CheckCircle2, Clock, HardDrive, ArrowDown, FileCode, Globe, AlertTriangle, RotateCcw,
+  Download, Zap, AlertCircle
 } from 'lucide-react';
 import { useCloneStore } from '../stores/clone-store';
 import { useUiStore } from '../stores/ui-store';
@@ -34,7 +35,7 @@ export const ClonePage: React.FC = () => {
       } else if (window.electronAPI?.openBrowser) {
         const isWindows = outputPath.includes('\\');
         const sep = isWindows ? '\\' : '/';
-        const indexPath = `${outputPath}${sep}site${sep}index.html`;
+        const indexPath = outputPath.endsWith('index.html') ? outputPath : `${outputPath}${sep}site${sep}index.html`;
         await window.electronAPI.openBrowser(indexPath);
       }
     } else {
@@ -168,83 +169,78 @@ export const ClonePage: React.FC = () => {
           </div>
           <div className="max-h-24 overflow-y-auto space-y-1 pr-2">
             {errors.slice(-10).map((err, i) => (
-              <div key={i} className="truncate text-[11px] opacity-90">
-                • {err.url} <span className="opacity-60">({err.message})</span>
+              <div key={i} className="truncate text-[11px] opacity-90 flex items-center gap-1.5">
+                <AlertCircle size={11} className="shrink-0 text-error-hover" />
+                <span className="truncate">{err.url}</span>
+                <span className="opacity-60 shrink-0">({err.message})</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* 2. Operasyonel Metrik Kartları */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4.5 relative overflow-hidden">
-          <div className="text-[11px] font-mono uppercase text-text-muted flex items-center gap-1.5 mb-2">
-            <CheckCircle2 size={13} className="text-success-hover" />
-            <span>İndirilen Dosyalar</span>
+      {/* 2. İlerleme & Metrik Kartları */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4 shadow-lg">
+          <div className="text-xs text-text-muted mb-1 flex items-center gap-1.5">
+            <Download size={14} className="text-accent-hover" />
+            <span>İndirilen Dosya</span>
           </div>
-          <div className="text-2xl font-bold font-mono text-text-primary">
+          <div className="text-xl font-bold font-mono text-text-primary">
             {progress?.downloaded || 0}
-            <span className="text-xs text-text-dim font-normal ml-1.5">/ {totalFiles}</span>
+            <span className="text-xs text-text-dim ml-1">/ {totalFiles}</span>
           </div>
-          <div className="absolute bottom-3 right-3 w-1.5 h-1.5 rounded-full bg-success-hover shadow-sm shadow-success-hover/80" />
         </div>
 
-        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4.5 relative overflow-hidden">
-          <div className="text-[11px] font-mono uppercase text-text-muted flex items-center gap-1.5 mb-2">
-            <ArrowDown size={13} className="text-accent-hover" />
+        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4 shadow-lg">
+          <div className="text-xs text-text-muted mb-1 flex items-center gap-1.5">
+            <Zap size={14} className="text-warning-hover" />
             <span>İndirme Hızı</span>
           </div>
-          <div className="text-2xl font-bold font-mono text-accent-hover">
+          <div className="text-xl font-bold font-mono text-text-primary">
             {formatSpeed(progress?.speed || 0)}
           </div>
-          <div className="absolute bottom-3 right-3 w-1.5 h-1.5 rounded-full bg-accent-hover shadow-sm shadow-accent-hover/80" />
         </div>
 
-        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4.5 relative overflow-hidden">
-          <div className="text-[11px] font-mono uppercase text-text-muted flex items-center gap-1.5 mb-2">
-            <HardDrive size={13} className="text-secondary-hover" />
+        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4 shadow-lg">
+          <div className="text-xs text-text-muted mb-1 flex items-center gap-1.5">
+            <Clock size={14} className="text-secondary-hover" />
+            <span>Kalan Süre</span>
+          </div>
+          <div className="text-xl font-bold font-mono text-text-primary">
+            {formatDuration(progress?.eta || 0)}
+          </div>
+        </div>
+
+        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4 shadow-lg">
+          <div className="text-xs text-text-muted mb-1 flex items-center gap-1.5">
+            <FileCode size={14} className="text-success-hover" />
             <span>Toplam Veri</span>
           </div>
-          <div className="text-2xl font-bold font-mono text-text-primary">
+          <div className="text-xl font-bold font-mono text-text-primary">
             {formatBytes(progress?.bytesTransferred || 0)}
           </div>
-          <div className="absolute bottom-3 right-3 w-1.5 h-1.5 rounded-full bg-secondary-hover shadow-sm shadow-secondary-hover/80" />
-        </div>
-
-        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-4.5 relative overflow-hidden">
-          <div className="text-[11px] font-mono uppercase text-text-muted flex items-center gap-1.5 mb-2">
-            <Clock size={13} className="text-warning-hover" />
-            <span>Tahmini Süre</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-text-primary">
-            {progress?.eta ? formatDuration(progress.eta) : '—'}
-          </div>
-          <div className="absolute bottom-3 right-3 w-1.5 h-1.5 rounded-full bg-warning-hover shadow-sm shadow-warning-hover/80" />
         </div>
       </div>
 
-      {/* 3. Progress Bar */}
-      <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-5 space-y-2.5 shadow-lg">
-        <div className="flex justify-between items-center text-xs font-mono">
-          <span className="text-text-secondary font-medium">Klonlama İlerleme Durumu</span>
-          <span className="text-accent-hover font-bold bg-accent/40 px-2 py-0.5 rounded border border-accent/30">
-            %{percentComplete}
-          </span>
+      {/* 3. Ana İlerleme Çubuğu */}
+      <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-5 shadow-xl space-y-2.5">
+        <div className="flex items-center justify-between text-xs font-semibold">
+          <span className="text-text-muted">Klonlama Tamamlanma Oranı</span>
+          <span className="text-accent-hover font-mono font-bold">%{percentComplete}</span>
         </div>
-        <div
-          className="w-full h-3 bg-surface-3 rounded-full overflow-hidden p-0.5 border border-white/[0.06]"
-          role="progressbar"
-          aria-valuenow={percentComplete}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Klonlama ilerleme yüzdesi"
-        >
-          <div
-            className="h-full bg-gradient-to-r from-accent via-success-hover to-accent-hover rounded-full transition-all duration-300 shadow-sm shadow-accent/50"
+        <div className="w-full bg-surface-3 rounded-full h-2.5 overflow-hidden border border-white/[0.04]">
+          <div 
+            className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
             style={{ width: `${percentComplete}%` }}
           />
         </div>
+        {progress?.failed ? (
+          <div className="flex items-center gap-1.5 text-xs text-error-hover font-medium pt-1">
+            <AlertCircle size={14} />
+            <span>{progress.failed} dosya indirilemedi (hatalar günlüğe kaydedildi)</span>
+          </div>
+        ) : null}
       </div>
 
       {/* 4. Canlı İndirilen Dosyalar & Log Akışı */}
@@ -266,7 +262,7 @@ export const ClonePage: React.FC = () => {
               <div className="text-center py-16 text-text-dim">Henüz dosya indirilmedi.</div>
             ) : (
               files.slice(-60).reverse().map((f, i) => (
-                <div key={i} role="listitem" className="flex items-center justify-between p-2 bg-overlay hover:bg-surface-3 rounded-lg border border-white/[0.04] text-[11px] transition-colors">
+                <div key={f.path || i} role="listitem" className="flex items-center justify-between p-2 bg-overlay hover:bg-surface-3 rounded-lg border border-white/[0.04] text-[11px] transition-colors">
                   <span className="truncate max-w-[280px] text-text-primary">{f.path.split(/[\\/]/).pop()}</span>
                   <span className="text-success-hover font-bold">{formatBytes(f.size)}</span>
                 </div>
@@ -291,7 +287,7 @@ export const ClonePage: React.FC = () => {
               <div className="text-center py-16 text-text-dim">Log akışı bekleniyor...</div>
             ) : (
               logs.slice(-60).map((l, i) => (
-                <div key={i} className="flex items-start gap-2 p-1.5 bg-overlay rounded-lg border border-white/[0.04]">
+                <div key={`${l.timestamp}-${i}`} className="flex items-start gap-2 p-1.5 bg-overlay rounded-lg border border-white/[0.04]">
                   <span className="text-text-dim select-none text-[10px]">
                     {new Date(l.timestamp).toLocaleTimeString()}
                   </span>

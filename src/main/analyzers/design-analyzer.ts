@@ -75,7 +75,7 @@ export class DesignAnalyzer {
       const pText = $('p').first().text().trim();
 
       const navLinks: Array<{ text: string; href: string }> = [];
-      $('header a, nav a').slice(0, 6).each((_, el) => {
+      $('header a, nav a').slice(0, 16).each((_, el) => {
         const text = $(el).text().trim();
         const href = $(el).attr('href') || '';
         if (text) navLinks.push({ text, href });

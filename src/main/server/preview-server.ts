@@ -81,6 +81,13 @@ export class PreviewServer {
           const parsedUrl = url.parse(req.url || '/');
           let pathname = decodeURIComponent(parsedUrl.pathname || '/');
 
+          // Null byte injection denetimi
+          if (pathname.includes('\0')) {
+            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('400 - Geçersiz İstek (Null byte engellendi)');
+            return;
+          }
+
           // Dizin yolu güvenliği kontrolü (Directory traversal engeli)
           let targetPath = path.normalize(path.join(this.currentRoot, pathname));
           const relative = path.relative(this.currentRoot, targetPath);
@@ -91,16 +98,25 @@ export class PreviewServer {
             return;
           }
 
-          // Eğer dizin isteniyorsa index.html ara
+          // 1. Eğer dizin isteniyorsa index.html ara
           if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory()) {
             targetPath = path.join(targetPath, 'index.html');
           }
 
-          // Eğer uzantısız rota ise .html ekleyerek dene (Clean URLs)
-          if (!fs.existsSync(targetPath) && !path.extname(targetPath)) {
-            const htmlCandidate = `${targetPath}.html`;
-            if (fs.existsSync(htmlCandidate)) {
-              targetPath = htmlCandidate;
+          // 2. Temiz URL, trailing slash ve uzantısız rota çözümlemesi
+          if (!fs.existsSync(targetPath)) {
+            const trimmedPath = targetPath.replace(/[/\\]+$/, '');
+            if (fs.existsSync(`${trimmedPath}.html`)) {
+              targetPath = `${trimmedPath}.html`;
+            } else if (fs.existsSync(path.join(trimmedPath, 'index.html'))) {
+              targetPath = path.join(trimmedPath, 'index.html');
+            } else {
+              // 3. SPA Rota Fallback (React Router / Vue Router desteği)
+              const rootIndex = path.join(this.currentRoot, 'index.html');
+              const acceptHeader = (req.headers['accept'] as string) || '';
+              if (fs.existsSync(rootIndex) && !path.extname(pathname) && (acceptHeader.includes('text/html') || !acceptHeader)) {
+                targetPath = rootIndex;
+              }
             }
           }
 

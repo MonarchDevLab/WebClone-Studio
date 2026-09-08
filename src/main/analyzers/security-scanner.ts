@@ -9,10 +9,16 @@ export class SecurityScanner {
     let csp = false;
     const formattedHeaders: Record<string, string> = {};
 
+    let parsedUrl: URL;
     try {
-      const parsedUrl = new URL(url);
-      https = parsedUrl.protocol === 'https:';
+      parsedUrl = new URL(url);
+    } catch {
+      return { https, hsts, csp, robotsTxt: false, sitemap: false, headers: formattedHeaders };
+    }
 
+    https = parsedUrl.protocol === 'https:';
+
+    try {
       const response = await got.head(url, { 
         timeout: { request: 5000 },
         throwHttpErrors: false,
@@ -43,7 +49,6 @@ export class SecurityScanner {
     // robots.txt varlığı
     let robotsTxt = false;
     try {
-      const parsedUrl = new URL(url);
       const robotsUrl = `${parsedUrl.protocol}//${parsedUrl.host}/robots.txt`;
       const res = await got.head(robotsUrl, { timeout: { request: 3000 }, throwHttpErrors: false });
       if (res.statusCode === 200) robotsTxt = true;
@@ -52,7 +57,6 @@ export class SecurityScanner {
     // sitemap.xml varlığı
     let sitemap = false;
     try {
-      const parsedUrl = new URL(url);
       const sitemapUrl = `${parsedUrl.protocol}//${parsedUrl.host}/sitemap.xml`;
       const res = await got.head(sitemapUrl, { timeout: { request: 3000 }, throwHttpErrors: false });
       if (res.statusCode === 200) sitemap = true;

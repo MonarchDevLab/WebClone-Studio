@@ -19,7 +19,7 @@ Bu klasör **WebClone Studio** (Monolith Works / MonarchDevLab) tarafından otom
 
 ---
 
-## 📊 Proje Özeti
+## Proje Özeti
 
 | Parametre | Değer |
 |---|---|
@@ -35,7 +35,7 @@ Bu klasör **WebClone Studio** (Monolith Works / MonarchDevLab) tarafından otom
 
 ---
 
-## 🚀 Nasıl Görüntülenir?
+## Nasıl Görüntülenir?
 
 İndirilen web sitesini çevrimdışı gezmek için:
 1. \`${manifest.entryPoint}\` dosyasını herhangi bir modern web tarayıcısında (Chrome, Edge, Firefox, Brave vb.) açın.
@@ -46,19 +46,19 @@ npx serve site
 
 ---
 
-## 🛠️ Tespit Edilen Teknolojiler
+## Tespit Edilen Teknolojiler
 
 ${techList}
 
 ---
 
-## 📁 Dosya Dağılımı
+## Dosya Dağılımı
 
 ${fileIndexList}
 
 ---
 
-## 📑 Raporlar ve Ek Dosyalar
+## Raporlar ve Ek Dosyalar
 
 - **Proje Manifestosu:** \`manifest.json\`
 - **Görsel Teknoloji & Tasarım Raporu:** \`_meta/tech-report.html\`

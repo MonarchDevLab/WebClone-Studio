@@ -19,15 +19,17 @@ export class SiteMapper {
 
         if (res.statusCode === 200 && res.body.includes('<loc>')) {
           const urls: string[] = [];
-          const locRegex = /<loc>\s*(https?:\/\/[^<\s]+)\s*<\/loc>/gi;
-          let match;
-          while ((match = locRegex.exec(res.body)) !== null) {
-            const foundUrl = match[1].trim();
-            // Alt sitemap indeksi değilse ve aynı kök domaindeyse ekle
-            if (!foundUrl.endsWith('.xml') && new URL(foundUrl).hostname === new URL(origin).hostname) {
-              urls.push(foundUrl);
+          const $ = cheerio.load(res.body, { xmlMode: true });
+          $('loc').each((_, el) => {
+            const foundUrl = $(el).text().trim();
+            if (foundUrl && !foundUrl.endsWith('.xml')) {
+              try {
+                if (new URL(foundUrl).hostname === new URL(origin).hostname) {
+                  urls.push(foundUrl);
+                }
+              } catch {}
             }
-          }
+          });
           if (urls.length > 0) {
             return Array.from(new Set(urls));
           }
@@ -129,19 +131,31 @@ export class SiteMapper {
             if (href) links.add(href);
           });
 
-          // Kontrollü seri/paralel tarama (Sunucudan 429 yememek için)
+          // Kontrollü eşzamanlı tarama (Sunucudan 429 yemeden hızlı haritalama)
+          const validNextUrls: string[] = [];
           for (const link of Array.from(links)) {
-            if (pageCount >= maxPages) break;
+            if (pageCount + validNextUrls.length >= maxPages) break;
             try {
               const nextUrlObj = new URL(link, urlToCrawl);
               nextUrlObj.hash = '';
               const nextUrl = nextUrlObj.href;
 
               if (nextUrlObj.hostname === baseUrlObj.hostname && !visited.has(nextUrl)) {
-                const childNode = await crawl(nextUrl, currentDepth + 1);
-                if (childNode) children.push(childNode);
+                validNextUrls.push(nextUrl);
               }
             } catch {}
+          }
+
+          const concurrency = 2;
+          for (let i = 0; i < validNextUrls.length; i += concurrency) {
+            if (pageCount >= maxPages) break;
+            const batch = validNextUrls.slice(i, i + concurrency);
+            const results = await Promise.all(
+              batch.map(u => (!visited.has(u) ? crawl(u, currentDepth + 1) : Promise.resolve(null)))
+            );
+            for (const childNode of results) {
+              if (childNode) children.push(childNode);
+            }
           }
         }
 

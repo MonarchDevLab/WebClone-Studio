@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  X, Folder, HardDrive, Shield, Zap, Filter, CheckCircle2, 
+  X, Folder, HardDrive, Shield, Zap, Filter, CheckCircle2, Check,
   ArrowRight, ArrowLeft, Download, FileText, Monitor, AlertTriangle, Cpu,
   FolderOpen, Globe
 } from 'lucide-react';
@@ -38,17 +38,17 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
   const [settings, setSettings] = useState<CloneSettings>({
     mode: 'static',
     maxDepth: 3,
-    concurrentDownloads: 5,
-    rateLimit: 200,
-    respectRobotsTxt: true,
+    concurrentDownloads: 6,
+    rateLimit: 120,
+    respectRobotsTxt: false,
     downloadImages: true,
     downloadFonts: true,
-    downloadMedia: false,
+    downloadMedia: true,
     downloadExternalAssets: true,
     includedPatterns: [],
     excludedPatterns: ['/admin/*', '/api/*', '/login*'],
-    maxFileSize: 50 * 1024 * 1024,
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 WebCloneStudio/1.0',
+    maxFileSize: 100 * 1024 * 1024,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   });
 
   const [includePatternText, setIncludePatternText] = useState<string>('');
@@ -136,8 +136,9 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
       toast.success('Klonlama motoru başlatıldı!');
       onClose();
       setActiveTab('clone');
-    } catch (err: any) {
-      toast.error(err.message || 'Klonlama başlatılamadı.');
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Klonlama başlatılamadı.';
+      toast.error(errMsg);
     }
   };
 
@@ -199,7 +200,7 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                     ? 'bg-success text-black'
                     : 'bg-surface-3 text-text-dim'
               }`} aria-hidden="true">
-                {currentStep > step.num ? '✓' : step.num}
+                {currentStep > step.num ? <Check size={12} strokeWidth={3} /> : step.num}
               </span>
               <span>{step.title}</span>
             </button>
@@ -567,8 +568,23 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                 </div>
                 <div className="flex justify-between pb-2 border-b border-white/[0.06]">
                   <span className="text-text-muted">Varlık Tipleri:</span>
-                  <span className="text-text-primary font-mono">
-                    HTML, CSS, JS, {settings.downloadImages ? 'Resimler ✓' : ''} {settings.downloadFonts ? 'Fontlar ✓' : ''} {settings.downloadMedia ? 'Medya ✓' : ''}
+                  <span className="text-text-primary font-mono flex items-center gap-2 flex-wrap">
+                    <span>HTML, CSS, JS</span>
+                    {settings.downloadImages && (
+                      <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
+                        <Check size={12} strokeWidth={2.5} /> Resimler
+                      </span>
+                    )}
+                    {settings.downloadFonts && (
+                      <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
+                        <Check size={12} strokeWidth={2.5} /> Fontlar
+                      </span>
+                    )}
+                    {settings.downloadMedia && (
+                      <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
+                        <Check size={12} strokeWidth={2.5} /> Medya
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">

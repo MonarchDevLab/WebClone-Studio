@@ -41,4 +41,7 @@ export enum IpcChannel {
   // Local Preview Server
   SERVER_START_PREVIEW = 'server:start-preview',
   SERVER_STOP_PREVIEW = 'server:stop-preview',
+
+  // System & Global Errors
+  SYSTEM_ERROR = 'system:error',
 }

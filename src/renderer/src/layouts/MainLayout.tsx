@@ -145,7 +145,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                       ) : (
                         filteredLogs.map((log, i) => (
                           <div 
-                            key={i} 
+                            key={`${log.timestamp}-${i}`} 
                             className={`flex items-start gap-2 ${
                               log.level === 'error' 
                                 ? 'text-error-hover bg-error/10 px-2 py-0.5 rounded border border-error/20' 

@@ -64,6 +64,11 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
     try {
       console.log(`[IPC] Analiz başlatılıyor: ${url}`);
       
+      const parsedUrl = new URL(url.trim());
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new Error('Yalnızca http:// ve https:// protokolleri desteklenmektedir.');
+      }
+
       let htmlBody = '';
       let globals: string[] = [];
       let renderedDesignTokens: any = null;
@@ -89,7 +94,9 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
           });
           htmlBody = res.body;
           rawHeaders = res.headers;
-        } catch {}
+        } catch (httpFallbackErr) {
+          console.warn('[IPC] Statik HTTP fallback isteği de başarısız oldu:', httpFallbackErr);
+        }
       }
 
       // 2. Adım: Meta Verileri Çıkar (Cheerio)
@@ -204,10 +211,15 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
         seedScreenshot
       );
 
-      // İlerleme olaylarını renderer'a ilet
+      // İlerleme olaylarını renderer'a kontrollü ilet (UI donmasını önlemek için 100ms throttle)
+      let lastProgressSend = 0;
       crawler.on('progress', (data) => {
-        if (!sender.isDestroyed()) {
-          sender.send(IpcChannel.CLONE_PROGRESS, data);
+        const now = Date.now();
+        if (now - lastProgressSend >= 100 || data.queued === 0) {
+          lastProgressSend = now;
+          if (!sender.isDestroyed()) {
+            sender.send(IpcChannel.CLONE_PROGRESS, data);
+          }
         }
       });
 
@@ -249,6 +261,7 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
       activeJobs.set(jobId, crawler);
       crawler.start().catch((err) => {
         console.error('[IPC] Crawler başlatma hatası:', err);
+        activeJobs.delete(jobId);
         if (!sender.isDestroyed()) {
           sender.send(IpcChannel.CLONE_ERROR, {
             url,

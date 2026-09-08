@@ -10,7 +10,8 @@ interface TreeNodeProps {
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({ node, level = 0 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  // Derin dallar varsayılan olarak kapalı tutulur (DOM freeze engeli)
+  const [isExpanded, setIsExpanded] = useState<boolean>(level < 2);
   const hasChildren = node.children && node.children.length > 0;
 
   const toggle = () => hasChildren && setIsExpanded(!isExpanded);
@@ -71,8 +72,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, level = 0 }) => {
 
       {hasChildren && isExpanded && (
         <div className="border-l border-white/[0.06] ml-6 my-0.5">
-          {node.children.map((child, idx) => (
-            <TreeNode key={`${child.url}_${idx}`} node={child} level={level + 1} />
+          {node.children.map((child) => (
+            <TreeNode key={child.url} node={child} level={level + 1} />
           ))}
         </div>
       )}

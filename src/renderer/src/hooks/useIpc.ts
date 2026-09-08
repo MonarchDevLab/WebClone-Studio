@@ -18,10 +18,10 @@ import { toast } from 'sonner';
 declare global {
   interface Window {
     electronAPI?: {
-      send?: (channel: string, ...args: any[]) => void;
-      invoke?: (channel: string, ...args: any[]) => Promise<any>;
-      on?: (channel: string, callback: (event: any, ...args: any[]) => void) => () => void;
-      removeListener?: (channel: string, callback: (event: any, ...args: any[]) => void) => void;
+      send?: (channel: string, ...args: unknown[]) => void;
+      invoke?: <T = unknown>(channel: string, ...args: unknown[]) => Promise<T>;
+      on?: (channel: string, callback: (event: unknown, ...args: unknown[]) => void) => () => void;
+      removeListener?: (channel: string, callback: (event: unknown, ...args: unknown[]) => void) => void;
 
       analyze: (url: string) => Promise<AnalyzeResult>;
       clone: (url: string, settings: CloneSettings, outputPath: string, projectName?: string) => Promise<{ success: boolean; jobId: string; outputPath: string }>;
@@ -43,11 +43,11 @@ declare global {
       startPreviewServer: (targetPath: string) => Promise<{ success: boolean; url?: string; error?: string }>;
       stopPreviewServer: () => Promise<{ success: boolean }>;
 
-      onProgress: (callback: (event: any, data: CloneProgress) => void) => () => void;
-      onFileAdded: (callback: (event: any, data: FileAddedEvent) => void) => () => void;
-      onLog: (callback: (event: any, data: CloneLogEntry) => void) => () => void;
-      onComplete: (callback: (event: any, data: CloneCompleteEvent) => void) => () => void;
-      onError: (callback: (event: any, data: CloneErrorEvent) => void) => () => void;
+      onProgress: (callback: (event: unknown, data: CloneProgress) => void) => () => void;
+      onFileAdded: (callback: (event: unknown, data: FileAddedEvent) => void) => () => void;
+      onLog: (callback: (event: unknown, data: CloneLogEntry) => void) => () => void;
+      onComplete: (callback: (event: unknown, data: CloneCompleteEvent) => void) => () => void;
+      onError: (callback: (event: unknown, data: CloneErrorEvent) => void) => () => void;
     };
   }
 }

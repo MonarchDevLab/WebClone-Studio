@@ -1,20 +1,44 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { IpcChannel } from '../shared/ipc-channels';
-import { CloneSettings } from '../shared/types';
+import { 
+  CloneSettings, 
+  AppSettings, 
+  AnalyzeResult, 
+  CloneProgress, 
+  FileAddedEvent, 
+  CloneLogEntry, 
+  CloneCompleteEvent, 
+  CloneErrorEvent 
+} from '../shared/types';
+
+const ALLOWED_CHANNELS = new Set<string>(Object.values(IpcChannel));
+
+function assertAllowedChannel(channel: string): void {
+  if (!ALLOWED_CHANNELS.has(channel)) {
+    throw new Error(`[Preload Security] İzin verilmeyen IPC kanalı: ${channel}`);
+  }
+}
 
 // Olay dinleyici callback tipleri
-type Callback<T = any> = (event: IpcRendererEvent, ...args: T[]) => void;
-const subscriptionMap = new Map<Callback, (_event: IpcRendererEvent, ...args: any[]) => void>();
+type Callback<T = unknown> = (event: IpcRendererEvent, data: T) => void;
+const subscriptionMap = new Map<Callback<any>, (_event: IpcRendererEvent, data: any) => void>();
 
 /**
  * Ana süreç ile Renderer süreci arasında güvenli bir köprü (API) oluşturur.
  */
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Temel IPC metotları
-  send: (channel: string, ...args: any[]) => ipcRenderer.send(channel, ...args),
-  invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
-  on: (channel: string, callback: Callback) => {
-    const subscription = (_event: IpcRendererEvent, ...args: any[]) => callback(_event, ...args);
+  // Temel IPC metotları (Kanal beyaz liste korumalı)
+  send: (channel: string, ...args: unknown[]) => {
+    assertAllowedChannel(channel);
+    ipcRenderer.send(channel, ...args);
+  },
+  invoke: (channel: string, ...args: unknown[]) => {
+    assertAllowedChannel(channel);
+    return ipcRenderer.invoke(channel, ...args);
+  },
+  on: (channel: string, callback: Callback<any>) => {
+    assertAllowedChannel(channel);
+    const subscription = (_event: IpcRendererEvent, data: any) => callback(_event, data);
     subscriptionMap.set(callback, subscription);
     ipcRenderer.on(channel, subscription);
     return () => {
@@ -22,7 +46,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       subscriptionMap.delete(callback);
     };
   },
-  removeListener: (channel: string, callback: Callback) => {
+  removeListener: (channel: string, callback: Callback<any>) => {
+    assertAllowedChannel(channel);
     const sub = subscriptionMap.get(callback);
     if (sub) {
       ipcRenderer.removeListener(channel, sub);
@@ -55,10 +80,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Ayar yönetimi
   getSettings: () => ipcRenderer.invoke(IpcChannel.SETTINGS_GET),
-  saveSettings: (settings: any) => ipcRenderer.invoke(IpcChannel.SETTINGS_SET, settings),
+  saveSettings: (settings: AppSettings) => ipcRenderer.invoke(IpcChannel.SETTINGS_SET, settings),
 
   // Sistem Haritası ve Mimari Şartname (.md) Dışa Aktarımı
-  exportSystemMap: (result?: any) => ipcRenderer.invoke(IpcChannel.EXPORT_SYSTEM_MAP, result),
+  exportSystemMap: (result?: AnalyzeResult) => ipcRenderer.invoke(IpcChannel.EXPORT_SYSTEM_MAP, result),
   saveSystemMapFile: (content: string, defaultName?: string) => 
     ipcRenderer.invoke(IpcChannel.DIALOG_SAVE_FILE, { content, defaultName }),
 
@@ -67,28 +92,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   stopPreviewServer: () => ipcRenderer.invoke(IpcChannel.SERVER_STOP_PREVIEW),
 
   // Klonlama süreci dinleyicileri
-  onProgress: (callback: Callback) => {
-    const sub = (_event: any, data: any) => callback(_event, data);
+  onProgress: (callback: (event: IpcRendererEvent, data: CloneProgress) => void) => {
+    const sub = (_event: IpcRendererEvent, data: CloneProgress) => callback(_event, data);
     ipcRenderer.on(IpcChannel.CLONE_PROGRESS, sub);
     return () => ipcRenderer.removeListener(IpcChannel.CLONE_PROGRESS, sub);
   },
-  onFileAdded: (callback: Callback) => {
-    const sub = (_event: any, data: any) => callback(_event, data);
+  onFileAdded: (callback: (event: IpcRendererEvent, data: FileAddedEvent) => void) => {
+    const sub = (_event: IpcRendererEvent, data: FileAddedEvent) => callback(_event, data);
     ipcRenderer.on(IpcChannel.CLONE_FILE_ADDED, sub);
     return () => ipcRenderer.removeListener(IpcChannel.CLONE_FILE_ADDED, sub);
   },
-  onLog: (callback: Callback) => {
-    const sub = (_event: any, data: any) => callback(_event, data);
+  onLog: (callback: (event: IpcRendererEvent, data: CloneLogEntry) => void) => {
+    const sub = (_event: IpcRendererEvent, data: CloneLogEntry) => callback(_event, data);
     ipcRenderer.on(IpcChannel.CLONE_LOG, sub);
     return () => ipcRenderer.removeListener(IpcChannel.CLONE_LOG, sub);
   },
-  onComplete: (callback: Callback) => {
-    const sub = (_event: any, data: any) => callback(_event, data);
+  onComplete: (callback: (event: IpcRendererEvent, data: CloneCompleteEvent) => void) => {
+    const sub = (_event: IpcRendererEvent, data: CloneCompleteEvent) => callback(_event, data);
     ipcRenderer.on(IpcChannel.CLONE_COMPLETE, sub);
     return () => ipcRenderer.removeListener(IpcChannel.CLONE_COMPLETE, sub);
   },
-  onError: (callback: Callback) => {
-    const sub = (_event: any, data: any) => callback(_event, data);
+  onError: (callback: (event: IpcRendererEvent, data: CloneErrorEvent) => void) => {
+    const sub = (_event: IpcRendererEvent, data: CloneErrorEvent) => callback(_event, data);
     ipcRenderer.on(IpcChannel.CLONE_ERROR, sub);
     return () => ipcRenderer.removeListener(IpcChannel.CLONE_ERROR, sub);
   }

@@ -178,6 +178,7 @@ export const SettingsPage: React.FC = () => {
                 max={15}
                 value={defaultThreads}
                 onChange={(e) => setDefaultThreads(Number(e.target.value))}
+                aria-label="Eşzamanlı İndirme Sayısı"
                 className="w-full accent-accent-hover"
               />
               <span className="text-[10px] text-text-dim block mt-1">Aynı anda havuzda çalışan indirme sayısı (1 - 15)</span>
@@ -195,6 +196,7 @@ export const SettingsPage: React.FC = () => {
                 step={50}
                 value={defaultRateLimit}
                 onChange={(e) => setDefaultRateLimit(Number(e.target.value))}
+                aria-label="İstekler Arası Bekleme Gecikmesi"
                 className="w-full accent-warning-hover"
               />
               <span className="text-[10px] text-text-dim block mt-1">Hedef sunucuya yapılan istekler arası minimum gecikme</span>

@@ -78,9 +78,10 @@ export class TechDetector {
       // 1. Headers eşleştirmesi (Ağırlık: 30)
       if (tech.headers) {
         for (const [key, regex] of Object.entries(tech.headers)) {
-          const val = headers[key.toLowerCase()];
-          if (val && regex.test(String(val))) {
-            const verMatch = String(val).match(versionRegex);
+          const rawVal = headers[key.toLowerCase()];
+          const val = Array.isArray(rawVal) ? rawVal.join(' ') : (rawVal !== undefined ? String(rawVal) : '');
+          if (val && regex.test(val)) {
+            const verMatch = val.match(versionRegex);
             const ver = verMatch ? verMatch[1] : undefined;
             addScore(tech.name, tech, 30, `header: ${key}=${val}`, ver);
           }
@@ -143,7 +144,7 @@ export class TechDetector {
     // Güven skoru hesaplama ve sıralama
     const results: TechSignature[] = [];
     for (const [_, data] of scores.entries()) {
-      const confidence = Math.min(Math.round((data.score / 100) * 100), 100);
+      const confidence = Math.min(Math.round(data.score), 100);
       if (confidence >= 20) {
         results.push({
           name: data.tech.name,

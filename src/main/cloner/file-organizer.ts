@@ -170,7 +170,21 @@ export class FileOrganizer {
   public async writeAsset(absolutePath: string, buffer: Buffer): Promise<void> {
     const parentDir = path.dirname(absolutePath);
     await fs.promises.mkdir(parentDir, { recursive: true });
-    await fs.promises.writeFile(absolutePath, buffer);
+    
+    // Atomik dosya yazımı: .tmp dosyasına yazılıp rename edilir, kısmi yazma engellenir
+    const tempPath = `${absolutePath}.${Date.now()}.${Math.random().toString(36).slice(2, 6)}.tmp`;
+    try {
+      await fs.promises.writeFile(tempPath, buffer);
+      await fs.promises.rename(tempPath, absolutePath);
+    } catch {
+      try {
+        if (fs.existsSync(tempPath)) {
+          await fs.promises.unlink(tempPath);
+        }
+      } catch {}
+      // Windows dosya kilitlenme veya rename fallback
+      await fs.promises.writeFile(absolutePath, buffer);
+    }
   }
 
   /**

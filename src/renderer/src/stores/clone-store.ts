@@ -120,15 +120,21 @@ export const useCloneStore = create<CloneState>((set, get) => ({
   },
   
   updateProgress: (progress) => set({ progress }),
-  addFile: (file) => set((state) => ({
-    files: state.files.length >= 200 ? [...state.files.slice(1), file] : [...state.files, file]
-  })),
-  addLog: (log) => set((state) => ({
-    logs: state.logs.length >= 500 ? [...state.logs.slice(1), log] : [...state.logs, log]
-  })),
-  addError: (error) => set((state) => ({
-    errors: state.errors.length >= 100 ? [...state.errors.slice(1), error] : [...state.errors, error]
-  })),
+  addFile: (file) => set((state) => {
+    const next = state.files.length >= 200 ? state.files.slice(-199) : state.files.slice();
+    next.push(file);
+    return { files: next };
+  }),
+  addLog: (log) => set((state) => {
+    const next = state.logs.length >= 500 ? state.logs.slice(-499) : state.logs.slice();
+    next.push(log);
+    return { logs: next };
+  }),
+  addError: (error) => set((state) => {
+    const next = state.errors.length >= 100 ? state.errors.slice(-99) : state.errors.slice();
+    next.push(error);
+    return { errors: next };
+  }),
   setComplete: (result) => set({ isCloning: false, isPaused: false, outputPath: result?.outputPath || get().outputPath }),
   clearLogs: () => set({ logs: [] }),
   

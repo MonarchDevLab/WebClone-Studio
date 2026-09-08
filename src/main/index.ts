@@ -15,6 +15,8 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+}).catch((err) => {
+  console.error('[Main] Uygulama başlatma hatası:', err);
 });
 
 /**

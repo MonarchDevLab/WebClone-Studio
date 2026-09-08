@@ -31,16 +31,22 @@ export const Sidebar: React.FC = () => {
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent, projectPath: string, name: string) => {
+  const handleDelete = (e: React.MouseEvent, projectPath: string, name: string) => {
     e.stopPropagation();
-    if (window.confirm(`"${name}" projesini silmek istediğinize emin misiniz? Disk üzerindeki tüm dosyalar temizlenecektir.`)) {
-      const ok = await deleteProject(projectPath);
-      if (ok) {
-        toast.success(`${name} projesi silindi.`);
-      } else {
-        toast.error('Proje silinirken hata oluştu.');
-      }
-    }
+    toast(`"${name}" projesi silinsin mi?`, {
+      description: 'Disk üzerindeki tüm klonlama dosyaları silinecektir.',
+      action: {
+        label: 'Evet, Sil',
+        onClick: async () => {
+          const ok = await deleteProject(projectPath);
+          if (ok) {
+            toast.success(`${name} projesi başarıyla silindi.`);
+          } else {
+            toast.error('Proje silinirken hata oluştu.');
+          }
+        },
+      },
+    });
   };
 
   return (

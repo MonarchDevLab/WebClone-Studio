@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Layers, ShieldCheck, Tag, Loader2 } from 'lucide-react';
 import { useAnalyzeStore } from '../stores/analyze-store';
 
@@ -37,16 +37,21 @@ export const TechStackPage: React.FC = () => {
 
   const { technologies } = analyzeResult;
 
-  // Kategorileri topla
-  const categories = ['ALL', ...Array.from(new Set(technologies.map(t => t.category)))];
+  // Kategorileri topla (memoized)
+  const categories = useMemo(() => {
+    return ['ALL', ...Array.from(new Set(technologies.map(t => t.category)))];
+  }, [technologies]);
 
-  // Filtreleme
-  const filtered = technologies.filter(tech => {
-    const matchesSearch = tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          tech.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCat = selectedCategory === 'ALL' || tech.category === selectedCategory;
-    return matchesSearch && matchesCat;
-  });
+  // Filtreleme (memoized)
+  const filtered = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return technologies.filter(tech => {
+      const matchesSearch = tech.name.toLowerCase().includes(query) ||
+                            tech.category.toLowerCase().includes(query);
+      const matchesCat = selectedCategory === 'ALL' || tech.category === selectedCategory;
+      return matchesSearch && matchesCat;
+    });
+  }, [technologies, searchQuery, selectedCategory]);
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto animate-in fade-in duration-200">
@@ -61,6 +66,7 @@ export const TechStackPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Teknoloji veya kategori ara"
             placeholder="Teknoloji veya kategori ara (örn: React)..."
             className="w-full bg-surface-3 border border-white/[0.08] rounded-xl pl-9 pr-3.5 py-2 text-xs text-text-primary focus:outline-none focus:border-accent/70 font-mono placeholder:text-text-dim"
           />

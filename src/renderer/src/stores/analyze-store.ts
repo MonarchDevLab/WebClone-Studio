@@ -25,13 +25,27 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
   startAnalysis: async (url) => {
     set({ isAnalyzing: true, error: null, url });
 
+    try {
+      const parsed = new URL(url.trim());
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        const err = new Error('Yalnızca http:// ve https:// protokolleri desteklenmektedir.');
+        set({ isAnalyzing: false, error: err.message });
+        throw err;
+      }
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : 'Geçersiz URL formatı.';
+      set({ isAnalyzing: false, error: errMsg });
+      throw new Error(errMsg);
+    }
+
     if (window.electronAPI?.analyze) {
       try {
         const result: AnalyzeResult = await window.electronAPI.analyze(url);
         set({ analyzeResult: result, isAnalyzing: false });
         return result;
-      } catch (err: any) {
-        set({ isAnalyzing: false, error: err.message || 'Analiz başarısız oldu.' });
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : 'Analiz başarısız oldu.';
+        set({ isAnalyzing: false, error: errMsg });
         throw err;
       }
     } else {

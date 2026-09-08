@@ -73,10 +73,11 @@ export class UrlRewriter {
     const currentDir = path.dirname(context.currentLocalFilePath);
     const resolveRelativePath = (targetLocalAbsPath: string) => UrlRewriter.resolveRelativePath(currentDir, targetLocalAbsPath);
 
-    // 0. <base href="..."> Etiketini Etkisizleştir (Offline göreceli linkleri kırmaması için zorunlu)
-    $('base[href]').each((_, elem) => {
-      $(elem).remove();
-    });
+    // 0. Güvensiz veya Offline Engelleyici Meta Etiketlerini Temizle
+    $('base[href]').remove();
+    $('meta[http-equiv="Content-Security-Policy" i]').remove();
+    $('meta[http-equiv="refresh" i]').remove();
+    $('meta[http-equiv="origin-trial" i]').remove();
 
     // 1. Standart Nitelikler İçin URL Dönüşümü
     const attributesToRewrite: Array<{ selector: string; attr: string }> = [
@@ -91,8 +92,12 @@ export class UrlRewriter {
       { selector: 'source[src]', attr: 'src' },
       { selector: 'video[src]', attr: 'src' },
       { selector: 'video[poster]', attr: 'poster' },
+      { selector: 'video[data-poster]', attr: 'data-poster' },
       { selector: 'audio[src]', attr: 'src' },
-      { selector: 'track[src]', attr: 'track' },
+      { selector: 'track[src]', attr: 'src' },
+      { selector: '[data-bg]', attr: 'data-bg' },
+      { selector: '[data-background]', attr: 'data-background' },
+      { selector: '[data-background-image]', attr: 'data-background-image' },
       { selector: 'iframe[src]', attr: 'src' },
       { selector: 'embed[src]', attr: 'src' },
       { selector: 'object[data]', attr: 'data' },
@@ -260,7 +265,9 @@ export class UrlRewriter {
 
         if (mappedLocalPath) {
           const newRelative = resolveRelativePath(mappedLocalPath);
-          return `url("${newRelative}${hashPart}")`;
+          // Sadece geçerli fragment identifier (#id) tut, ?#iefix gibi bozuk disk parametrelerini temizle
+          const cleanHash = /^#[a-zA-Z0-9_\-]+$/.test(hashPart) ? hashPart : '';
+          return `url("${newRelative}${cleanHash}")`;
         }
       } catch {}
 

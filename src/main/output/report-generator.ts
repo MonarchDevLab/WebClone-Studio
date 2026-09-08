@@ -13,6 +13,14 @@ export class ReportGenerator {
       .replace(/'/g, '&#39;');
   }
 
+  private static safeHex(hex: string): string {
+    return /^#[0-9A-Fa-f]{3,8}$/.test(hex.trim()) ? hex.trim() : '#000000';
+  }
+
+  private static safeCssValue(val: string): string {
+    return (val || '').replace(/["';}{]/g, '').trim();
+  }
+
   public static generateHtmlReport(result: AnalyzeResult, domain: string): string {
     const safeDomain = this.escapeHtml(domain);
     const techCards = result.technologies.map((t: TechSignature) => `
@@ -29,23 +37,29 @@ export class ReportGenerator {
       </div>
     `).join('');
 
-    const colorSwatches = (result.designTokens?.colors || []).map((c: ColorToken) => `
+    const colorSwatches = (result.designTokens?.colors || []).map((c: ColorToken) => {
+      const safeColor = this.safeHex(c.hex);
+      return `
       <div class="color-card">
-        <div class="color-preview" style="background-color: ${c.hex};"></div>
+        <div class="color-preview" style="background-color: ${safeColor};"></div>
         <div class="color-info">
-          <span class="color-hex">${c.hex}</span>
-          <span class="color-role">${c.role} (${c.frequency}x)</span>
+          <span class="color-hex">${safeColor}</span>
+          <span class="color-role">${this.escapeHtml(c.role)} (${c.frequency}x)</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
-    const typoItems = (result.designTokens?.typography || []).map((ty: TypoToken) => `
+    const typoItems = (result.designTokens?.typography || []).map((ty: TypoToken) => {
+      const safeFamily = this.safeCssValue(ty.fontFamily);
+      return `
       <div class="typo-row">
-        <div class="typo-role">${ty.role}</div>
-        <div class="typo-family" style="font-family: ${ty.fontFamily};">${ty.fontFamily}</div>
-        <div class="typo-meta">${ty.fontSize} / ${ty.fontWeight} / ${ty.lineHeight}</div>
+        <div class="typo-role">${this.escapeHtml(ty.role)}</div>
+        <div class="typo-family" style="font-family: '${safeFamily}', sans-serif;">${this.escapeHtml(ty.fontFamily)}</div>
+        <div class="typo-meta">${this.escapeHtml(String(ty.fontSize))} / ${this.escapeHtml(String(ty.fontWeight))} / ${this.escapeHtml(String(ty.lineHeight))}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     return `<!DOCTYPE html>
 <html lang="tr">
@@ -112,7 +126,7 @@ export class ReportGenerator {
   <div class="container">
     <header>
       <h1>Teknoloji & Tasarım Analiz Raporu</h1>
-      <div class="subtitle">Hedef: <strong>${domain}</strong> &bull; Üretilme Tarihi: ${new Date().toLocaleString('tr-TR')}</div>
+      <div class="subtitle">Hedef: <strong>${safeDomain}</strong> &bull; Üretilme Tarihi: ${new Date().toLocaleString('tr-TR')}</div>
     </header>
 
     <section>
@@ -142,9 +156,9 @@ export class ReportGenerator {
         <div class="meta-item"><span class="meta-label">Başlık:</span><span class="meta-value">${this.escapeHtml(result.meta?.title || '—')}</span></div>
         <div class="meta-item"><span class="meta-label">Açıklama:</span><span class="meta-value">${this.escapeHtml(result.meta?.description || '—')}</span></div>
         <div class="meta-item"><span class="meta-label">Dil / Encoding:</span><span class="meta-value">${this.escapeHtml(result.meta?.language || '—')} / ${this.escapeHtml(result.meta?.encoding || '—')}</span></div>
-        <div class="meta-item"><span class="meta-label">HTTPS:</span><span class="meta-value">${result.security?.https ? '✓ Aktif' : '✗ Pasif'}</span></div>
-        <div class="meta-item"><span class="meta-label">HSTS:</span><span class="meta-value">${result.security?.hsts ? '✓ Var' : '✗ Yok'}</span></div>
-        <div class="meta-item"><span class="meta-label">CSP:</span><span class="meta-value">${result.security?.csp ? '✓ Tanımlı' : '✗ Yok'}</span></div>
+        <div class="meta-item"><span class="meta-label">HTTPS:</span><span class="meta-value">${result.security?.https ? 'Aktif' : 'Pasif'}</span></div>
+        <div class="meta-item"><span class="meta-label">HSTS:</span><span class="meta-value">${result.security?.hsts ? 'Var' : 'Yok'}</span></div>
+        <div class="meta-item"><span class="meta-label">CSP:</span><span class="meta-value">${result.security?.csp ? 'Tanımlı' : 'Yok'}</span></div>
       </div>
     </section>
   </div>

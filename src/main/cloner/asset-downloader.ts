@@ -66,127 +66,179 @@ export class AssetDownloader {
     let sizeBytes = 0;
     let finalUrl = url;
 
-    try {
-      const downloadStream = got.stream(url, {
-        headers: this.getBrowserHeaders(url),
-        timeout: {
-          request: this.timeoutMs,
-        },
-        retry: {
-          limit: 3,
-          methods: ['GET'],
-          statusCodes: [408, 413, 429, 500, 502, 503, 504],
-          errorCodes: [
-            'ETIMEDOUT',
-            'ECONNRESET',
-            'EADDRINUSE',
-            'ECONNREFUSED',
-            'EPIPE',
-            'ENOTFOUND',
-            'ENETUNREACH',
-            'EAI_AGAIN',
-          ],
-        },
-        throwHttpErrors: false,
-      });
-
-      downloadStream.on('response', (response: Response) => {
-        statusCode = response.statusCode;
-        mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
-        if (response.url) {
-          finalUrl = response.url;
-        }
-
-        // Boyut kontrolü
-        const contentLength = parseInt(response.headers['content-length'] || '0', 10);
-        if (maxSizeBytes && contentLength > maxSizeBytes) {
-          downloadStream.destroy(new Error(`Dosya boyutu (${contentLength} bytes) maksimum sınırı (${maxSizeBytes} bytes) aşıyor.`));
-        }
-      });
-
-      let downloadedBytes = 0;
-      downloadStream.on('data', (chunk: Buffer) => {
-        downloadedBytes += chunk.length;
-        if (maxSizeBytes && downloadedBytes > maxSizeBytes) {
-          downloadStream.destroy(new Error(`Dosya boyutu kümülatif sınırı (${maxSizeBytes} bytes) aşıyor.`));
-        }
-      });
-
-      const fileStream = fs.createWriteStream(destinationPath);
-      await pipeline(downloadStream, fileStream);
-
-      if (statusCode >= 400) {
-        try {
-          if (fs.existsSync(destinationPath)) {
-            await fs.promises.unlink(destinationPath);
-          }
-        } catch {}
-      } else {
-        const stats = await fs.promises.stat(destinationPath);
-        sizeBytes = stats.size;
-      }
-
-      return {
-        url,
-        finalUrl,
-        statusCode,
-        mimeType,
-        sizeBytes,
-        localPath: statusCode < 400 ? destinationPath : '',
-      };
-    } catch (err) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        if (fs.existsSync(destinationPath)) {
-          await fs.promises.unlink(destinationPath);
+        const downloadStream = got.stream(url, {
+          headers: this.getBrowserHeaders(url),
+          https: {
+            rejectUnauthorized: false,
+          },
+          timeout: {
+            request: this.timeoutMs,
+          },
+          retry: {
+            limit: 2,
+            methods: ['GET'],
+            errorCodes: ['ETIMEDOUT', 'ECONNRESET', 'EADDRINUSE', 'ECONNREFUSED', 'EPIPE', 'ENOTFOUND', 'ENETUNREACH', 'EAI_AGAIN'],
+          },
+          throwHttpErrors: false,
+        });
+
+        downloadStream.on('response', (response: Response) => {
+          statusCode = response.statusCode;
+          mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
+          if (response.url) {
+            finalUrl = response.url;
+          }
+
+          // Boyut kontrolü
+          const contentLength = parseInt(response.headers['content-length'] || '0', 10);
+          if (maxSizeBytes && contentLength > maxSizeBytes) {
+            downloadStream.destroy(new Error(`Dosya boyutu (${contentLength} bytes) maksimum sınırı (${maxSizeBytes} bytes) aşıyor.`));
+          }
+        });
+
+        let downloadedBytes = 0;
+        downloadStream.on('data', (chunk: Buffer) => {
+          downloadedBytes += chunk.length;
+          if (maxSizeBytes && downloadedBytes > maxSizeBytes) {
+            downloadStream.destroy(new Error(`Dosya boyutu kümülatif sınırı (${maxSizeBytes} bytes) aşıyor.`));
+          }
+        });
+
+        let fileStream: fs.WriteStream | null = null;
+        try {
+          fileStream = fs.createWriteStream(destinationPath);
+          await pipeline(downloadStream, fileStream);
+
+          if (statusCode === 429 || (statusCode >= 500 && statusCode <= 504)) {
+            // Geçici CDN/Sunucu hatası, backoff ile tekrar dene
+            if (fileStream && !fileStream.destroyed) fileStream.destroy();
+            if (fs.existsSync(destinationPath)) await fs.promises.unlink(destinationPath);
+            if (attempt < 3) {
+              await new Promise((r) => setTimeout(r, 600 * attempt));
+              continue;
+            }
+          }
+
+          if (statusCode >= 400) {
+            try {
+              if (fileStream && !fileStream.destroyed) fileStream.destroy();
+              if (fs.existsSync(destinationPath)) {
+                await fs.promises.unlink(destinationPath);
+              }
+            } catch {}
+          } else {
+            const stats = await fs.promises.stat(destinationPath);
+            sizeBytes = stats.size;
+          }
+
+          return {
+            url,
+            finalUrl,
+            statusCode,
+            mimeType,
+            sizeBytes,
+            localPath: statusCode < 400 ? destinationPath : '',
+          };
+        } catch (err) {
+          try {
+            if (fileStream && !fileStream.destroyed) fileStream.destroy();
+            if (fs.existsSync(destinationPath)) {
+              await fs.promises.unlink(destinationPath);
+            }
+          } catch {}
+          if (attempt < 3) {
+            await new Promise((r) => setTimeout(r, 600 * attempt));
+            continue;
+          }
+          throw err;
         }
-      } catch {}
-      throw err;
+      } catch (err) {
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, 600 * attempt));
+          continue;
+        }
+        throw err;
+      }
     }
+
+    return {
+      url,
+      finalUrl,
+      statusCode: statusCode || 500,
+      mimeType,
+      sizeBytes: 0,
+      localPath: '',
+    };
   }
 
   /**
    * HTML veya CSS gibi hemen işlenmesi gereken içerikleri RAM'e (Buffer) çeker.
    */
   public async downloadToBuffer(url: string, maxSizeBytes?: number): Promise<DownloadResult> {
-    const response = await got(url, {
-      headers: this.getBrowserHeaders(url),
-      timeout: {
-        request: this.timeoutMs,
-      },
-      retry: {
-        limit: 3,
-        methods: ['GET'],
-        statusCodes: [408, 413, 429, 500, 502, 503, 504],
-        errorCodes: [
-          'ETIMEDOUT',
-          'ECONNRESET',
-          'EADDRINUSE',
-          'ECONNREFUSED',
-          'EPIPE',
-          'ENOTFOUND',
-          'ENETUNREACH',
-          'EAI_AGAIN',
-        ],
-      },
-      responseType: 'buffer',
-      throwHttpErrors: false,
-    });
+    let lastError: Error | null = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await got(url, {
+          headers: this.getBrowserHeaders(url),
+          timeout: {
+            request: this.timeoutMs,
+          },
+          https: {
+            rejectUnauthorized: false,
+          },
+          retry: {
+            limit: 2,
+            methods: ['GET'],
+            statusCodes: [408, 413, 429, 500, 502, 503, 504],
+            errorCodes: [
+              'ETIMEDOUT',
+              'ECONNRESET',
+              'EADDRINUSE',
+              'ECONNREFUSED',
+              'EPIPE',
+              'ENOTFOUND',
+              'ENETUNREACH',
+              'EAI_AGAIN',
+            ],
+          },
+          responseType: 'buffer',
+          throwHttpErrors: false,
+        });
 
-    const mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
-    const sizeBytes = response.rawBody.length;
+        const mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
+        const sizeBytes = response.rawBody.length;
 
-    if (maxSizeBytes && sizeBytes > maxSizeBytes) {
-      throw new Error(`İçerik boyutu (${sizeBytes} bytes) sınırı (${maxSizeBytes} bytes) aşıyor.`);
+        if (maxSizeBytes && sizeBytes > maxSizeBytes) {
+          throw new Error(`İçerik boyutu (${sizeBytes} bytes) sınırı (${maxSizeBytes} bytes) aşıyor.`);
+        }
+
+        if (response.statusCode === 429 || (response.statusCode >= 500 && response.statusCode <= 504)) {
+          if (attempt < 3) {
+            await new Promise((r) => setTimeout(r, 600 * attempt));
+            continue;
+          }
+        }
+
+        return {
+          url,
+          finalUrl: response.url || url,
+          statusCode: response.statusCode,
+          mimeType,
+          sizeBytes,
+          localPath: '',
+          buffer: response.rawBody,
+        };
+      } catch (err: any) {
+        lastError = err;
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, 600 * attempt));
+          continue;
+        }
+      }
     }
 
-    return {
-      url,
-      finalUrl: response.url || url,
-      statusCode: response.statusCode,
-      mimeType,
-      sizeBytes,
-      localPath: '',
-      buffer: response.rawBody,
-    };
+    throw lastError || new Error(`İndirme başarısız: ${url}`);
   }
 }

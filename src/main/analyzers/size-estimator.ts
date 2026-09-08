@@ -71,7 +71,7 @@ export class SizeEstimator {
       try {
         const res = await got.get(url, { timeout: { request: 3500 }, throwHttpErrors: false });
         const $ = cheerio.load(res.body);
-        const domAssets = $('img, script[src], link[rel="stylesheet"]').length || 20;
+        const domAssets = $('img, script[src], link[rel="stylesheet"]').length;
         const multiplier = depth === 1 ? 4 : depth === 2 ? 15 : 40;
         const estimatedPages = multiplier;
         const estimatedAssets = estimatedPages * domAssets;

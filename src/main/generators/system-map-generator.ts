@@ -13,8 +13,10 @@ export class SystemMapGenerator {
     const rootUrl = result.siteMap?.url || 'https://bilinmeyen-site.com';
     let domain = 'Bilinmeyen Domain';
     try {
-      domain = new URL(rootUrl).hostname;
-    } catch {}
+      domain = new URL(rootUrl).hostname || 'Bilinmeyen Domain';
+    } catch (e) {
+      console.warn('[SystemMapGenerator] URL parse uyarısı:', e);
+    }
 
     const now = new Date();
     const formattedDate = now.toLocaleString('tr-TR', {
@@ -27,7 +29,7 @@ export class SystemMapGenerator {
     // ==========================================
     // 1. BAŞLIK VE YÖNETİCİ ÖZETİ
     // ==========================================
-    lines.push(`# 🌐 SİSTEM HARİTASI VE MİMARİ TASARIM ŞARTNAMESİ: ${domain}`);
+    lines.push(`# SİSTEM HARİTASI VE MİMARİ TASARIM ŞARTNAMESİ: ${domain}`);
     lines.push('');
     lines.push(`> **Rapor Üretim Tarihi:** ${formattedDate}  `);
     lines.push(`> **Hedef Canlı URL:** \`${rootUrl}\`  `);
@@ -52,8 +54,8 @@ export class SystemMapGenerator {
     lines.push(`| **Favicon URL** | ${result.designTokens?.assets?.favicon || result.meta?.favicon ? `\`${result.designTokens?.assets?.favicon || result.meta?.favicon}\`` : '_Belirtilmemiş_'} |`);
     lines.push(`| **Logo Kaynağı** | ${result.designTokens?.assets?.logo ? `\`${result.designTokens.assets.logo}\`` : '_Tespit Edilemedi / Inline SVG_'} |`);
     lines.push(`| **SVG İkon Sayısı** | \`${result.designTokens?.assets?.svgCount || 0} adet inline SVG\` |`);
-    lines.push(`| **robots.txt Arama İzni** | ${result.security?.robotsTxt ? '✅ Mevcut' : '❌ Bulunamadı'} |`);
-    lines.push(`| **sitemap.xml Haritası** | ${result.security?.sitemap ? '✅ Mevcut' : '❌ Bulunamadı'} |`);
+    lines.push(`| **robots.txt Arama İzni** | ${result.security?.robotsTxt ? 'Mevcut' : 'Bulunamadı'} |`);
+    lines.push(`| **sitemap.xml Haritası** | ${result.security?.sitemap ? 'Mevcut' : 'Bulunamadı'} |`);
     lines.push('');
 
     if (result.meta?.ogImage) {
@@ -106,7 +108,7 @@ export class SystemMapGenerator {
         const rgb = this.hexToRgb(c.hex);
         const rgbStr = rgb ? `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})` : '-';
         const contrast = this.calculateContrast(c.hex, bgColor);
-        const contrastBadge = contrast >= 7.0 ? `🌟 %${contrast.toFixed(1)}:1 (AAA)` : contrast >= 4.5 ? `✅ %${contrast.toFixed(1)}:1 (AA)` : `⚠️ %${contrast.toFixed(1)}:1 (Düşük)`;
+        const contrastBadge = contrast >= 7.0 ? `%${contrast.toFixed(1)}:1 (AAA Uygun)` : contrast >= 4.5 ? `%${contrast.toFixed(1)}:1 (AA Uygun)` : `%${contrast.toFixed(1)}:1 (Düşük)`;
         lines.push(`| \`${c.hex}\` | \`${c.hex}\` | \`${rgbStr}\` | **${c.role}** | ${c.frequency} kez | ${c.role === 'background' ? '_Referans_' : contrastBadge} |`);
       });
     }
@@ -376,7 +378,7 @@ export class SystemMapGenerator {
     flatPages.slice(0, 50).forEach((p, idx) => {
       let pathName = p.url;
       try {
-        pathName = new URL(p.url).pathname || '/';
+        pathName = new URL(p.url, rootUrl).pathname || '/';
       } catch {}
       const titleStr = p.title ? `\`${this.escapeMd(p.title.slice(0, 30))}\`` : '-';
       const statusStr = p.statusCode ? `\`${p.statusCode}\`` : '`200`';
@@ -395,10 +397,10 @@ export class SystemMapGenerator {
     lines.push('');
     lines.push('| Güvenlik Parametresi | Durum | Açıklama |');
     lines.push('|---|---|---|');
-    lines.push(`| **HTTPS Şifrelemesi** | ${result.security?.https ? '✅ Aktif' : '❌ Pasif'} | ${result.security?.https ? 'Trafik TLS/SSL ile korunuyor.' : 'Bağlantı şifresiz HTTP üzerinden.'} |`);
-    lines.push(`| **HSTS (Strict Transport Security)** | ${result.security?.hsts ? '✅ Aktif' : '⚠️ Yok'} | ${result.security?.hsts ? 'Tarayıcının yalnızca HTTPS ile bağlanması zorunlu.' : 'HSTS başlığı tespit edilemedi.'} |`);
-    lines.push(`| **CSP (Content Security Policy)** | ${result.security?.csp ? '✅ Yapılandırılmış' : '⚠️ Yok'} | ${result.security?.csp ? 'XSS ve veri sızdırma kalkanı mevcut.' : 'İçerik güvenlik politikası başlığı bulunamadı.'} |`);
-    lines.push(`| **robots.txt Arama Motoru İzni** | ${result.security?.robotsTxt ? '✅ Açık' : 'ℹ️ Yok'} | ${result.security?.robotsTxt ? 'Bot yönlendirmeleri tanımlanmış.' : 'Varsayılan bot politikası geçerli.'} |`);
+    lines.push(`| **HTTPS Şifrelemesi** | ${result.security?.https ? 'Aktif' : 'Pasif'} | ${result.security?.https ? 'Trafik TLS/SSL ile korunuyor.' : 'Bağlantı şifresiz HTTP üzerinden.'} |`);
+    lines.push(`| **HSTS (Strict Transport Security)** | ${result.security?.hsts ? 'Aktif' : 'Yok'} | ${result.security?.hsts ? 'Tarayıcının yalnızca HTTPS ile bağlanması zorunlu.' : 'HSTS başlığı tespit edilemedi.'} |`);
+    lines.push(`| **CSP (Content Security Policy)** | ${result.security?.csp ? 'Yapılandırılmış' : 'Yok'} | ${result.security?.csp ? 'XSS ve veri sızdırma kalkanı mevcut.' : 'İçerik güvenlik politikası başlığı bulunamadı.'} |`);
+    lines.push(`| **robots.txt Arama Motoru İzni** | ${result.security?.robotsTxt ? 'Açık' : 'Yok'} | ${result.security?.robotsTxt ? 'Bot yönlendirmeleri tanımlanmış.' : 'Varsayılan bot politikası geçerli.'} |`);
     lines.push('');
 
     // ==========================================
@@ -460,7 +462,7 @@ export class SystemMapGenerator {
 
     let path = node.url;
     try {
-      path = new URL(node.url).pathname || '/';
+      path = new URL(node.url, 'https://placeholder.local').pathname || '/';
     } catch {}
 
     const connector = isLast ? '└── ' : '├── ';

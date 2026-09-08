@@ -73,8 +73,9 @@ export const UrlInput: React.FC = () => {
     try {
       await startAnalysis(formattedUrl);
       toast.success('Site analizi tamamlandı!');
-    } catch (err: any) {
-      toast.error(err.message || 'Analiz sırasında hata oluştu.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Analiz sırasında hata oluştu.';
+      toast.error(msg);
     }
   };
 
@@ -207,21 +208,30 @@ export const UrlInput: React.FC = () => {
               <span className="text-[9px]">Seçmek için tıkla</span>
             </div>
             {recentUrls.map((hUrl, i) => (
-              <div
-                key={i}
+              <button
+                type="button"
+                key={hUrl || i}
                 onClick={() => {
                   setInputValue(hUrl);
                   setShowHistory(false);
                   handleAnalyze(hUrl);
                 }}
-                className="flex items-center justify-between px-3 py-2 text-xs font-mono text-text-secondary hover:text-text-primary hover:bg-white/[0.06] cursor-pointer transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setInputValue(hUrl);
+                    setShowHistory(false);
+                    handleAnalyze(hUrl);
+                  }
+                }}
+                className="w-full text-left flex items-center justify-between px-3 py-2 text-xs font-mono text-text-secondary hover:text-text-primary hover:bg-white/[0.06] cursor-pointer transition-colors"
               >
                 <div className="flex items-center gap-2 truncate">
                   <Globe size={12} className="text-accent-hover flex-shrink-0" />
                   <span className="truncate">{hUrl}</span>
                 </div>
                 <CornerDownLeft size={11} className="text-text-dim flex-shrink-0 ml-2" />
-              </div>
+              </button>
             ))}
           </div>
         )}
