@@ -11,13 +11,17 @@ export async function reconstructSourceTree(mapContent: string, outputDir: strin
 
   try {
     const resolvedOutDir = path.resolve(outputDir);
+    const outDirWithSep = resolvedOutDir.endsWith(path.sep) ? resolvedOutDir : resolvedOutDir + path.sep;
+
     consumer.sources.forEach((source) => {
-      const content = consumer.sourceContentFor(source);
+      const content = consumer.sourceContentFor(source, true);
       if (content) {
-        const cleanPath = source.replace(/^([a-z]+):\/\/\/?/, '$1/');
+        let cleanPath = source.replace(/^([a-z]+):\/\/\/?/, '$1/');
+        // Strip leading slashes and Windows drive letters
+        cleanPath = cleanPath.replace(/^([a-zA-Z]:)?[\/\\]+/, '');
         const fullPath = path.resolve(resolvedOutDir, cleanPath);
 
-        if (!fullPath.startsWith(resolvedOutDir)) {
+        if (!fullPath.startsWith(outDirWithSep)) {
           return;
         }
 
