@@ -4,12 +4,13 @@
 - [ ] Beklemede / Sistem hazır.
 
 ## SIRADAKİ
-- [ ] Task 2: Framework Data Extractor
+- [ ] Task 3: Setup UI Controls
 
 ## BLOKLU
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-09-16 (3ad940c) - feat(reverse-engineering): implement SPA framework data extractor (extract Next.js and Nuxt hydration state from HTML)
 - [x] 2026-09-16 (9d8c33c) - feat(reverse-engineering): implement sourcemap reconstructor (extract original source tree from .map files)
 - [x] 2026-09-16 (d2f77de) - build(portable): package WebClone-Studio-Portable.exe (77.6MB, zero errors, comprehensive asset engine + 404 tolerance verified)
 - [x] 2026-09-16 (d2f77de) - feat(cloner): add selective asset filtering (.zip, docs, data), content-disposition resolver, subdomain isolation & 404 offline tolerance

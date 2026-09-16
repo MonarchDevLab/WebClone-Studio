@@ -18,8 +18,8 @@ Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra &
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Commit:** `9d8c33c` feat(reverse-engineering): implement sourcemap reconstructor
-- **Önceki Commit:** `0b21ba9` feat(cloner): add selective asset filtering, archive support and 404 tolerance
+- **Son Commit:** `3ad940c` feat(reverse-engineering): implement SPA framework data extractor
+- **Önceki Commit:** `9d8c33c` feat(reverse-engineering): implement sourcemap reconstructor
 
 ## Riskler
 - Yok.
