@@ -184,7 +184,7 @@ git commit -m "feat(reverse-engineering): implement SPA framework data extractor
 - Consumes: Existing Settings interfaces
 - Produces: `reverseEngineering: boolean` in Settings
 
-- [ ] **Step 1: Add type definition**
+- [x] **Step 1: Add type definition**
 
 Modify `src/shared/types.ts` to add `reverseEngineering: boolean` to `CloneSettings` interface:
 ```typescript
@@ -194,7 +194,7 @@ export interface CloneSettings {
 }
 ```
 
-- [ ] **Step 2: Add to store defaults**
+- [x] **Step 2: Add to store defaults**
 
 Modify `src/renderer/src/stores/clone-store.ts` to include `reverseEngineering: true` in `settings`:
 ```typescript
@@ -204,7 +204,7 @@ Modify `src/renderer/src/stores/clone-store.ts` to include `reverseEngineering: 
   },
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/shared/types.ts src/renderer/src/stores/clone-store.ts
