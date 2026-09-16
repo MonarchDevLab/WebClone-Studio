@@ -18,8 +18,8 @@ Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra &
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Commit:** `0b21ba9` feat(cloner): add selective asset filtering, archive support and 404 tolerance
-- **Önceki Commit:** `e47a95f` fix(cloner): overhaul engine for lossless cloning, eliminate emojis, and enhance offline preview
+- **Son Commit:** `9d8c33c` feat(reverse-engineering): implement sourcemap reconstructor
+- **Önceki Commit:** `0b21ba9` feat(cloner): add selective asset filtering, archive support and 404 tolerance
 
 ## Riskler
 - Yok.

@@ -4,12 +4,13 @@
 - [ ] Beklemede / Sistem hazır.
 
 ## SIRADAKİ
-- [ ] Kullanıcıdan gelecek yeni özellik veya test talepleri.
+- [ ] Task 2: Framework Data Extractor
 
 ## BLOKLU
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-09-16 (9d8c33c) - feat(reverse-engineering): implement sourcemap reconstructor (extract original source tree from .map files)
 - [x] 2026-09-16 (d2f77de) - build(portable): package WebClone-Studio-Portable.exe (77.6MB, zero errors, comprehensive asset engine + 404 tolerance verified)
 - [x] 2026-09-16 (d2f77de) - feat(cloner): add selective asset filtering (.zip, docs, data), content-disposition resolver, subdomain isolation & 404 offline tolerance
 - [x] 2026-09-08 (e47a95f) - fix(cloner): overhaul engine for lossless cloning (SPA client fallback, SSL tolerance, CSP elimination, clean URL preview, zero emojis & strictly Lucide icons)
