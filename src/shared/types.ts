@@ -159,6 +159,7 @@ export interface CloneSettings {
   excludedPatterns: string[];
   maxFileSize: number;
   userAgent: string;
+  reverseEngineering?: boolean;
 }
 
 /** Klonlama süreci ilerleme durumu */

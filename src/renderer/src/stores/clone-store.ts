@@ -58,6 +58,7 @@ export const useCloneStore = create<CloneState>((set, get) => ({
     excludedPatterns: [],
     maxFileSize: DEFAULT_MAX_FILE_SIZE,
     userAgent: DEFAULT_USER_AGENT,
+    reverseEngineering: true,
   },
   outputPath: '',
   projectName: '',
