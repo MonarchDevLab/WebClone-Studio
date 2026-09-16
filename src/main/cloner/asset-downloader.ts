@@ -11,7 +11,28 @@ export interface DownloadResult {
   sizeBytes: number;
   localPath: string;
   buffer?: Buffer;
+  contentDispositionFilename?: string;
 }
+
+const MIME_EXTENSION_MAP: Record<string, string> = {
+  'application/zip': '.zip',
+  'application/x-zip-compressed': '.zip',
+  'application/x-rar-compressed': '.rar',
+  'application/x-7z-compressed': '.7z',
+  'application/x-tar': '.tar',
+  'application/gzip': '.gz',
+  'application/pdf': '.pdf',
+  'application/msword': '.doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'application/vnd.ms-excel': '.xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+  'application/vnd.ms-powerpoint': '.ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+  'text/csv': '.csv',
+  'application/json': '.json',
+  'application/xml': '.xml',
+  'text/xml': '.xml',
+};
 
 const REAL_BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
@@ -84,11 +105,25 @@ export class AssetDownloader {
           throwHttpErrors: false,
         });
 
+        let dispositionFilename: string | undefined;
+
         downloadStream.on('response', (response: Response) => {
           statusCode = response.statusCode;
           mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
           if (response.url) {
             finalUrl = response.url;
+          }
+
+          const cd = response.headers['content-disposition'] as string | undefined;
+          if (cd) {
+            const filenameMatch = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+            if (filenameMatch && filenameMatch[1]) {
+              try {
+                dispositionFilename = decodeURIComponent(filenameMatch[1].trim());
+              } catch {
+                dispositionFilename = filenameMatch[1].trim();
+              }
+            }
           }
 
           // Boyut kontrolü
@@ -133,13 +168,39 @@ export class AssetDownloader {
             sizeBytes = stats.size;
           }
 
+          let finalLocalPath = destinationPath;
+          if (statusCode < 400 && fs.existsSync(destinationPath)) {
+            const currentExt = path.extname(destinationPath).toLowerCase();
+            const cleanMime = mimeType.split(';')[0].trim().toLowerCase();
+
+            // Eğer dosyanın uzantısı yoksa ve Content-Disposition veya Content-Type'tan uzantı tespit edildiyse tamamla
+            if (!currentExt || currentExt === '.other') {
+              let suggestedExt = '';
+              if (dispositionFilename) {
+                const cdExt = path.extname(dispositionFilename).toLowerCase();
+                if (cdExt) suggestedExt = cdExt;
+              }
+              if (!suggestedExt && MIME_EXTENSION_MAP[cleanMime]) {
+                suggestedExt = MIME_EXTENSION_MAP[cleanMime];
+              }
+              if (suggestedExt && !destinationPath.endsWith(suggestedExt)) {
+                const newPath = `${destinationPath}${suggestedExt}`;
+                try {
+                  await fs.promises.rename(destinationPath, newPath);
+                  finalLocalPath = newPath;
+                } catch {}
+              }
+            }
+          }
+
           return {
             url,
             finalUrl,
             statusCode,
             mimeType,
             sizeBytes,
-            localPath: statusCode < 400 ? destinationPath : '',
+            localPath: statusCode < 400 ? finalLocalPath : '',
+            contentDispositionFilename: dispositionFilename,
           };
         } catch (err) {
           try {

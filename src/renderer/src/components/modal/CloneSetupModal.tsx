@@ -44,7 +44,11 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
     downloadImages: true,
     downloadFonts: true,
     downloadMedia: true,
+    downloadDocuments: true,
+    downloadArchives: true,
+    downloadData: true,
     downloadExternalAssets: true,
+    crawlSubdomains: false,
     includedPatterns: [],
     excludedPatterns: ['/admin/*', '/api/*', '/login*'],
     maxFileSize: 100 * 1024 * 1024,
@@ -80,6 +84,14 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
             userAgent: s.userAgent || prev.userAgent,
             concurrentDownloads: s.defaultThreads || prev.concurrentDownloads,
             rateLimit: s.defaultRateLimit ?? prev.rateLimit,
+            downloadImages: s.defaultDownloadImages ?? prev.downloadImages,
+            downloadFonts: s.defaultDownloadFonts ?? prev.downloadFonts,
+            downloadMedia: s.defaultDownloadMedia ?? prev.downloadMedia,
+            downloadDocuments: s.defaultDownloadDocuments ?? prev.downloadDocuments,
+            downloadArchives: s.defaultDownloadArchives ?? prev.downloadArchives,
+            downloadData: s.defaultDownloadData ?? prev.downloadData,
+            crawlSubdomains: s.defaultCrawlSubdomains ?? prev.crawlSubdomains,
+            downloadExternalAssets: s.defaultDownloadExternalAssets ?? prev.downloadExternalAssets,
           }));
           if (s.defaultOutputDir) {
             setOutputPath(prev => prev ? prev : s.defaultOutputDir);
@@ -476,6 +488,16 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                   />
                   <span>Harici domain varlıklarını indir (CDN, Google Fonts, jsDelivr, font dosyaları)</span>
                 </label>
+
+                <label className="flex items-center gap-2.5 text-xs text-text-secondary cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.crawlSubdomains}
+                    onChange={(e) => setSettings({ ...settings, crawlSubdomains: e.target.checked })}
+                    className="rounded accent-accent-hover"
+                  />
+                  <span>Alt alan adlarını (subdomain) sayfa olarak tara (örn: blog.site.com, demo.site.com)</span>
+                </label>
               </div>
             </div>
           )}
@@ -487,17 +509,20 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                 <label className="block text-xs font-semibold text-text-primary uppercase tracking-wider mb-2">
                   İndirilecek Varlık Türleri
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {[
-                    { key: 'downloadImages', label: 'Resimler (png, jpg, webp, svg)', state: settings.downloadImages },
-                    { key: 'downloadFonts', label: 'Fontlar (woff2, ttf, otf)', state: settings.downloadFonts },
-                    { key: 'downloadMedia', label: 'Medya (mp4, mp3)', state: settings.downloadMedia },
+                    { key: 'downloadImages', label: 'Resimler', desc: 'png, jpg, webp, svg, gif, ico, avif', state: settings.downloadImages },
+                    { key: 'downloadFonts', label: 'Fontlar', desc: 'woff2, woff, ttf, otf, eot', state: settings.downloadFonts },
+                    { key: 'downloadMedia', label: 'Medya (Video & Ses)', desc: 'mp4, webm, mp3, wav, ogg, mov', state: settings.downloadMedia },
+                    { key: 'downloadDocuments', label: 'Belgeler & Ofis', desc: 'pdf, docx, xlsx, pptx, csv, txt', state: settings.downloadDocuments },
+                    { key: 'downloadArchives', label: 'Arşivler & Zip', desc: 'zip, rar, 7z, tar, gz, dmg, iso', state: settings.downloadArchives },
+                    { key: 'downloadData', label: 'Veri Dosyaları', desc: 'json, xml, yaml, toml, sql', state: settings.downloadData },
                   ].map(item => (
                     <label 
                       key={item.key} 
-                      className={`flex items-center gap-2.5 p-3 border rounded-xl text-xs cursor-pointer transition-all ${
+                      className={`flex items-start gap-2.5 p-3 border rounded-xl text-xs cursor-pointer transition-all ${
                         item.state 
-                          ? 'bg-accent/20 border-accent/40 text-text-primary' 
+                          ? 'bg-accent/20 border-accent/40 text-text-primary shadow-sm' 
                           : 'bg-surface-2 border-white/[0.06] text-text-muted hover:border-white/[0.12]'
                       }`}
                     >
@@ -505,9 +530,12 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                         type="checkbox"
                         checked={item.state}
                         onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
-                        className="rounded accent-accent-hover"
+                        className="rounded accent-accent-hover mt-0.5"
                       />
-                      <span className="font-medium">{item.label}</span>
+                      <div>
+                        <div className="font-semibold text-text-primary">{item.label}</div>
+                        <div className="text-[10px] text-text-dim font-mono mt-0.5">{item.desc}</div>
+                      </div>
                     </label>
                   ))}
                 </div>
@@ -568,7 +596,7 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                 </div>
                 <div className="flex justify-between pb-2 border-b border-white/[0.06]">
                   <span className="text-text-muted">Varlık Tipleri:</span>
-                  <span className="text-text-primary font-mono flex items-center gap-2 flex-wrap">
+                  <span className="text-text-primary font-mono flex items-center gap-2 flex-wrap justify-end">
                     <span>HTML, CSS, JS</span>
                     {settings.downloadImages && (
                       <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
@@ -583,6 +611,21 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                     {settings.downloadMedia && (
                       <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
                         <Check size={12} strokeWidth={2.5} /> Medya
+                      </span>
+                    )}
+                    {settings.downloadDocuments && (
+                      <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
+                        <Check size={12} strokeWidth={2.5} /> Belgeler
+                      </span>
+                    )}
+                    {settings.downloadArchives && (
+                      <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
+                        <Check size={12} strokeWidth={2.5} /> Arşivler (.zip)
+                      </span>
+                    )}
+                    {settings.downloadData && (
+                      <span className="inline-flex items-center gap-1 text-accent-hover text-xs">
+                        <Check size={12} strokeWidth={2.5} /> Veriler
                       </span>
                     )}
                   </span>

@@ -3,9 +3,33 @@ import { CloneSettings } from '../../shared/types';
 
 export interface DiscoveredAsset {
   url: string;
-  type: 'html' | 'css' | 'js' | 'image' | 'font' | 'media' | 'other';
+  type: 'html' | 'css' | 'js' | 'image' | 'font' | 'media' | 'document' | 'archive' | 'data' | 'other';
   isPage: boolean;
 }
+
+export const DOCUMENT_EXTENSIONS = new Set([
+  'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'txt', 'rtf', 'odt', 'ods', 'odp'
+]);
+
+export const ARCHIVE_EXTENSIONS = new Set([
+  'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'dmg', 'iso', 'apk', 'exe', 'msi'
+]);
+
+export const DATA_EXTENSIONS = new Set([
+  'json', 'xml', 'yaml', 'yml', 'toml', 'sql', 'sqlite'
+]);
+
+export const MEDIA_EXTENSIONS = new Set([
+  'mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v', 'flac', 'aac', 'avi', 'mkv'
+]);
+
+export const IMAGE_EXTENSIONS = new Set([
+  'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif', 'bmp', 'tiff'
+]);
+
+export const FONT_EXTENSIONS = new Set([
+  'woff', 'woff2', 'ttf', 'otf', 'eot'
+]);
 
 export interface ProcessedPageResult {
   html: string;
@@ -87,15 +111,24 @@ export class PageProcessor {
         const ext = pathname.split('.').pop() || '';
         let type: DiscoveredAsset['type'] = 'other';
 
-        if (['woff', 'woff2', 'ttf', 'otf', 'eot'].includes(ext)) {
+        if (FONT_EXTENSIONS.has(ext)) {
           if (!settings.downloadFonts) return;
           type = 'font';
-        } else if (['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'avif', 'ico', 'bmp'].includes(ext)) {
+        } else if (IMAGE_EXTENSIONS.has(ext)) {
           if (!settings.downloadImages) return;
           type = 'image';
-        } else if (['mp4', 'webm', 'ogg', 'mp3', 'wav'].includes(ext)) {
+        } else if (MEDIA_EXTENSIONS.has(ext)) {
           if (!settings.downloadMedia) return;
           type = 'media';
+        } else if (DOCUMENT_EXTENSIONS.has(ext)) {
+          if (!settings.downloadDocuments) return;
+          type = 'document';
+        } else if (ARCHIVE_EXTENSIONS.has(ext)) {
+          if (!settings.downloadArchives) return;
+          type = 'archive';
+        } else if (DATA_EXTENSIONS.has(ext)) {
+          if (!settings.downloadData) return;
+          type = 'data';
         } else if (ext === 'css' || parsed.hostname.includes('fonts.googleapis.com') || pathname.includes('css')) {
           type = 'css';
         }
@@ -154,25 +187,35 @@ export class PageProcessor {
         const isInternal = isInternalDomain(cleanUrl, baseOrigin);
 
         const ext = parsed.pathname.split('.').pop()?.toLowerCase() || '';
-        const nonPageExtensions = new Set([
-          'pdf', 'zip', 'rar', '7z', 'tar', 'gz', 'dmg', 'exe', 'apk',
-          'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif', 'bmp',
-          'mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v',
-          'docx', 'xlsx', 'pptx', 'csv', 'xml', 'json'
-        ]);
 
         let type = initialType;
         let isPage = initialIsPage;
 
-        if (isPage && nonPageExtensions.has(ext)) {
+        // Uzantı bazlı varlık tespiti ve sayfa ayrımı
+        if (IMAGE_EXTENSIONS.has(ext)) {
           isPage = false;
-          if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'ico', 'avif', 'bmp'].includes(ext)) {
-            type = 'image';
-          } else if (['mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v'].includes(ext)) {
-            type = 'media';
-          } else {
-            type = 'other';
-          }
+          type = 'image';
+        } else if (FONT_EXTENSIONS.has(ext)) {
+          isPage = false;
+          type = 'font';
+        } else if (MEDIA_EXTENSIONS.has(ext)) {
+          isPage = false;
+          type = 'media';
+        } else if (DOCUMENT_EXTENSIONS.has(ext)) {
+          isPage = false;
+          type = 'document';
+        } else if (ARCHIVE_EXTENSIONS.has(ext)) {
+          isPage = false;
+          type = 'archive';
+        } else if (DATA_EXTENSIONS.has(ext)) {
+          isPage = false;
+          type = 'data';
+        } else if (ext === 'css') {
+          isPage = false;
+          type = 'css';
+        } else if (ext === 'js' || ext === 'mjs') {
+          isPage = false;
+          type = 'js';
         }
 
         // Sayfa linkleri için: Dış domain sayfaları (Twitter, Facebook vb.) ASLA klonlama kuyruğuna sayfa olarak eklenmez!
@@ -180,7 +223,17 @@ export class PageProcessor {
           return;
         }
 
-        // Harici domain varlıkları (CDN CSS, JS, Font, Resim) filtre kontrolü
+        // Alt alan adı (Subdomain) denetimi:
+        // Eğer crawlSubdomains false ise, yalnızca ana origin'in aynı hostu (www varyantı hariç) taranır
+        if (isPage && !settings.crawlSubdomains) {
+          const targetHost = parsed.hostname.toLowerCase().replace(/^www\./, '');
+          const baseHost = new URL(baseOrigin).hostname.toLowerCase().replace(/^www\./, '');
+          if (targetHost !== baseHost) {
+            return;
+          }
+        }
+
+        // Harici domain varlıkları (CDN CSS, JS, Font, Resim, Zip) filtre kontrolü
         if (!isInternal && !settings.downloadExternalAssets && !isPage) {
           return;
         }
@@ -189,6 +242,9 @@ export class PageProcessor {
         if (type === 'image' && !settings.downloadImages) return;
         if (type === 'font' && !settings.downloadFonts) return;
         if (type === 'media' && !settings.downloadMedia) return;
+        if (type === 'document' && !settings.downloadDocuments) return;
+        if (type === 'archive' && !settings.downloadArchives) return;
+        if (type === 'data' && !settings.downloadData) return;
 
         discoveredAssets.push({
           url: cleanUrl,
@@ -216,9 +272,30 @@ export class PageProcessor {
       }
     };
 
-    // 1. Sayfa Linkleri (a[href], area[href])
+    // 1. Sayfa ve İndirme Linkleri (a[href], area[href], a[download])
     $('a[href], area[href]').each((_, el) => {
-      addAsset($(el).attr('href'), 'html', true);
+      const href = $(el).attr('href');
+      const downloadAttr = $(el).attr('download');
+      if (downloadAttr !== undefined) {
+        const dlExt = downloadAttr ? downloadAttr.split('.').pop()?.toLowerCase() || '' : '';
+        let hintType: DiscoveredAsset['type'] = 'other';
+        if (ARCHIVE_EXTENSIONS.has(dlExt)) hintType = 'archive';
+        else if (DOCUMENT_EXTENSIONS.has(dlExt)) hintType = 'document';
+        else if (DATA_EXTENSIONS.has(dlExt)) hintType = 'data';
+        else if (IMAGE_EXTENSIONS.has(dlExt)) hintType = 'image';
+        else if (MEDIA_EXTENSIONS.has(dlExt)) hintType = 'media';
+        addAsset(href, hintType, false);
+      } else {
+        addAsset(href, 'html', true);
+      }
+    });
+
+    // 1.1 Alternatif Beslemeler (RSS, Atom, XML, JSON API)
+    $('link[rel="alternate"][href]').each((_, el) => {
+      const typeAttr = ($(el).attr('type') || '').toLowerCase();
+      if (typeAttr.includes('xml') || typeAttr.includes('json') || typeAttr.includes('rss') || typeAttr.includes('atom')) {
+        addAsset($(el).attr('href'), 'data', false);
+      }
     });
 
     // 2. CSS Dosyaları (link[rel="stylesheet"], link[as="style"])

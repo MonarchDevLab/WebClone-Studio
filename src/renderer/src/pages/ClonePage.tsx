@@ -160,24 +160,64 @@ export const ClonePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Hata Bildirim Paneli (Eğer indirilemeyen varlıklar varsa) */}
-      {errors && errors.length > 0 && (
-        <div className="bg-error/10 border border-error/30 rounded-2xl p-4 text-xs font-mono text-error-hover space-y-2">
-          <div className="flex items-center gap-2 font-bold text-sm">
-            <AlertTriangle size={16} />
-            <span>{errors.length} Varlık İndirilemedi veya Atlandı:</span>
-          </div>
-          <div className="max-h-24 overflow-y-auto space-y-1 pr-2">
-            {errors.slice(-10).map((err, i) => (
-              <div key={i} className="truncate text-[11px] opacity-90 flex items-center gap-1.5">
-                <AlertCircle size={11} className="shrink-0 text-error-hover" />
-                <span className="truncate">{err.url}</span>
-                <span className="opacity-60 shrink-0">({err.message})</span>
+      {/* Hata ve Atlanan Varlıklar Bildirim Paneli */}
+      {errors && errors.length > 0 && (() => {
+        const deadLinksCount = errors.filter(err => err.message.includes('404') || err.message.toLowerCase().includes('mevcut değil')).length;
+        const otherErrorsCount = errors.length - deadLinksCount;
+
+        return (
+          <div className="bg-surface-2 border border-white/[0.08] rounded-2xl p-4 text-xs font-mono space-y-3 shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-2.5">
+              <div className="flex items-center gap-2 font-bold text-sm text-text-primary">
+                <AlertTriangle size={16} className={otherErrorsCount > 0 ? "text-error-hover" : "text-warning-hover"} />
+                <span>{errors.length} Varlık Atlandı veya İndirilemedi</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2 font-sans text-[11px]">
+                {deadLinksCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-warning/15 text-warning-hover border border-warning/30">
+                    {deadLinksCount} Hedef Site Kırık Linki (404)
+                  </span>
+                )}
+                {otherErrorsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-error/15 text-error-hover border border-error/30">
+                    {otherErrorsCount} İndirme Hatası
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {deadLinksCount > 0 && (
+              <p className="font-sans text-[11px] text-text-muted leading-relaxed">
+                <span className="text-text-primary font-medium">Bilgi:</span> Hedef sitenin kendi orijinal sunucusunda silinmiş veya 404 veren sayfalar tespit edildi. Bu sayfalar için yerel çevrimdışı fallback oluşturulmuştur ve klonun genel bütünlüğünü etkilemez.
+              </p>
+            )}
+
+            <div className="max-h-32 overflow-y-auto space-y-1.5 pr-2">
+              {errors.slice(-15).map((err, i) => {
+                const is404 = err.message.includes('404') || err.message.toLowerCase().includes('mevcut değil');
+                return (
+                  <div 
+                    key={i} 
+                    className={`p-1.5 rounded-lg border text-[11px] flex items-center justify-between gap-2 ${
+                      is404 
+                        ? 'bg-warning/[0.04] border-warning/20 text-text-secondary' 
+                        : 'bg-error/[0.05] border-error/20 text-error-hover'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <AlertCircle size={12} className={is404 ? "text-warning-hover shrink-0" : "text-error-hover shrink-0"} />
+                      <span className="truncate">{err.url}</span>
+                    </div>
+                    <span className="shrink-0 font-sans text-[10px] px-1.5 py-0.5 rounded bg-black/40 text-text-muted border border-white/[0.05]">
+                      {err.message}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 2. İlerleme & Metrik Kartları */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">

@@ -150,7 +150,11 @@ export interface CloneSettings {
   downloadImages: boolean;
   downloadFonts: boolean;
   downloadMedia: boolean;
+  downloadDocuments: boolean;
+  downloadArchives: boolean;
+  downloadData: boolean;
   downloadExternalAssets: boolean;
+  crawlSubdomains: boolean;
   includedPatterns: string[];
   excludedPatterns: string[];
   maxFileSize: number;
@@ -247,6 +251,9 @@ export interface ProjectManifest {
     images: { count: number; sizeBytes: number };
     fonts: { count: number; sizeBytes: number };
     media: { count: number; sizeBytes: number };
+    documents: { count: number; sizeBytes: number };
+    archives: { count: number; sizeBytes: number };
+    data: { count: number; sizeBytes: number };
     other: { count: number; sizeBytes: number };
   };
 
@@ -292,4 +299,12 @@ export interface AppSettings {
   userAgent: string;
   defaultThreads: number;
   defaultRateLimit: number;
+  defaultDownloadImages?: boolean;
+  defaultDownloadFonts?: boolean;
+  defaultDownloadMedia?: boolean;
+  defaultDownloadDocuments?: boolean;
+  defaultDownloadArchives?: boolean;
+  defaultDownloadData?: boolean;
+  defaultCrawlSubdomains?: boolean;
+  defaultDownloadExternalAssets?: boolean;
 }

@@ -121,6 +121,14 @@ export class PreviewServer {
           }
 
           if (!fs.existsSync(targetPath) || fs.statSync(targetPath).isDirectory()) {
+            const custom404 = path.join(this.currentRoot, '_404.html');
+            if (fs.existsSync(custom404)) {
+              res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+              const content = fs.readFileSync(custom404, 'utf-8');
+              res.end(content);
+              return;
+            }
+
             res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
             res.end(`
               <!DOCTYPE html>

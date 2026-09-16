@@ -9,6 +9,7 @@ Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra &
 5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`) 0 hata ile derlendi.
 6. **Emoji Tasfiyesi & İndirme Motoru Güçlendirmesi:** Kod tabanındaki tüm emojiler temizlenip Lucide SVG ikonlarına dönüştürüldü; harici sayfa sızıntıları engellendi, robots.txt varlık blokajı kaldırıldı, Google Fonts/CSS/preload/data-bg varlık keşfi genişletildi ve aynı kök domain yönlendirmelerine izin verildi.
 7. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuldu, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı, CSP meta etiketleri offline açılışta temizlendi ve önizleme sunucusuna temiz URL ile SPA fallback eklendi.
+8. **Kapsamlı Varlık İndirme & Seçenekli Filtreleme:** Resimler, Fontlar, Medya, Belgeler (.pdf, .doc, .xls, .ppt), Arşivler (.zip, .rar, .tar, .7z) ve Veriler (.json, .xml, .csv) için bağımsız indirme anahtarları eklendi. Content-Disposition ve MIME tabanlı dinamik uzantı çözümleyici kuruldu. Alt alan adı (subdomain) izolasyonu seçeneği eklendi. Orijinal hedef sunucuda mevcut olmayan (HTTP 404) kırık linkler için yerel offline fallback kartı (`site/_404.html`) ve arayüzde bilgilendirici rozet sistemi entegre edildi.
 
 ## Kritik Komutlar
 - Development: `npm run dev`
@@ -17,9 +18,8 @@ Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra &
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Commit:** `e47a95f` fix(cloner): overhaul engine for lossless cloning, eliminate emojis, and enhance offline preview
-- **Önceki Commit:** `3506367` fix(core): harden engine architecture, resolve memory leaks and polish ui
-- **Planlanan:** Yeni kullanıcı direktifleri.
+- **Son Commit:** `0b21ba9` feat(cloner): add selective asset filtering, archive support and 404 tolerance
+- **Önceki Commit:** `e47a95f` fix(cloner): overhaul engine for lossless cloning, eliminate emojis, and enhance offline preview
 
 ## Riskler
 - Yok.

@@ -1,15 +1,16 @@
 # TASKS
 
 ## ŞİMDİ
-- [ ] Yeni kullanıcı direktifleri bekleniyor.
+- [ ] Beklemede / Sistem hazır.
 
 ## SIRADAKİ
-- [ ] İsteğe bağlı ilave özellikler veya entegrasyonlar.
+- [ ] Kullanıcıdan gelecek yeni özellik veya test talepleri.
 
 ## BLOKLU
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-09-16 (0b21ba9) - feat(cloner): add selective asset filtering (.zip, docs, data), content-disposition resolver, subdomain isolation & 404 offline tolerance
 - [x] 2026-09-08 (e47a95f) - fix(cloner): overhaul engine for lossless cloning (SPA client fallback, SSL tolerance, CSP elimination, clean URL preview, zero emojis & strictly Lucide icons)
 - [x] 2026-09-08 (e47a95f) - build(portable): package WebClone-Studio-Portable.exe (77.6MB, zero errors, electron-builder portable target verified)
 - [x] 2026-09-08 - fix(audit): comprehensive 4-phase codebase remediation (ReDoS, IPC safety, memory leaks, XSS, strict typing, build verified)

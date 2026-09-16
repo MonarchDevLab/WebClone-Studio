@@ -90,6 +90,9 @@ export class CrawlerEngine extends EventEmitter {
     images: { count: 0, sizeBytes: 0 },
     fonts: { count: 0, sizeBytes: 0 },
     media: { count: 0, sizeBytes: 0 },
+    documents: { count: 0, sizeBytes: 0 },
+    archives: { count: 0, sizeBytes: 0 },
+    data: { count: 0, sizeBytes: 0 },
     other: { count: 0, sizeBytes: 0 },
   };
 
@@ -352,8 +355,11 @@ export class CrawlerEngine extends EventEmitter {
         const staticRes = await this.downloader.downloadToBuffer(item.url, this.settings.maxFileSize);
         if (!staticRes.buffer || staticRes.statusCode >= 400) {
           this.stats.failedUrls++;
-          this.failedUrlsList.push({ url: item.url, error: `HTTP ${staticRes.statusCode}`, time: new Date().toISOString() });
-          this.emitError(item.url, `HTTP ${staticRes.statusCode}`, 'HTTP_ERROR');
+          const errLabel = staticRes.statusCode === 404
+            ? 'HTTP 404 (Hedef sitede mevcut değil / kırık sayfa)'
+            : `HTTP ${staticRes.statusCode}`;
+          this.failedUrlsList.push({ url: item.url, error: errLabel, time: new Date().toISOString() });
+          this.emitError(item.url, errLabel, 'HTTP_ERROR');
           return;
         }
         htmlStr = staticRes.buffer.toString('utf-8');
@@ -399,7 +405,21 @@ export class CrawlerEngine extends EventEmitter {
       for (const asset of processed.discoveredAssets) {
         if (!this.visitedUrls.has(asset.url)) {
           if (asset.isPage) {
-            if (item.depth + 1 <= this.settings.maxDepth && isInternalDomain(asset.url, origin)) {
+            let allowPage = item.depth + 1 <= this.settings.maxDepth && isInternalDomain(asset.url, origin);
+            // Subdomain kontrolü
+            if (allowPage && !this.settings.crawlSubdomains) {
+              try {
+                const targetHost = new URL(asset.url).hostname.toLowerCase().replace(/^www\./, '');
+                const baseHost = new URL(origin).hostname.toLowerCase().replace(/^www\./, '');
+                if (targetHost !== baseHost) {
+                  allowPage = false;
+                }
+              } catch {
+                allowPage = false;
+              }
+            }
+
+            if (allowPage) {
               this.queue.push({
                 url: asset.url,
                 depth: item.depth + 1,
@@ -429,21 +449,25 @@ export class CrawlerEngine extends EventEmitter {
       this.emitFileAdded(mapping.absolutePath, sizeBytes, 'text/html', statusCode, item.depth);
 
     } else {
-      // Statik Asset (CSS, JS, Resim, Font, Medya)
+      // Statik Asset (CSS, JS, Resim, Font, Medya, Doküman, Arşiv, Veri)
       const downloadRes = await this.downloader.downloadToFile(item.url, mapping.absolutePath, this.settings.maxFileSize);
       if (downloadRes.statusCode >= 400 || !downloadRes.localPath) {
         this.stats.failedUrls++;
-        this.failedUrlsList.push({ url: item.url, error: `HTTP ${downloadRes.statusCode}`, time: new Date().toISOString() });
-        this.emitError(item.url, `HTTP ${downloadRes.statusCode}`, 'HTTP_ERROR');
+        const errLabel = downloadRes.statusCode === 404
+          ? 'HTTP 404 (Hedef sitede mevcut değil / kırık dosya)'
+          : `HTTP ${downloadRes.statusCode}`;
+        this.failedUrlsList.push({ url: item.url, error: errLabel, time: new Date().toISOString() });
+        this.emitError(item.url, errLabel, 'HTTP_ERROR');
         return;
       }
 
-      this.registerUrlMapping(item.url, mapping.absolutePath, downloadRes.finalUrl);
+      const finalLocalPath = downloadRes.localPath || mapping.absolutePath;
+      this.registerUrlMapping(item.url, finalLocalPath, downloadRes.finalUrl);
 
       // CSS Varlık Keşfi: İndirilen stil dosyasından font ve arka plan görsellerini ayrıştır
-      if (item.type === 'css' || mapping.absolutePath.endsWith('.css')) {
+      if (item.type === 'css' || finalLocalPath.endsWith('.css')) {
         try {
-          const cssContent = await fs.promises.readFile(mapping.absolutePath, 'utf-8');
+          const cssContent = await fs.promises.readFile(finalLocalPath, 'utf-8');
           const cssAssets = PageProcessor.extractCssUrls(cssContent, item.url, this.settings, origin);
           for (const cssAsset of cssAssets) {
             if (!this.visitedUrls.has(cssAsset.url)) {
@@ -458,10 +482,14 @@ export class CrawlerEngine extends EventEmitter {
         } catch {}
       }
 
-      const fileTypeKey = item.type === 'image' ? 'images' : item.type;
+      const fileTypeKey = item.type === 'image' ? 'images'
+        : item.type === 'document' ? 'documents'
+        : item.type === 'archive' ? 'archives'
+        : item.type === 'data' ? 'data'
+        : item.type;
       this.recordFileStats(fileTypeKey, downloadRes.sizeBytes);
       this.stats.totalAssets++;
-      this.emitFileAdded(mapping.absolutePath, downloadRes.sizeBytes, downloadRes.mimeType, downloadRes.statusCode, item.depth);
+      this.emitFileAdded(finalLocalPath, downloadRes.sizeBytes, downloadRes.mimeType, downloadRes.statusCode, item.depth);
     }
   }
 
@@ -538,6 +566,50 @@ export class CrawlerEngine extends EventEmitter {
           .map(item => `[${item.time}] ${item.url} -> ${item.error}`)
           .join('\n');
         await this.organizer.writeMetaFile('errors.log', errorLogContent);
+
+        // 4.1 Çevrimdışı 404 Sayfası: Orijinal sitede ölü olan linkler için şık bilgilendirme sayfası
+        const deadLinksList = this.failedUrlsList
+          .filter(item => item.error.includes('404'))
+          .map(item => `<li><code>${item.url}</code></li>`)
+          .join('\n');
+
+        if (deadLinksList) {
+          const offline404Html = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sayfa Bulunamadı (Orijinal Sitede 404)</title>
+  <style>
+    body { background: #08090C; color: #F1F5F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; box-sizing: border-box; }
+    .card { background: #13161C; border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 36px; max-width: 560px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); text-align: center; }
+    .badge { display: inline-block; background: rgba(244,63,94,0.15); color: #F43F5E; border: 1px solid rgba(244,63,94,0.3); padding: 4px 14px; border-radius: 9999px; font-size: 11px; font-family: monospace; font-weight: 700; margin-bottom: 16px; letter-spacing: 0.05em; }
+    h1 { color: #F1F5F9; font-size: 22px; margin: 0 0 12px 0; font-weight: 700; }
+    p { color: #94A3B8; font-size: 13px; line-height: 1.6; margin: 0 0 18px 0; }
+    .details { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; text-align: left; max-height: 140px; overflow-y: auto; font-size: 11px; font-family: monospace; color: #CBD5E1; }
+    .details ul { margin: 0; padding-left: 20px; }
+    .details li { margin: 4px 0; word-break: break-all; }
+    .btn { display: inline-block; margin-top: 24px; background: #00F5D4; color: #000; padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">ORİJİNAL SİTEDE HTTP 404</div>
+    <h1>Bu Sayfa Orijinal Canlı Sunucuda da Mevcut Değil</h1>
+    <p>Klonlanan web sitesindeki bu bağlantı, sitenin orijinal sunucusunda da mevcut değildir (geliştirici tarafından arayüze ölü link konulmuş ancak yayına alınmamıştır).</p>
+    <div class="details">
+      <div style="font-weight:bold;margin-bottom:6px;color:#F43F5E;">Orijinal Sitede Bulunamayan Bağlantılar:</div>
+      <ul>
+        ${deadLinksList}
+      </ul>
+    </div>
+    <a href="./index.html" class="btn">Ana Sayfaya Geri Dön</a>
+  </div>
+</body>
+</html>`;
+          await fs.promises.writeFile(path.join(siteRoot, '_404.html'), offline404Html, 'utf-8');
+        }
       } catch {}
     }
 
@@ -632,7 +704,14 @@ export class CrawlerEngine extends EventEmitter {
     this.stats.totalFiles++;
     this.stats.totalSizeBytes += sizeBytes;
 
-    const countKey = (type === 'image' ? 'images' : type) as keyof typeof this.fileCounts;
+    const countKey = (
+      type === 'image' ? 'images'
+      : type === 'document' ? 'documents'
+      : type === 'archive' ? 'archives'
+      : type === 'data' ? 'data'
+      : type
+    ) as keyof typeof this.fileCounts;
+
     if (this.fileCounts[countKey]) {
       this.fileCounts[countKey].count++;
       this.fileCounts[countKey].sizeBytes += sizeBytes;

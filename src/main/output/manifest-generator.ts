@@ -21,6 +21,9 @@ export interface ManifestOptions {
     images: { count: number; sizeBytes: number };
     fonts: { count: number; sizeBytes: number };
     media: { count: number; sizeBytes: number };
+    documents: { count: number; sizeBytes: number };
+    archives: { count: number; sizeBytes: number };
+    data: { count: number; sizeBytes: number };
     other: { count: number; sizeBytes: number };
   };
   entryPoint?: string;

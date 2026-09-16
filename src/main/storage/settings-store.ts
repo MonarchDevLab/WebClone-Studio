@@ -39,6 +39,14 @@ const DEFAULT_SETTINGS: AppSettings = {
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 WebCloneStudio/1.0',
   defaultThreads: 5,
   defaultRateLimit: 200,
+  defaultDownloadImages: true,
+  defaultDownloadFonts: true,
+  defaultDownloadMedia: true,
+  defaultDownloadDocuments: true,
+  defaultDownloadArchives: true,
+  defaultDownloadData: true,
+  defaultCrawlSubdomains: false,
+  defaultDownloadExternalAssets: true,
 };
 
 export class SettingsStore {

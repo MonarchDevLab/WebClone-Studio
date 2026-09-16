@@ -106,7 +106,11 @@ export class FileOrganizer {
       // 2. Statik Varlıklar İçin Temiz ve Düzenli Dosyalama (assets/{type}/...)
       const typeFolder = assetType === 'image' ? 'images' 
         : assetType === 'media' ? 'media'
-        : ['css', 'js', 'font'].includes(assetType) ? `${assetType === 'font' ? 'fonts' : assetType}`
+        : assetType === 'font' ? 'fonts'
+        : assetType === 'document' ? 'documents'
+        : assetType === 'archive' ? 'archives'
+        : assetType === 'data' ? 'data'
+        : ['css', 'js'].includes(assetType) ? assetType
         : 'other';
 
       // Dosya adı ve uzantı ayıklama
@@ -123,6 +127,10 @@ export class FileOrganizer {
         else if (assetType === 'js') ext = '.js';
         else if (assetType === 'font') ext = '.woff2';
         else if (assetType === 'image') ext = '.png';
+        else if (assetType === 'document') ext = '.pdf';
+        else if (assetType === 'archive') ext = '.zip';
+        else if (assetType === 'data') ext = '.json';
+        else if (assetType === 'media') ext = '.mp4';
       }
 
       const safeBase = sanitizeFilename(baseName).slice(0, 40) || 'file';
