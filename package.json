@@ -11,7 +11,8 @@
     "preview": "electron-vite preview",
     "build:portable": "npm run typecheck && electron-vite build && electron-builder --win portable",
     "postinstall": "electron-builder install-app-deps",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "bottleneck": "^2.19.5",
@@ -26,6 +27,7 @@
     "robots-parser": "^3.0.1",
     "sanitize-filename": "^1.6.3",
     "sonner": "^2.0.3",
+    "source-map": "^0.8.0",
     "tailwind-merge": "^3.0.2",
     "zustand": "^5.0.5"
   },
@@ -36,6 +38,7 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@types/source-map": "^0.5.2",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
     "electron": "^33.4.0",
@@ -43,6 +46,7 @@
     "electron-vite": "^3.1.0",
     "tailwindcss": "^4.1.5",
     "typescript": "^5.8.3",
-    "vite": "^6.3.4"
+    "vite": "^6.3.4",
+    "vitest": "^4.1.11"
   }
 }
