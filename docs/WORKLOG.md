@@ -10,6 +10,7 @@
   5. `AppSettings`, `SettingsStore`, `SettingsPage` ve `CloneSetupModal` bileşenlerine tersine mühendislik kontrolleri eklendi.
   6. `ipc-handlers.ts` içerisindeki yanlış konumlanan ve mükerrer `_meta/SYSTEM_MAP.md` yazımı kaldırıldı.
   7. Vitest testleri (17/17), typecheck (0 hata) ve production bundle (`npm run build`) başarıyla doğrulandı.
+  8. `npm run build:portable` ile güncel kodları ve tersine mühendislik motorunu içeren Windows Portable uygulama paketi (`dist/WebClone-Studio-Portable.exe`, 77.6MB) 0 hata ile derlendi.
 
 ## Mimari Kararlar
 - **[KARAR-024] Tersine Mühendislik Laboratuvarı & Tam Pipeline Entegrasyonu:**

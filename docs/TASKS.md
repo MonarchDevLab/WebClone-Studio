@@ -10,7 +10,8 @@
 - [!] Yok.
 
 ## TAMAMLANDI
-- [x] 2026-09-26 (HEAD) - fix(ipc): resolve redundant meta path and update project documentation
+- [x] 2026-09-26 (HEAD) - build(portable): package WebClone-Studio-Portable.exe (77.6MB, reverse engineering suite, offline mock server, zero type errors)
+- [x] 2026-09-26 (5741e4c) - fix(ipc): resolve redundant meta path and update project documentation
 - [x] 2026-09-26 (b888133) - feat(ui): add reverse engineering toggles to settings and clone modal (SettingsPage checkbox, CloneSetupModal Step 3 and 4 summary)
 - [x] 2026-09-26 (a0a9b5b) - feat(reverse-engineering): implement api traffic interceptor and offline mock server (CDP Network domain interception, _meta/api-endpoints.json, preview server mock route fallback)
 - [x] 2026-09-26 (893e6e9) - feat(reverse-engineering): implement tailwind and design token extractor (CSS variable, font, color parsing, _meta/tailwind.config.js and _meta/design-tokens.json output)
