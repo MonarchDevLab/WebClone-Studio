@@ -16,6 +16,7 @@ import { ReadmeGenerator } from '../output/readme-generator';
 import { ReportGenerator } from '../output/report-generator';
 import { SystemMapGenerator } from '../generators/system-map-generator';
 import { PageRenderer } from '../browser/page-renderer';
+import { reconstructSourceTree } from './reverse-engineering/sourcemap-reconstructor';
 
 interface QueueItem {
   url: string;
@@ -70,6 +71,8 @@ export class CrawlerEngine extends EventEmitter {
   private resumeResolver: (() => void) | null = null;
   private robotsChecker: any = null;
   private screenshotBuffer: Buffer | null = null;
+  private processedSourceMaps = new Set<string>();
+  private extractedStates: Record<string, any> = {};
 
   private stats = {
     totalPages: 0,
@@ -480,6 +483,37 @@ export class CrawlerEngine extends EventEmitter {
             }
           }
         } catch {}
+      }
+
+      // Tersine Mühendislik (Reverse Engineering): JS ve CSS dosyalarından sourcemap keşfet ve kaynak ağacını kurtar
+      if (this.settings.reverseEngineering && (item.type === 'js' || item.type === 'css' || finalLocalPath.endsWith('.js') || finalLocalPath.endsWith('.css'))) {
+        try {
+          const fileContent = await fs.promises.readFile(finalLocalPath, 'utf-8');
+          const mapUrl = PageProcessor.extractSourceMapUrl(fileContent, item.url);
+          if (mapUrl && !this.processedSourceMaps.has(mapUrl)) {
+            this.processedSourceMaps.add(mapUrl);
+            const sourceCodeOutDir = path.join(this.organizer.getFolders().siteDir, '_source-code');
+            if (mapUrl.startsWith('data:')) {
+              const commaIdx = mapUrl.indexOf(',');
+              if (commaIdx !== -1) {
+                const b64Data = mapUrl.slice(commaIdx + 1);
+                const mapJson = Buffer.from(b64Data, 'base64').toString('utf-8');
+                await reconstructSourceTree(mapJson, sourceCodeOutDir);
+                this.emitLog('info', `Inline sourcemap çözümlendi: ${path.basename(finalLocalPath)}`);
+              }
+            } else {
+              this.emitLog('debug', `Sourcemap indiriliyor: ${mapUrl}`);
+              const mapRes = await this.downloader.downloadToBuffer(mapUrl, this.settings.maxFileSize);
+              if (mapRes.buffer && mapRes.statusCode < 400) {
+                const mapJson = mapRes.buffer.toString('utf-8');
+                await reconstructSourceTree(mapJson, sourceCodeOutDir);
+                this.emitLog('info', `Sourcemap kaynak kod ağacı kurtarıldı: ${path.basename(mapUrl)}`);
+              }
+            }
+          }
+        } catch (mapErr: any) {
+          this.emitLog('debug', `Sourcemap çözümlenemedi (${item.url}): ${mapErr.message}`);
+        }
       }
 
       const fileTypeKey = item.type === 'image' ? 'images'

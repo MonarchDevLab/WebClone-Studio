@@ -162,6 +162,27 @@ export class PageProcessor {
   }
 
   /**
+   * JS veya CSS içeriği içerisindeki sourceMappingURL direktifini yakalar ve mutlak URL'e dönüştürür.
+   */
+  public static extractSourceMapUrl(content: string, fileUrl: string): string | null {
+    if (!content) return null;
+    const regex = /(?:\/\/[#@]\s*sourceMappingURL=([^\s'"]+)|(?:\/\*#\s*sourceMappingURL=([^\s'"]+)\s*\*\/))/i;
+    const match = content.match(regex);
+    const rawMapUrl = match ? (match[1] || match[2]) : null;
+    if (!rawMapUrl) return null;
+
+    if (rawMapUrl.startsWith('data:')) {
+      return rawMapUrl;
+    }
+
+    try {
+      return new URL(rawMapUrl, fileUrl).href;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * HTML metnini tarar ve tüm varlık/link referanslarını eksiksiz çıkarır.
    */
   public static process(html: string, pageUrl: string, settings: CloneSettings, baseOrigin: string): ProcessedPageResult {

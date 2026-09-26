@@ -92,3 +92,22 @@ test('reconstructSourceTree handles absolute paths correctly', async () => {
     fs.rmSync(outDir, { recursive: true, force: true });
   }
 });
+
+test('PageProcessor.extractSourceMapUrl extracts relative and inline source maps', async () => {
+  const { PageProcessor } = await import('../../../../src/main/cloner/page-processor');
+  
+  const jsContent = 'function hello() { console.log("hi"); }\n//# sourceMappingURL=bundle.js.map';
+  const resolved = PageProcessor.extractSourceMapUrl(jsContent, 'https://example.com/assets/js/bundle.js');
+  expect(resolved).toBe('https://example.com/assets/js/bundle.js.map');
+
+  const cssContent = '.test { color: red; } /*# sourceMappingURL=style.css.map */';
+  const resolvedCss = PageProcessor.extractSourceMapUrl(cssContent, 'https://example.com/css/style.css');
+  expect(resolvedCss).toBe('https://example.com/css/style.css.map');
+
+  const dataUriJs = 'console.log("test");\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozfQ==';
+  const resolvedData = PageProcessor.extractSourceMapUrl(dataUriJs, 'https://example.com/test.js');
+  expect(resolvedData).toBe('data:application/json;base64,eyJ2ZXJzaW9uIjozfQ==');
+
+  const noMapJs = 'console.log("no map");';
+  expect(PageProcessor.extractSourceMapUrl(noMapJs, 'https://example.com/test.js')).toBeNull();
+});
