@@ -308,4 +308,5 @@ export interface AppSettings {
   defaultDownloadData?: boolean;
   defaultCrawlSubdomains?: boolean;
   defaultDownloadExternalAssets?: boolean;
+  defaultReverseEngineering?: boolean;
 }

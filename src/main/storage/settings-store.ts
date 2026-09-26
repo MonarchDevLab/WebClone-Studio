@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultDownloadData: true,
   defaultCrawlSubdomains: false,
   defaultDownloadExternalAssets: true,
+  defaultReverseEngineering: true,
 };
 
 export class SettingsStore {

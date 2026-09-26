@@ -53,6 +53,7 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
     excludedPatterns: ['/admin/*', '/api/*', '/login*'],
     maxFileSize: 100 * 1024 * 1024,
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    reverseEngineering: true,
   });
 
   const [includePatternText, setIncludePatternText] = useState<string>('');
@@ -92,6 +93,7 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
             downloadData: s.defaultDownloadData ?? prev.downloadData,
             crawlSubdomains: s.defaultCrawlSubdomains ?? prev.crawlSubdomains,
             downloadExternalAssets: s.defaultDownloadExternalAssets ?? prev.downloadExternalAssets,
+            reverseEngineering: s.defaultReverseEngineering ?? prev.reverseEngineering,
           }));
           if (s.defaultOutputDir) {
             setOutputPath(prev => prev ? prev : s.defaultOutputDir);
@@ -569,6 +571,36 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                   className="w-full bg-surface-2 border border-white/[0.1] rounded-lg px-3.5 py-2 text-xs text-text-primary focus:outline-none focus:border-accent font-mono"
                 />
               </div>
+
+              {/* Tersine Mühendislik Laboratuvarı */}
+              <div className="pt-2">
+                <label className="block text-xs font-semibold text-text-primary uppercase tracking-wider mb-2">
+                  Tersine Mühendislik & Analiz
+                </label>
+                <label
+                  className={`flex items-start gap-3 p-3.5 border rounded-xl text-xs cursor-pointer transition-all ${
+                    settings.reverseEngineering
+                      ? 'bg-accent/20 border-accent/40 text-text-primary shadow-sm'
+                      : 'bg-surface-2 border-white/[0.06] text-text-muted hover:border-white/[0.12]'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={settings.reverseEngineering ?? true}
+                    onChange={(e) => setSettings({ ...settings, reverseEngineering: e.target.checked })}
+                    className="rounded accent-accent-hover mt-0.5"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 font-semibold text-text-primary">
+                      <Cpu size={14} className="text-accent-hover" />
+                      <span>Tersine Mühendislik Laboratuvarı (SourceMap, Durum, Token & API Mock)</span>
+                    </div>
+                    <div className="text-[11px] text-text-dim leading-relaxed">
+                      SourceMap ile kaynak kod ağacını rekonstrükte eder (`site/_source-code/`), React/Vue/Next.js hydration durumunu (`_meta/extracted-state.json`), Tailwind renk ve font tokenlarını (`_meta/tailwind.config.js`) ve API ağ trafiğini yakalayıp yerel önizleme sunucusuna mock olarak kaydeder (`_meta/api-endpoints.json`).
+                    </div>
+                  </div>
+                </label>
+              </div>
             </div>
           )}
 
@@ -628,6 +660,12 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                         <Check size={12} strokeWidth={2.5} /> Veriler
                       </span>
                     )}
+                  </span>
+                </div>
+                <div className="flex justify-between pb-2 border-b border-white/[0.06]">
+                  <span className="text-text-muted">Tersine Mühendislik:</span>
+                  <span className={`font-mono font-medium ${settings.reverseEngineering ? 'text-accent-hover' : 'text-text-dim'}`}>
+                    {settings.reverseEngineering ? 'Aktif (SourceMap, State, Token, API)' : 'Devre Dışı'}
                   </span>
                 </div>
                 <div className="flex justify-between">

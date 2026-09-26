@@ -15,6 +15,7 @@ export const SettingsPage: React.FC = () => {
   const [downloadData, setDownloadData] = useState<boolean>(true);
   const [crawlSubdomains, setCrawlSubdomains] = useState<boolean>(false);
   const [downloadExternalAssets, setDownloadExternalAssets] = useState<boolean>(true);
+  const [reverseEngineering, setReverseEngineering] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export const SettingsPage: React.FC = () => {
             if (s.defaultDownloadData !== undefined) setDownloadData(s.defaultDownloadData);
             if (s.defaultCrawlSubdomains !== undefined) setCrawlSubdomains(s.defaultCrawlSubdomains);
             if (s.defaultDownloadExternalAssets !== undefined) setDownloadExternalAssets(s.defaultDownloadExternalAssets);
+            if (s.defaultReverseEngineering !== undefined) setReverseEngineering(s.defaultReverseEngineering);
           }
         } catch (e) {
           console.error('Ayarlar yüklenemedi:', e);
@@ -71,6 +73,7 @@ export const SettingsPage: React.FC = () => {
           defaultDownloadData: downloadData,
           defaultCrawlSubdomains: crawlSubdomains,
           defaultDownloadExternalAssets: downloadExternalAssets,
+          defaultReverseEngineering: reverseEngineering,
         });
         toast.success('Ayarlar başarıyla kaydedildi!');
       } catch (err: any) {
@@ -288,6 +291,16 @@ export const SettingsPage: React.FC = () => {
                 className="rounded accent-accent-hover"
               />
               <span>Alt alan adlarını (subdomain) varsayılan olarak tara (Kapalı tutulması kırık linkleri önler)</span>
+            </label>
+
+            <label className="flex items-center gap-2.5 text-xs text-text-secondary cursor-pointer">
+              <input
+                type="checkbox"
+                checked={reverseEngineering}
+                onChange={(e) => setReverseEngineering(e.target.checked)}
+                className="rounded accent-accent-hover"
+              />
+              <span>Gelişmiş Tersine Mühendislik (Kaynak Kod Kurtarma, SPA State & Dinamik API Mock Yakalama)</span>
             </label>
           </div>
         </div>
