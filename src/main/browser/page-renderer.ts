@@ -1,16 +1,19 @@
 import { BrowserWindow } from 'electron';
 import { ColorToken, TypoToken, DesignTokens } from '../../shared/types';
+import { CapturedApiEndpoint } from '../cloner/reverse-engineering/api-interceptor';
 
 export interface PageRenderResult {
   html: string;
   globals: string[];
   screenshot: Buffer;
   designTokens: DesignTokens;
+  capturedEndpoints?: CapturedApiEndpoint[];
 }
 
 export interface PageRenderOptions {
   timeoutMs?: number;
   viewport?: { width: number; height: number };
+  captureApi?: boolean;
 }
 
 /**
@@ -80,9 +83,15 @@ export class PageRenderer {
     });
 
     let isDestroyed = false;
+    let debuggerAttached = false;
     const cleanup = () => {
       if (!isDestroyed) {
         isDestroyed = true;
+        try {
+          if (debuggerAttached && win.webContents.debugger.isAttached()) {
+            win.webContents.debugger.detach();
+          }
+        } catch {}
         try {
           if (!win.isDestroyed()) {
             win.destroy();
@@ -92,6 +101,45 @@ export class PageRenderer {
     };
 
     try {
+      const capturedEndpoints: CapturedApiEndpoint[] = [];
+      if (options.captureApi) {
+        try {
+          win.webContents.debugger.attach('1.3');
+          debuggerAttached = true;
+          win.webContents.debugger.sendCommand('Network.enable').catch(() => {});
+          win.webContents.debugger.on('message', async (_event, method, params) => {
+            if (method === 'Network.responseReceived') {
+              const { response, requestId, type } = params as any;
+              if (
+                type === 'XHR' || 
+                type === 'Fetch' || 
+                (response?.mimeType && response.mimeType.includes('json'))
+              ) {
+                try {
+                  const bodyObj = await win.webContents.debugger.sendCommand('Network.getResponseBody', { requestId }) as any;
+                  let responseData: any = bodyObj?.body;
+                  if (response?.mimeType?.includes('json') && typeof bodyObj?.body === 'string') {
+                    try {
+                      responseData = JSON.parse(bodyObj.body);
+                    } catch {}
+                  }
+                  const endpointUrl = new URL(response.url);
+                  capturedEndpoints.push({
+                    url: response.url,
+                    pathname: endpointUrl.pathname,
+                    method: response.requestHeaders?.[':method'] || 'GET',
+                    status: response.status,
+                    contentType: response.mimeType || 'application/json',
+                    responseData,
+                    timestamp: Date.now(),
+                  });
+                } catch {}
+              }
+            }
+          });
+        } catch {}
+      }
+
       // Yükleme promise'i
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => {
@@ -440,6 +488,7 @@ export class PageRenderer {
         globals: rawData.globals || [],
         screenshot,
         designTokens,
+        capturedEndpoints,
       };
     } finally {
       cleanup();

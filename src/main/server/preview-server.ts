@@ -2,6 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
+import { findMockResponse } from '../cloner/reverse-engineering/api-interceptor';
 
 const MIME_MAP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -121,6 +122,31 @@ export class PreviewServer {
           }
 
           if (!fs.existsSync(targetPath) || fs.statSync(targetPath).isDirectory()) {
+            // 4. API Mock Fallback (_meta/api-endpoints.json)
+            const mockDbPaths = [
+              path.join(this.currentRoot, '_meta', 'api-endpoints.json'),
+              path.join(this.currentRoot, '..', '_meta', 'api-endpoints.json'),
+            ];
+            for (const dbPath of mockDbPaths) {
+              if (fs.existsSync(dbPath)) {
+                try {
+                  const dbJson = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+                  const mock = findMockResponse(dbJson, pathname, req.method || 'GET');
+                  if (mock) {
+                    res.writeHead(mock.status || 200, {
+                      'Content-Type': mock.contentType || 'application/json; charset=utf-8',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                      'Access-Control-Allow-Headers': '*',
+                    });
+                    const responseBody = typeof mock.data === 'string' ? mock.data : JSON.stringify(mock.data);
+                    res.end(responseBody);
+                    return;
+                  }
+                } catch {}
+              }
+            }
+
             const custom404 = path.join(this.currentRoot, '_404.html');
             if (fs.existsSync(custom404)) {
               res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });

@@ -19,6 +19,7 @@ import { PageRenderer } from '../browser/page-renderer';
 import { reconstructSourceTree } from './reverse-engineering/sourcemap-reconstructor';
 import { extractFrameworkState } from './reverse-engineering/framework-extractor';
 import { extractDesignTokensFromCss } from './reverse-engineering/token-extractor';
+import { ApiTrafficInterceptor } from './reverse-engineering/api-interceptor';
 
 interface QueueItem {
   url: string;
@@ -75,6 +76,7 @@ export class CrawlerEngine extends EventEmitter {
   private screenshotBuffer: Buffer | null = null;
   private processedSourceMaps = new Set<string>();
   private extractedStates: Record<string, any> = {};
+  private apiInterceptor = new ApiTrafficInterceptor();
 
   private stats = {
     totalPages: 0,
@@ -335,12 +337,20 @@ export class CrawlerEngine extends EventEmitter {
       if (this.settings.mode === 'dynamic') {
         try {
           const rendered = await this.dynamicLimiter.schedule(() => 
-            this.pageRenderer.render(item.url, { timeoutMs: 25000 })
+            this.pageRenderer.render(item.url, { 
+              timeoutMs: 25000,
+              captureApi: !!this.settings.reverseEngineering
+            })
           );
           htmlStr = rendered.html;
           sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
           if (!this.screenshotBuffer && rendered.screenshot) {
             this.screenshotBuffer = rendered.screenshot;
+          }
+          if (rendered.capturedEndpoints && rendered.capturedEndpoints.length > 0) {
+            for (const ep of rendered.capturedEndpoints) {
+              this.apiInterceptor.record(ep);
+            }
           }
         } catch (renderErr: any) {
           this.emitLog('warn', `Dinamik render uyarısı (${item.url}), statik moda geçiliyor: ${renderErr.message}`);
@@ -377,13 +387,21 @@ export class CrawlerEngine extends EventEmitter {
           this.emitLog('info', `İstemci render iskeleti tespit edildi (${item.url}), dinamik tarayıcı render uygulanıyor...`);
           try {
             const rendered = await this.dynamicLimiter.schedule(() =>
-              this.pageRenderer.render(item.url, { timeoutMs: 25000 })
+              this.pageRenderer.render(item.url, { 
+                timeoutMs: 25000,
+                captureApi: !!this.settings.reverseEngineering
+              })
             );
             if (rendered.html && rendered.html.length > htmlStr.length) {
               htmlStr = rendered.html;
               sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
               if (!this.screenshotBuffer && rendered.screenshot) {
                 this.screenshotBuffer = rendered.screenshot;
+              }
+              if (rendered.capturedEndpoints && rendered.capturedEndpoints.length > 0) {
+                for (const ep of rendered.capturedEndpoints) {
+                  this.apiInterceptor.record(ep);
+                }
               }
             }
           } catch (spaErr: any) {
@@ -683,6 +701,19 @@ export class CrawlerEngine extends EventEmitter {
         this.emitLog('info', 'Tersine mühendislik Tailwind ve tasarım tokenları üretildi (_meta/tailwind.config.js, _meta/design-tokens.json).');
       } catch (tokenErr: any) {
         this.emitLog('warn', `Tasarım tokenları çıkarılamadı: ${tokenErr.message}`);
+      }
+    }
+
+    // 4.4 Tersine Mühendislik: Dinamik API Uç Noktalarını Kaydet (_meta/api-endpoints.json)
+    if (this.settings.reverseEngineering) {
+      const mockDb = this.apiInterceptor.exportMockDatabase();
+      if (Object.keys(mockDb).length > 0) {
+        try {
+          await this.organizer.writeMetaFile('api-endpoints.json', mockDb);
+          this.emitLog('info', 'Tersine mühendislik dinamik API uç noktaları kaydedildi (_meta/api-endpoints.json).');
+        } catch (apiErr: any) {
+          this.emitLog('warn', `api-endpoints.json kaydedilemedi: ${apiErr.message}`);
+        }
       }
     }
 
