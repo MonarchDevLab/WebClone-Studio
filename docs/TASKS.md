@@ -1,15 +1,22 @@
 # TASKS
 
 ## ŞİMDİ
-- [ ] Beklemede / Sistem hazır.
+- [ ] Yeni talimat bekleniyor.
 
 ## SIRADAKİ
-- [ ] Kullanıcıdan gelecek yeni özellik veya test talepleri.
+- [ ] Yok.
 
 ## BLOKLU
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-09-26 (HEAD) - fix(ipc): resolve redundant meta path and update project documentation
+- [x] 2026-09-26 (b888133) - feat(ui): add reverse engineering toggles to settings and clone modal (SettingsPage checkbox, CloneSetupModal Step 3 and 4 summary)
+- [x] 2026-09-26 (a0a9b5b) - feat(reverse-engineering): implement api traffic interceptor and offline mock server (CDP Network domain interception, _meta/api-endpoints.json, preview server mock route fallback)
+- [x] 2026-09-26 (893e6e9) - feat(reverse-engineering): implement tailwind and design token extractor (CSS variable, font, color parsing, _meta/tailwind.config.js and _meta/design-tokens.json output)
+- [x] 2026-09-26 (cb16c4b) - feat(cloner): aggregate and persist framework state across pages (React, Vue, Next.js, Nuxt hydration states saved to _meta/extracted-state.json)
+- [x] 2026-09-26 (479c196) - feat(cloner): wire sourcemap discovery and extraction pipeline (auto-detect .map files, queue and reconstruct source tree in site/_source-code/)
+- [x] 2026-09-16 (HEAD) - fix(reverse-engineering): address final review findings (Path traversal security fix, absolute path resolution, strict testing cleanup)
 - [x] 2026-09-16 (5cc82fe) - feat(ui): add reverse engineering setting flag (CloneSettings interface and store default)
 - [x] 2026-09-16 (3ad940c) - feat(reverse-engineering): implement SPA framework data extractor (extract Next.js and Nuxt hydration state from HTML)
 - [x] 2026-09-16 (9d8c33c) - feat(reverse-engineering): implement sourcemap reconstructor (extract original source tree from .map files)

@@ -1,17 +1,24 @@
 # WORKLOG
 
 ## Aktif Oturum
-- **Hedef:** Sıfır emoji standartının uygulanması, sitelerin kayıpsız/eksiksiz indirilmesini sağlayan motor revizyonları (SPA fallback, SSL toleransı, CSP temizliği, preload/data-bg varlık keşfi, temiz URL önizleme) ve Windows Portable paketin derlenmesi.
+- **Hedef:** Ouroboros v9.0 mimari analizinde tespit edilen tüm tersine mühendislik borçlarının kapatılması: SourceMap kurtarma pipeline'ı, çok sayfalı framework state toplayıcı, Tailwind token extractor, dinamik API trafik yakalayıcı & offline mock sunucu entegrasyonu, UI ayar kontrolleri ve IPC yol temizliği.
 - **Yapılanlar:**
-  1. Kod tabanındaki tüm emojiler temizlendi; arayüz ve raporlar yalnızca Lucide SVG ikonlarına dönüştürüldü.
-  2. Klonlama motoru zırhlandı (kök domain izolasyonu, Google Fonts /css2 ve CSS @import, preload ve data-bg varlık keşfi).
-  3. Statik modda indirilen boş React/Vue/Next iskeletleri için dahili Chromium motoru (`PageRenderer`) ile hibrit SPA kurtarma fallback'i eklendi.
-  4. İndirme istemcisine SSL toleransı (`rejectUnauthorized: false`) ve 3 kademeli retry backoff entegre edildi.
-  5. İndirilen HTML sayfalarından offline engelleyici CSP ve yönlendirme meta etiketleri temizlendi.
-  6. Önizleme sunucusuna uzantısız temiz URL, trailing slash ve SPA rota fallback desteği sağlandı.
-  7. TypeScript derlemesi 0 hata ile doğrulandı ve `dist/WebClone-Studio-Portable.exe` (77.6 MB) paketlendi.
+  1. `PageProcessor` ve `CrawlerEngine` içine SourceMap keşif ve otomatik indirme hattı bağlandı; `site/_source-code/` altında orijinal kaynak ağacı inşa edildi.
+  2. `FrameworkExtractor` geliştirildi; `__NEXT_DATA__`, `__NUXT_DATA__`, `__INITIAL_STATE__`, `__PRELOADED_STATE__` tüm taranan sayfalardan toplanıp `_meta/extracted-state.json` içinde birleştirildi.
+  3. `TokenExtractor` yazıldı; CSS değişkenleri, palet renkleri ve fontlar ayrıştırılarak `_meta/tailwind.config.js` ve `_meta/design-tokens.json` üretildi.
+  4. `ApiInterceptor` yazıldı; Chromium CDP (`Network` domain) dinlenerek dinamik API trafiği `_meta/api-endpoints.json` olarak kaydedildi ve `PreviewServer` mock rota fallback'ine bağlandı.
+  5. `AppSettings`, `SettingsStore`, `SettingsPage` ve `CloneSetupModal` bileşenlerine tersine mühendislik kontrolleri eklendi.
+  6. `ipc-handlers.ts` içerisindeki yanlış konumlanan ve mükerrer `_meta/SYSTEM_MAP.md` yazımı kaldırıldı.
+  7. Vitest testleri (17/17), typecheck (0 hata) ve production bundle (`npm run build`) başarıyla doğrulandı.
 
 ## Mimari Kararlar
+- **[KARAR-024] Tersine Mühendislik Laboratuvarı & Tam Pipeline Entegrasyonu:**
+  1) `SourceMapReconstructor` asset pipeline ile doğrudan birleştirildi; `.js` ve `.css` dosyalarındaki bağıl/mutlak/data-URI `sourceMappingURL` direktifleri ayrıştırılarak indirme kuyruğuna alındı ve indirme bitiminde atomik olarak `site/_source-code/` ağacına açıldı.
+  2) Sayfa taramalarında React, Vue, Next.js ve Nuxt hydration durumları sayfa URL'si anahtarıyla hafızada biriktirilip `_meta/extracted-state.json` olarak serileştirildi.
+  3) DOM ve stil katmanından çıkarılan renk/font değişkenleri modern Tailwind v3 `tailwind.config.js` şablonuna dönüştürüldü.
+  4) Electron offscreen penceresine `win.webContents.debugger` (CDP Network) takılarak arka plan API istek/yanıtları `ApiInterceptor` tarafından kaydedildi; `PreviewServer` ise gelen isteklerde yerel statik dosya bulunamadığında `_meta/api-endpoints.json` üzerinden offline mock yanıt üretecek şekilde genişletildi.
+  5) `CloneSetupModal` ve `SettingsPage` üzerinden kullanıcıya tersine mühendisliği açıp kapatma yetkisi verildi.
+  6) `ipc-handlers.ts` içerisindeki kök çıktı dizinine `_meta/` yazan hatalı kod temizlenerek yetki `CrawlerEngine`'in proje içi organizatörüne bırakıldı.
 - **[KARAR-023] Sıfır Emoji Standartı, Kayıpsız Klonlama Motoru ve Hibrit SPA Kurtarma:**
   1) Kod tabanı, rapor şablonları (`system-map-generator.ts`, `report-generator.ts`, `readme-generator.ts`), log konsolları ve UI bileşenlerindeki tüm emojiler temizlendi; arayüzde yalnızca Lucide SVG ikonları ve kurumsal tipografi bırakıldı.
   2) `PageProcessor` kök domain eşleşmesi (`getRootDomain`, `isInternalDomain`) ile güçlendirildi; `www.` yönlendirmelerinde iç linklerin atlanması engellendi; harici sosyal linkler kuyruktan izole edildi; CSS `@import` ve Google Fonts `/css2` ayrıştırması güçlendirildi; `<link rel="preload" as="image">`, `data-bg`, `data-background`, `data-background-image` ve `video[poster]` seçicileri varlık keşfine dahil edildi.

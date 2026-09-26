@@ -236,16 +236,6 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
       });
 
       crawler.on('complete', (data) => {
-        try {
-          if (targetAnalyzeResult) {
-            const metaDir = path.join(finalOutputDir, '_meta');
-            if (!fs.existsSync(metaDir)) fs.mkdirSync(metaDir, { recursive: true });
-            const systemMapMd = SystemMapGenerator.generate(targetAnalyzeResult);
-            fs.writeFileSync(path.join(metaDir, 'SYSTEM_MAP.md'), systemMapMd, 'utf-8');
-          }
-        } catch (err) {
-          console.warn('[IPC] _meta/SYSTEM_MAP.md kaydetme uyarısı:', err);
-        }
         if (!sender.isDestroyed()) {
           sender.send(IpcChannel.CLONE_COMPLETE, data);
         }
