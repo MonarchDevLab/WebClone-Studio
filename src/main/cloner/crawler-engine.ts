@@ -18,6 +18,7 @@ import { SystemMapGenerator } from '../generators/system-map-generator';
 import { PageRenderer } from '../browser/page-renderer';
 import { reconstructSourceTree } from './reverse-engineering/sourcemap-reconstructor';
 import { extractFrameworkState } from './reverse-engineering/framework-extractor';
+import { extractDesignTokensFromCss } from './reverse-engineering/token-extractor';
 
 interface QueueItem {
   url: string;
@@ -566,12 +567,14 @@ export class CrawlerEngine extends EventEmitter {
 
     // 2. CSS dosyalarını offline url() ve @import ile yeniden yaz
     const rewrittenCssPaths = new Set<string>();
+    const collectedCssList: string[] = [];
     for (const [assetUrl, localPath] of this.urlToLocalPathMap.entries()) {
       if (localPath.endsWith('.css') && !rewrittenCssPaths.has(localPath)) {
         rewrittenCssPaths.add(localPath);
         try {
           if (fs.existsSync(localPath)) {
             const rawCss = await fs.promises.readFile(localPath, 'utf-8');
+            collectedCssList.push(rawCss);
             const rewrittenCss = UrlRewriter.rewriteCss(rawCss, {
               currentPageUrl: assetUrl,
               currentLocalFilePath: localPath,
@@ -668,6 +671,18 @@ export class CrawlerEngine extends EventEmitter {
         this.emitLog('info', 'Tersine mühendislik SPA framework state verileri kaydedildi (_meta/extracted-state.json).');
       } catch (stateSaveErr: any) {
         this.emitLog('warn', `extracted-state.json kaydedilemedi: ${stateSaveErr.message}`);
+      }
+    }
+
+    // 4.3 Tersine Mühendislik: CSS Token ve Tailwind Konfigürasyonunu Çıkar (_meta/tailwind.config.js, _meta/design-tokens.json)
+    if (this.settings.reverseEngineering && collectedCssList.length > 0) {
+      try {
+        const { tokens, tailwindConfig } = extractDesignTokensFromCss(collectedCssList);
+        await this.organizer.writeMetaFile('tailwind.config.js', tailwindConfig);
+        await this.organizer.writeMetaFile('design-tokens.json', tokens);
+        this.emitLog('info', 'Tersine mühendislik Tailwind ve tasarım tokenları üretildi (_meta/tailwind.config.js, _meta/design-tokens.json).');
+      } catch (tokenErr: any) {
+        this.emitLog('warn', `Tasarım tokenları çıkarılamadı: ${tokenErr.message}`);
       }
     }
 
