@@ -17,6 +17,7 @@ import { ReportGenerator } from '../output/report-generator';
 import { SystemMapGenerator } from '../generators/system-map-generator';
 import { PageRenderer } from '../browser/page-renderer';
 import { reconstructSourceTree } from './reverse-engineering/sourcemap-reconstructor';
+import { extractFrameworkState } from './reverse-engineering/framework-extractor';
 
 interface QueueItem {
   url: string;
@@ -441,6 +442,19 @@ export class CrawlerEngine extends EventEmitter {
         }
       }
 
+      // Tersine Mühendislik (Reverse Engineering): SPA Framework State (Next.js, Nuxt vb.)
+      if (this.settings.reverseEngineering) {
+        try {
+          const state = extractFrameworkState(htmlStr);
+          if (state && Object.keys(state).length > 0) {
+            this.extractedStates[item.url] = state;
+            this.emitLog('info', `SPA framework durumu yakalandı: ${item.url}`);
+          }
+        } catch (stateErr: any) {
+          this.emitLog('debug', `Framework state ayıklanamadı: ${stateErr.message}`);
+        }
+      }
+
       this.pagesToRewrite.push({
         url: item.url,
         localPath: mapping.absolutePath,
@@ -645,6 +659,16 @@ export class CrawlerEngine extends EventEmitter {
           await fs.promises.writeFile(path.join(siteRoot, '_404.html'), offline404Html, 'utf-8');
         }
       } catch {}
+    }
+
+    // 4.2 Tersine Mühendislik: SPA Framework Durumlarını Kaydet (_meta/extracted-state.json)
+    if (this.settings.reverseEngineering && Object.keys(this.extractedStates).length > 0) {
+      try {
+        await this.organizer.writeMetaFile('extracted-state.json', this.extractedStates);
+        this.emitLog('info', 'Tersine mühendislik SPA framework state verileri kaydedildi (_meta/extracted-state.json).');
+      } catch (stateSaveErr: any) {
+        this.emitLog('warn', `extracted-state.json kaydedilemedi: ${stateSaveErr.message}`);
+      }
     }
 
     // 5. manifest.json ve README.md üret

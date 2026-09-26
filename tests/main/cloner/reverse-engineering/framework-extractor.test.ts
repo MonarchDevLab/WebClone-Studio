@@ -32,4 +32,10 @@ describe('extractFrameworkState', () => {
     const result = extractFrameworkState(html);
     expect(result.nextData).toBeUndefined();
   });
+
+  it('extracts window.__INITIAL_STATE__ from script text', () => {
+    const html = `<html><body><script>window.__INITIAL_STATE__ = {"auth":{"user":"admin"}};</script></body></html>`;
+    const result = extractFrameworkState(html);
+    expect(result.initialState).toEqual({ auth: { user: 'admin' } });
+  });
 });
