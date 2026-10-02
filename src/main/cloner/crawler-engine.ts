@@ -20,6 +20,7 @@ import { reconstructSourceTree } from './reverse-engineering/sourcemap-reconstru
 import { extractFrameworkState } from './reverse-engineering/framework-extractor';
 import { extractDesignTokensFromCss } from './reverse-engineering/token-extractor';
 import { ApiTrafficInterceptor } from './reverse-engineering/api-interceptor';
+import { StructuredDataExtractor } from '../analyzers/structured-data-extractor';
 
 interface QueueItem {
   url: string;
@@ -714,6 +715,27 @@ export class CrawlerEngine extends EventEmitter {
         } catch (apiErr: any) {
           this.emitLog('warn', `api-endpoints.json kaydedilemedi: ${apiErr.message}`);
         }
+      }
+    }
+
+    
+    // 4.5 Tersine Mühendislik: Yapısal Veri Çıkarımı (_meta/structured-data.json)
+    if (this.settings.reverseEngineering) {
+      try {
+        const extractor = new StructuredDataExtractor();
+        const allStructuredData: Record<string, any> = {};
+        for (const page of this.pagesToRewrite) {
+          const collections = extractor.extract(page.html);
+          if (collections.length > 0) {
+            allStructuredData[page.url] = collections;
+          }
+        }
+        if (Object.keys(allStructuredData).length > 0) {
+          await this.organizer.writeMetaFile('structured-data.json', allStructuredData);
+          this.emitLog('info', 'Tersine mühendislik yapısal veri (List/Grid) çıkarıldı (_meta/structured-data.json).');
+        }
+      } catch (dataErr: any) {
+        this.emitLog('warn', `Yapısal veri çıkarımı başarısız: ${dataErr.message}`);
       }
     }
 

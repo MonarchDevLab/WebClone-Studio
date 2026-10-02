@@ -1,15 +1,15 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] YAPISAL VERİ ÇIKARIMI: `src/main/analyzers` altına AI tabanlı veya tekrarlayan kalıp tabanlı (List/Grid) veri çıkarımı modülü eklenecek.
+- [~] COMPONENT EXPORT: İndirilen DOM ağacını React/Tailwind bileşenlerine çeviren dönüştürücü motor (AI/AST) geliştirilecek.
 
 ## SIRADAKİ
-- [ ] COMPONENT EXPORT: İndirilen DOM ağacını React/Tailwind bileşenlerine çeviren dönüştürücü motor (AI/AST) geliştirilecek.
 
 ## BLOKLU
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - feat(analyzers): implement Structured Data Extractor to mine grids and lists
 - [x] 2026-10-02 - feat(browser): implement Declarative Shadow DOM piercing for deep component extraction
 - [x] 2026-10-02 - feat(browser): implement infinite scroll and network idle stabilization in PageRenderer
 - [x] 2026-10-02 - feat(browser): inject CDP anti-bot stealth mechanisms into PageRenderer for WAF evasion
