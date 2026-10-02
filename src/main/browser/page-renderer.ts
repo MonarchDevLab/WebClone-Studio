@@ -193,6 +193,52 @@ export class PageRenderer {
           } catch (e) {
             console.warn('Oto-kaydirma basarisiz:', e);
           }
+
+          // OTONOM DURUM GEZGİNİ (Safe Interactive DOM Expansion)
+          try {
+            await win.webContents.executeJavaScript(`
+              new Promise((resolveExpand) => {
+                try {
+                  const safeSelectors = [
+                    'details:not([open]) > summary',
+                    '[aria-expanded="false"]',
+                    '[role="tab"][aria-selected="false"]',
+                    '.accordion-header',
+                    '.faq-question',
+                    '.collapse-toggle',
+                    '[data-bs-toggle="collapse"]'
+                  ];
+                  const candidates = Array.from(document.querySelectorAll(safeSelectors.join(',')));
+                  let idx = 0;
+                  const maxExpands = 25;
+                  
+                  if (candidates.length === 0) {
+                    resolveExpand();
+                    return;
+                  }
+
+                  const interval = setInterval(() => {
+                    if (idx >= candidates.length || idx >= maxExpands) {
+                      clearInterval(interval);
+                      resolveExpand();
+                      return;
+                    }
+                    const el = candidates[idx++];
+                    if (el && !el.closest('form') && el.tagName !== 'A' && el.getAttribute('type') !== 'submit') {
+                      try {
+                        el.click();
+                      } catch {}
+                    }
+                  }, 60);
+                } catch {
+                  resolveExpand();
+                }
+              });
+            `).catch(() => {});
+          } catch (e) {
+            console.warn('Otonom durum gezgini basarisiz:', e);
+          }
+
           // Network Idle
           setTimeout(resolve, 1500);
         });
