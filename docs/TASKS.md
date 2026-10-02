@@ -10,6 +10,9 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - feat(generators): implement SingleFileExporter for self-contained standalone HTML archive
+- [x] 2026-10-02 - feat(generators): implement ApiContractGenerator for OpenAPI 3.1 and TypeScript definitions
+- [x] 2026-10-02 - feat(renderer): implement autonomous state explorer to expand interactive tabs and accordions
 - [x] 2026-10-02 - chore(system): execute Ultimate Verification, update docs and close Ouroboros cycle
 - [x] 2026-10-02 - feat(cloner): implement Obfuscation Bypass to extract hidden fonts and assets from JS chunks
 - [x] 2026-10-02 - feat(cloner): implement HTML to React TSX component export

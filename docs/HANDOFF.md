@@ -1,8 +1,11 @@
 # HANDOFF
 
 ## Anlık Durum
-"Ultimate Web Clone" planı (Aşama 1-5) tam başarıyla uygulandı ve proje Ouroboros protokolü kapsamında tamamlandı.
-1. **Ultimate Özellikler:**
+"Ultimate Web Clone" planı ve ileri seviye eklemeler tam başarıyla uygulandı ve proje Ouroboros protokolü kapsamında tamamlandı.
+1. **İleri Seviye ve Ultimate Özellikler:**
+   - **Otonom Durum Gezgini (State Explorer):** Chromium render aşamasında `aria-expanded="false"`, `role="tab"`, `details summary` ve akordeon menüleri güvenle tıklayarak gizli dinamik DOM durumlarını açar ve yakalar.
+   - **OpenAPI 3.1 & TypeScript Generator:** Yakalanan dinamik API ağ trafiğinden (`_meta/api-endpoints.json`) otomatik standart `_meta/openapi.json` ve tip güvenli `_meta/api-types.d.ts` sözleşmeleri üretir.
+   - **Tek Dosya Arşivleyici (SingleFile Exporter):** Klonlanan sayfayı tüm CSS, JS, font (WOFF2 Base64) ve görselleriyle bağımsız tek bir dosya haline getirerek `_exports/index.standalone.html` olarak sunar.
    - **Stealth Evasion:** Cloudflare/Bot korumalarını aşmak için CDP `Page.addScriptToEvaluateOnNewDocument` ile `navigator.webdriver` ve özellik manipülasyonu sağlandı.
    - **Infinite Scroll:** Dinamik yüklenen içerikler (lazy-load) için native Chromium auto-scroll (aşağı/yukarı) entegre edildi.
    - **Shadow DOM Piercing:** Web components ve shadow-root kullanan modern siteler için DOM ayrıştırma algoritması Chromium `getInnerHTML` API'si ile derinlemesine delindi.
@@ -23,8 +26,11 @@
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Commit:** `6f1fa25` feat(cloner): implement Obfuscation Bypass to extract hidden fonts and assets from JS chunks
-- **Önceki Commitler:**
+- **Son Commitler:**
+  - `1df3ea3` feat(generators): implement SingleFileExporter for self-contained standalone HTML archive
+  - `be8a24e` feat(generators): implement ApiContractGenerator for OpenAPI 3.1 and TypeScript definitions
+  - `4b87326` feat(renderer): implement autonomous state explorer to expand interactive tabs and accordions
+  - `6f1fa25` feat(cloner): implement Obfuscation Bypass to extract hidden fonts and assets from JS chunks
   - `96041df` feat(cloner): implement HTML to React TSX component export
   - `7df194c` feat(cloner): extract structured JSON data from grid/list layouts
   - `b02fc68` feat(crawler): implement deep shadow dom piercing using getInnerHTML
