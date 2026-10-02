@@ -55,8 +55,11 @@ export class UpdateChecker {
             name: a.name,
             downloadUrl: a.browser_download_url,
             size: a.size,
+            downloadCount: a.download_count || 0,
           }))
         : [];
+
+      const totalDownloads = assets.reduce((sum, a) => sum + (a.downloadCount || 0), 0);
 
       return {
         hasUpdate,
@@ -67,6 +70,7 @@ export class UpdateChecker {
         publishedAt: release.published_at,
         htmlUrl: release.html_url || `https://github.com/${this.GITHUB_REPO}/releases`,
         assets,
+        totalDownloads,
       };
     } catch (err: any) {
       // 404 (henüz release açılmamışsa) veya internet bağlantısı yoksa

@@ -403,9 +403,16 @@ export const SettingsPage: React.FC = () => {
                   <span>{updateInfo.error}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg">
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  <span>WebClone Studio güncel. En son sürümü (v{currentVersion}) kullanıyorsunuz.</span>
+                <div className="flex items-center justify-between text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    <span>WebClone Studio güncel. En son sürümü (v{currentVersion}) kullanıyorsunuz.</span>
+                  </div>
+                  {updateInfo.totalDownloads !== undefined && (
+                    <span className="text-[11px] font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded">
+                      Toplam İndirme: {updateInfo.totalDownloads.toLocaleString()}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

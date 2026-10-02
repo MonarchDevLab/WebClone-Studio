@@ -316,6 +316,7 @@ export interface AppUpdateAsset {
   name: string;
   downloadUrl: string;
   size: number;
+  downloadCount?: number;
 }
 
 export interface AppUpdateInfo {
@@ -327,5 +328,6 @@ export interface AppUpdateInfo {
   publishedAt?: string;
   htmlUrl?: string;
   assets?: AppUpdateAsset[];
+  totalDownloads?: number;
   error?: string;
 }
