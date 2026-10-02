@@ -1,7 +1,7 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] COMPONENT EXPORT: İndirilen DOM ağacını React/Tailwind bileşenlerine çeviren dönüştürücü motor (AI/AST) geliştirilecek.
+- [~] OBFUSCATION BYPASS: JS içerisine gizlenmiş asset yolları ve web-fontları AST/Regex ile bulunup çıkarılacak.
 
 ## SIRADAKİ
 
@@ -9,6 +9,7 @@
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - feat(generators): build AST-based Component Exporter to generate React/Tailwind TSX files
 - [x] 2026-10-02 - feat(analyzers): implement Structured Data Extractor to mine grids and lists
 - [x] 2026-10-02 - feat(browser): implement Declarative Shadow DOM piercing for deep component extraction
 - [x] 2026-10-02 - feat(browser): implement infinite scroll and network idle stabilization in PageRenderer

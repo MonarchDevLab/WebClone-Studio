@@ -21,6 +21,7 @@ import { extractFrameworkState } from './reverse-engineering/framework-extractor
 import { extractDesignTokensFromCss } from './reverse-engineering/token-extractor';
 import { ApiTrafficInterceptor } from './reverse-engineering/api-interceptor';
 import { StructuredDataExtractor } from '../analyzers/structured-data-extractor';
+import { ComponentExporter } from '../generators/component-exporter';
 
 interface QueueItem {
   url: string;
@@ -736,6 +737,28 @@ export class CrawlerEngine extends EventEmitter {
         }
       } catch (dataErr: any) {
         this.emitLog('warn', `Yapısal veri çıkarımı başarısız: ${dataErr.message}`);
+      }
+    }
+
+    
+    // 4.6 Tersine Mühendislik: React Component Export
+    if (this.settings.reverseEngineering) {
+      try {
+        const componentsDir = path.join(this.organizer.getFolders().projectDir, '_components');
+        await fs.promises.mkdir(componentsDir, { recursive: true });
+        
+        let exportedCount = 0;
+        for (const page of this.pagesToRewrite) {
+          if (page.localPath.endsWith('index.html')) {
+             const compName = 'Page_' + Math.random().toString(36).substring(2, 8);
+             const tsx = ComponentExporter.generateReactComponent(page.html, compName);
+             await fs.promises.writeFile(path.join(componentsDir, compName + '.tsx'), tsx, 'utf-8');
+             exportedCount++;
+          }
+        }
+        this.emitLog('info', `Tersine mühendislik ${exportedCount} sayfa React bileşenine dönüştürüldü (_components/).`);
+      } catch (compErr: any) {
+        this.emitLog('warn', `Bileşen dönüşümü başarısız: ${compErr.message}`);
       }
     }
 
