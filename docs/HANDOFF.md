@@ -1,21 +1,18 @@
 # HANDOFF
 
 ## Anlık Durum
-Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra & Ouroboros v6.0 disipliniyle analiz edilip onarıldı:
-1. **Güvenlik:** ReDoS açığı `escapeWildcardToRegExp` ile kapatıldı, IPC kanal beyaz listesi zırhlandı, Chromium sandbox aktifleştirildi, preview server null-byte injection koruması eklendi, HTML/CSS rapor üreticisine sanitizasyon (`safeHex`, `safeCssValue`, `escapeHtml`) eklendi.
-2. **Bellek & Performans:** Crawler queue O(1) pointer tabanlı dequeue'ya çevrildi, IPC handler aktif iş havuzu temizliği yapıldı, Zustand clone-store array operasyonları optimize edildi, SiteMapPage ağaç yapısı lazy-expand ile hafifletildi, EBUSY dosya kilitlenmeleri çözüldü.
-3. **Mimari & Sağlamlık:** XML sitemap `xmlMode: true` ile Cheerio üzerinden parse edildi, asenkron I/O ve atomik dosya yazımı (`.tmp`) uygulandı, CSS hash temizliği ve harici protokol izolasyonu yapıldı.
-4. **Tip & UI Erişilebilirlik:** `any` tipleri katılaştırıldı, arayüz bileşenlerine erişilebilirlik (ARIA, klavye yönetimi) eklendi, `npm run typecheck` ve `npm run build` %100 başarıyla tamamlandı.
-5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`, 77.6MB) 26.09.2026 tarihinde 0 hata ile yeniden derlendi.
-6. **Emoji Tasfiyesi & İndirme Motoru Güçlendirmesi:** Kod tabanındaki tüm emojiler temizlenip Lucide SVG ikonlarına dönüştürüldü; harici sayfa sızıntıları engellendi, robots.txt varlık blokajı kaldırıldı, Google Fonts/CSS/preload/data-bg varlık keşfi genişletildi ve aynı kök domain yönlendirmelerine izin verildi.
-7. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuldu, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı, CSP meta etiketleri offline açılışta temizlendi ve önizleme sunucusuna temiz URL ile SPA fallback eklendi.
-8. **Kapsamlı Varlık İndirme & Seçenekli Filtreleme:** Resimler, Fontlar, Medya, Belgeler (.pdf, .doc, .xls, .ppt), Arşivler (.zip, .rar, .tar, .7z) ve Veriler (.json, .xml, .csv) için bağımsız indirme anahtarları eklendi. Content-Disposition ve MIME tabanlı dinamik uzantı çözümleyici kuruldu. Alt alan adı (subdomain) izolasyonu seçeneği eklendi. Orijinal hedef sunucuda mevcut olmayan (HTTP 404) kırık linkler için yerel offline fallback kartı (`site/_404.html`) ve arayüzde bilgilendirici rozet sistemi entegre edildi.
-9. **Tersine Mühendislik Laboratuvarı & Tam Pipeline Entegrasyonu (26.09.2026):**
-   - **SourceMap Keşif & Rekonstrüksiyon:** CSS ve JS dosyalarındaki `sourceMappingURL` direktifleri (bağıl, mutlak, data URI) otomatik keşfedilip `.map` varlıkları indirildi; `site/_source-code/` altında orijinal dizin hiyerarşisi yeniden inşa edildi.
-   - **Framework Hydration State Toplama:** SSR/SPA sayfalarından `__NEXT_DATA__`, `__NUXT_DATA__`, `__INITIAL_STATE__` ve `__PRELOADED_STATE__` yakalanıp çoklu sayfa bazında `_meta/extracted-state.json` içine birleştirildi.
-   - **Tasarım Sistemi & Tailwind Token Extractor:** Canlı DOM ve stillerden CSS değişkenleri, renk paletleri ve font aileleri çıkarılarak `_meta/tailwind.config.js` ve `_meta/design-tokens.json` üretildi.
-   - **Dinamik API Trafik Yakalama & Offline Mock:** Chromium CDP (`Network` domain) dinlenerek XHR/Fetch/JSON yanıtları yakalandı; `_meta/api-endpoints.json` içine kaydedildi ve yerleşik önizleme sunucusuna offline mock yanıt mekanizması bağlandı.
-   - **UI & Ayarlar:** `CloneSettings.reverseEngineering` anahtarı, `SettingsPage` kalıcı ayar desteği ve `CloneSetupModal` 3. adım kontrolü ile 4. adım özetine eklendi.
+"Ultimate Web Clone" planı (Aşama 1-5) tam başarıyla uygulandı ve proje Ouroboros protokolü kapsamında tamamlandı.
+1. **Ultimate Özellikler:**
+   - **Stealth Evasion:** Cloudflare/Bot korumalarını aşmak için CDP `Page.addScriptToEvaluateOnNewDocument` ile `navigator.webdriver` ve özellik manipülasyonu sağlandı.
+   - **Infinite Scroll:** Dinamik yüklenen içerikler (lazy-load) için native Chromium auto-scroll (aşağı/yukarı) entegre edildi.
+   - **Shadow DOM Piercing:** Web components ve shadow-root kullanan modern siteler için DOM ayrıştırma algoritması Chromium `getInnerHTML` API'si ile derinlemesine delindi.
+   - **Structured Data & React Export:** Sayfadaki liste/grid yapıları (Cheerio ile) analiz edilip `_meta/structured-data.json` olarak çıkartılıyor; temizlenmiş HTML yapısı `_components/` altında kullanıma hazır React `.tsx` bileşenlerine dönüştürülüyor.
+   - **Obfuscation Bypass:** İndirilen `.js` dosyalarındaki (Webpack/Vite chunk'ları vb.) gizli asset uzantıları (`.woff2`, `.png`, `.json` vb.) regex ve AST analiziyle bulunup crawler kuyruğuna otomatik ekleniyor.
+2. **Güvenlik:** ReDoS açığı `escapeWildcardToRegExp` ile kapatıldı, IPC kanal beyaz listesi zırhlandı, Chromium sandbox aktifleştirildi, preview server null-byte injection koruması eklendi, HTML/CSS rapor üreticisine sanitizasyon (`safeHex`, `safeCssValue`, `escapeHtml`) eklendi.
+3. **Bellek & Performans:** Crawler queue O(1) pointer tabanlı dequeue'ya çevrildi, IPC handler aktif iş havuzu temizliği yapıldı, Zustand clone-store array operasyonları optimize edildi, SiteMapPage ağaç yapısı lazy-expand ile hafifletildi, EBUSY dosya kilitlenmeleri çözüldü.
+4. **Mimari & Sağlamlık:** XML sitemap `xmlMode: true` ile Cheerio üzerinden parse edildi, asenkron I/O ve atomik dosya yazımı (`.tmp`) uygulandı, CSS hash temizliği ve harici protokol izolasyonu yapıldı.
+5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`, ~77MB) tamamen bağımsız (Playwright/Puppeteer vb. gerektirmeyen) native Electron altyapısıyla 0 hata ile derlenmeye hazır.
+6. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuluyor, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı.
 
 ## Kritik Komutlar
 - Development: `npm run dev`
@@ -26,12 +23,12 @@ Kod tabanındaki tüm hatalı, eksik ve riskli alanlar 4 fazlı Ponytail Ultra &
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
-- **Son Commit:** `b888133` feat(ui): add reverse engineering toggles to settings and clone modal
+- **Son Commit:** `6f1fa25` feat(cloner): implement Obfuscation Bypass to extract hidden fonts and assets from JS chunks
 - **Önceki Commitler:**
-  - `a0a9b5b` feat(reverse-engineering): implement api traffic interceptor and offline mock server
-  - `893e6e9` feat(reverse-engineering): implement tailwind and design token extractor
-  - `cb16c4b` feat(cloner): aggregate and persist framework state across pages
-  - `479c196` feat(cloner): wire sourcemap discovery and extraction pipeline
+  - `96041df` feat(cloner): implement HTML to React TSX component export
+  - `7df194c` feat(cloner): extract structured JSON data from grid/list layouts
+  - `b02fc68` feat(crawler): implement deep shadow dom piercing using getInnerHTML
+  - `4b13a7b` feat(evasion): add infinite scroll and stealth bot evasion scripts
 
 ## Riskler
 - Yok.
