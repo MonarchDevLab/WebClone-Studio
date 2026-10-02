@@ -22,6 +22,7 @@ import { extractDesignTokensFromCss } from './reverse-engineering/token-extracto
 import { ApiTrafficInterceptor } from './reverse-engineering/api-interceptor';
 import { StructuredDataExtractor } from '../analyzers/structured-data-extractor';
 import { ComponentExporter } from '../generators/component-exporter';
+import { ApiContractGenerator } from '../generators/api-contract-generator';
 
 interface QueueItem {
   url: string;
@@ -733,6 +734,22 @@ export class CrawlerEngine extends EventEmitter {
         try {
           await this.organizer.writeMetaFile('api-endpoints.json', mockDb);
           this.emitLog('info', 'Tersine mühendislik dinamik API uç noktaları kaydedildi (_meta/api-endpoints.json).');
+
+          // OpenAPI 3.1 & TypeScript Sözleşme Üretimi
+          const endpoints = this.apiInterceptor.getEndpoints();
+          if (endpoints.length > 0) {
+            try {
+              const host = new URL(this.targetUrl).hostname;
+              const openApiSpec = ApiContractGenerator.generateOpenApiSpec(endpoints, host);
+              await this.organizer.writeMetaFile('openapi.json', openApiSpec);
+
+              const tsDefs = ApiContractGenerator.generateTypeScriptDefinitions(endpoints);
+              await this.organizer.writeMetaFile('api-types.d.ts', tsDefs);
+              this.emitLog('info', 'OpenAPI 3.1 ve TypeScript sözleşmesi üretildi (_meta/openapi.json, _meta/api-types.d.ts).');
+            } catch (contractErr: any) {
+              this.emitLog('warn', `API sözleşmesi üretilemedi: ${contractErr.message}`);
+            }
+          }
         } catch (apiErr: any) {
           this.emitLog('warn', `api-endpoints.json kaydedilemedi: ${apiErr.message}`);
         }
