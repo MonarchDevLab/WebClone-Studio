@@ -10,6 +10,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - docs(readme): design and embed repository hero banner and UI showcase visuals
 - [x] 2026-10-02 - feat(dist): generate Windows Setup.exe, Portable.exe, and MSI packages
 - [x] 2026-10-02 - docs: rewrite comprehensive bilingual README for GitHub with zero emojis
 - [x] 2026-10-02 - feat(updater): add GitHub Releases in-app update hub and updater service
