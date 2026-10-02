@@ -12,7 +12,10 @@
     "build:portable": "npm run typecheck && electron-vite build && electron-builder --win portable",
     "postinstall": "electron-builder install-app-deps",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:setup": "npm run typecheck && electron-vite build && electron-builder --win nsis",
+    "build:msi": "npm run typecheck && electron-vite build && electron-builder --win msi",
+    "build:all": "npm run typecheck && electron-vite build && electron-builder --win nsis portable msi"
   },
   "dependencies": {
     "bottleneck": "^2.19.5",

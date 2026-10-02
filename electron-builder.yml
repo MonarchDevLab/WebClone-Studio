@@ -14,9 +14,25 @@ win:
   target:
     - target: portable
       arch: [x64]
+    - target: nsis
+      arch: [x64]
+    - target: msi
+      arch: [x64]
   icon: resources/icon.ico
 portable:
   artifactName: "WebClone-Studio-Portable.exe"
   requestExecutionLevel: user
   unpackDirName: "WebCloneStudio"
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: "WebClone Studio"
+  artifactName: "WebClone-Studio-Setup-${version}.exe"
+msi:
+  artifactName: "WebClone-Studio-${version}.msi"
+  oneClick: false
+  perMachine: false
 npmRebuild: false

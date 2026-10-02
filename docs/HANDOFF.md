@@ -17,6 +17,16 @@
 5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`, ~77MB) tamamen bağımsız (Playwright/Puppeteer vb. gerektirmeyen) native Electron altyapısıyla 0 hata ile derlenmeye hazır.
 6. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuluyor, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı.
 
+1. **Dağıtım ve Kurulum Paketleri (Windows x64):**
+   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.0.0.exe` (~77.9MB)
+   - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~77.6MB)
+   - **Kurumsal MSI:** `dist/WebClone-Studio-1.0.0.msi` (~97.2MB)
+2. **GitHub Güncelleme Entegrasyonu:**
+   - `UpdateChecker` servisi ve `SettingsPage` içi Güncelleme Merkezi kuruldu.
+   - GitHub Releases API üzerinden yeni sürüm denetimi ve indirme bağlantıları bağlandı.
+3. **Dokümantasyon & Hijyen:**
+   - GitHub için Türkçe & İngilizce, sıfır emojili, profesyonel `README.md` oluşturuldu.
+
 ## Kritik Komutlar
 - Development: `npm run dev`
 - Test: `npm test`

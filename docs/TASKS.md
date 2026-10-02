@@ -10,6 +10,9 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - feat(dist): generate Windows Setup.exe, Portable.exe, and MSI packages
+- [x] 2026-10-02 - docs: rewrite comprehensive bilingual README for GitHub with zero emojis
+- [x] 2026-10-02 - feat(updater): add GitHub Releases in-app update hub and updater service
 - [x] 2026-10-02 - feat(generators): implement SingleFileExporter for self-contained standalone HTML archive
 - [x] 2026-10-02 - feat(generators): implement ApiContractGenerator for OpenAPI 3.1 and TypeScript definitions
 - [x] 2026-10-02 - feat(renderer): implement autonomous state explorer to expand interactive tabs and accordions
