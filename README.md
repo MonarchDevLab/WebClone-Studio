@@ -2,6 +2,10 @@
 
 <div align="center">
 
+<img src="resources/banner.png" alt="WebClone Studio Hero Banner" width="100%" />
+
+<br/><br/>
+
 **Enterprise Web Architecture Extraction, Lossless Offline Mirroring & Reverse Engineering Workstation**
 
 [![Total Downloads](https://img.shields.io/github/downloads/MonarchDevLab/WebClone-Studio/total.svg?style=flat-square&color=10B981&label=Downloads)](https://github.com/MonarchDevLab/WebClone-Studio/releases)
@@ -55,6 +59,12 @@
 2. **Reverse Engineering Decompilation:** Reconstructs original development file trees from production source maps, extracts hydration states, outputs W3C design tokens and Tailwind v4 themes, and generates OpenAPI 3.1 specifications from background network traffic.
 3. **Modular Code Generation:** Synthesizes production-ready React 19 TSX components and creates self-contained single-file HTML deliverables.
 4. **Native Zero-Driver Architecture:** Embeds Chromium offscreen rendering directly within Electron 33, eliminating any requirement for external browser binaries (Playwright, Puppeteer, Selenium).
+
+<br/>
+
+<p align="center">
+  <img src="resources/ui_showcase.png" alt="WebClone Studio Workspace & Telemetry Interface" width="100%" />
+</p>
 
 ---
 
@@ -261,6 +271,12 @@ npm run build:all
 2. **Tersine Mühendislik ve Dekompilasyon:** Canlı sitelerdeki kaynak haritalarından (source maps) orijinal kaynak kod ağacını (`site/_source-code/`) kurtarır; hydration durumlarını, W3C tasarım tokenlarını ve ağ trafiğinden OpenAPI 3.1 spesifikasyonunu üretir.
 3. **Modüler Kod Üretimi:** Klonlanan sayfaları temiz React 19 TSX bileşenlerine dönüştürür ve dağıtılabilir tek parça bağımsız HTML çıktıları oluşturur.
 4. **Sıfır Harici Sürücü Bağımlılığı:** Electron 33'ün yerleşik offscreen Chromium motorunu kullanır. Playwright, Puppeteer veya harici WebDriver kurulumu gerektirmez.
+
+<br/>
+
+<p align="center">
+  <img src="resources/ui_showcase.png" alt="WebClone Studio Yönetim Paneli ve Canlı Telemetri Arayüzü" width="100%" />
+</p>
 
 ---
 
