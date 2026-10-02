@@ -524,7 +524,27 @@ export class CrawlerEngine extends EventEmitter {
       if (this.settings.reverseEngineering && (item.type === 'js' || item.type === 'css' || finalLocalPath.endsWith('.js') || finalLocalPath.endsWith('.css'))) {
         try {
           const fileContent = await fs.promises.readFile(finalLocalPath, 'utf-8');
-          const mapUrl = PageProcessor.extractSourceMapUrl(fileContent, item.url);
+          
+            // Tersine Mühendislik: JS içindeki gizli/obfuscate asset'leri çıkar
+            const hiddenAssets = PageProcessor.extractHiddenAssetsFromJs(fileContent, item.url);
+            if (hiddenAssets.length > 0) {
+              let hiddenAdded = 0;
+              for (const asset of hiddenAssets) {
+                if (!this.visitedUrls.has(asset.url)) {
+                  this.queue.push({
+                    url: asset.url,
+                    depth: item.depth + 1,
+                    type: asset.type,
+                    isPage: false,
+                  });
+                  hiddenAdded++;
+                }
+              }
+              if (hiddenAdded > 0) {
+                this.emitLog('info', `JS obfuscation bypass: ${hiddenAdded} gizli asset çıkarıldı (${path.basename(finalLocalPath)})`);
+              }
+            }
+            const mapUrl = PageProcessor.extractSourceMapUrl(fileContent, item.url);
           if (mapUrl && !this.processedSourceMaps.has(mapUrl)) {
             this.processedSourceMaps.add(mapUrl);
             const sourceCodeOutDir = path.join(this.organizer.getFolders().siteDir, '_source-code');

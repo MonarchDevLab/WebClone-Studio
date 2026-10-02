@@ -74,6 +74,72 @@ export function isInternalDomain(targetUrl: string, baseOriginUrl: string): bool
  * görselleri, fontları, stilleri, scriptleri ve medya varlıklarını eksiksiz çıkarır.
  */
 export class PageProcessor {
+
+  /**
+   * JS dosyalarındaki gizlenmiş veya dinamik asset yollarını (resim, font, media) regex ile çıkarır.
+   */
+  public static extractHiddenAssetsFromJs(jsCode: string, jsUrl: string): DiscoveredAsset[] {
+    const assets: DiscoveredAsset[] = [];
+    const seenUrls = new Set<string>();
+
+    const addAsset = (rawPath: string) => {
+      try {
+        const cleanPath = rawPath.replace(/\\/g, '').replace(/['"]/g, '');
+        if (cleanPath.startsWith('data:')) return;
+        
+        // Çok kısa veya çok uzun saçma stringleri yoksay
+        if (cleanPath.length < 5 || cleanPath.length > 500) return;
+        
+        // Mantıklı bir asset uzantısına benzemiyorsa atla
+        const validExt = /\.(png|jpe?g|gif|webp|svg|woff2?|ttf|eot|mp4|webm|mp3|wav|pdf|json)(\?.*)?$/i;
+        if (!validExt.test(cleanPath)) return;
+
+        const urlObj = new URL(cleanPath, jsUrl);
+        const resolved = urlObj.href;
+
+        if (!seenUrls.has(resolved)) {
+          seenUrls.add(resolved);
+          let type: DiscoveredAsset['type'] = 'other';
+          const ext = urlObj.pathname.split('.').pop()?.toLowerCase() || '';
+
+          if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico'].includes(ext)) {
+            type = 'image';
+          } else if (['woff', 'woff2', 'ttf', 'eot', 'otf'].includes(ext)) {
+            type = 'data';
+          } else if (['mp4', 'webm', 'mp3', 'wav', 'ogg'].includes(ext)) {
+            type = 'media';
+          } else if (['json'].includes(ext)) {
+            type = 'data';
+          }
+
+          assets.push({
+            url: resolved,
+            type,
+            isPage: false,
+          });
+        }
+      } catch (e) {
+        // invalid url
+      }
+    };
+
+    // 1. Düz URL path'leri arama (örn: "/assets/fonts/myfont.woff2")
+    const pathRegex = /(?:["'])(?:\/|https?:\/\/)[^"'\s]+\.(?:png|jpe?g|gif|webp|svg|woff2?|ttf|eot|mp4|webm|mp3|wav|pdf|json)(?:\?[^"']*)?(?:["'])/gi;
+    let match: RegExpExecArray | null;
+    while ((match = pathRegex.exec(jsCode)) !== null) {
+      addAsset(match[0]);
+    }
+    
+    // 2. Webpack publicPath + string concat (örn: p + "assets/img.png")
+    // Çok basit statik analiz, tırnak içindeki .png vs leri arayalım, başında slash olmasa bile js klasörüne göredir.
+    const relativeRegex = /(?:["'])([a-zA-Z0-9_\-]+\/(?:[a-zA-Z0-9_\-/]+)\.(?:png|jpe?g|gif|webp|svg|woff2?|ttf|eot|mp4|webm|mp3|wav|pdf|json))(?:["'])/gi;
+    while ((match = relativeRegex.exec(jsCode)) !== null) {
+      addAsset(match[1]);
+    }
+
+    return assets;
+  }
+
   /**
    * CSS metni içerisindeki url(...) ve @import varlık referanslarını ayrıştırır.
    */
