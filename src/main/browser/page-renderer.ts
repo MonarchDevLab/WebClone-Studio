@@ -102,11 +102,30 @@ export class PageRenderer {
 
     try {
       const capturedEndpoints: CapturedApiEndpoint[] = [];
-      if (options.captureApi) {
-        try {
+      try {
+        if (!debuggerAttached) {
           win.webContents.debugger.attach('1.3');
           debuggerAttached = true;
-          win.webContents.debugger.sendCommand('Network.enable').catch(() => {});
+        }
+
+        // Anti-Bot Stealth Injection via CDP (Her renderda aktif)
+        await win.webContents.debugger.sendCommand('Page.enable').catch(() => {});
+        await win.webContents.debugger.sendCommand('Page.addScriptToEvaluateOnNewDocument', {
+          source: `
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'languages', { get: () => ['tr-TR', 'tr', 'en-US', 'en'] });
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+            const getParameter = WebGLRenderingContext.prototype.getParameter;
+            WebGLRenderingContext.prototype.getParameter = function(parameter) {
+              if (parameter === 37445) return 'Intel Inc.';
+              if (parameter === 37446) return 'Intel Iris OpenGL Engine';
+              return getParameter.call(this, parameter);
+            };
+          `
+        }).catch(() => {});
+
+        if (options.captureApi) {
+          await win.webContents.debugger.sendCommand('Network.enable').catch(() => {});
           win.webContents.debugger.on('message', async (_event, method, params) => {
             if (method === 'Network.responseReceived') {
               const { response, requestId, type } = params as any;
@@ -137,7 +156,9 @@ export class PageRenderer {
               }
             }
           });
-        } catch {}
+        }
+      } catch (err) {
+        console.warn('PageRenderer: CDP entegrasyonu başarısız oldu.', err);
       }
 
       // Yükleme promise'i
