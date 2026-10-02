@@ -167,10 +167,34 @@ export class PageRenderer {
           reject(new Error(`PageRenderer zaman aşımına uğradı (${timeoutMs}ms): ${url}`));
         }, timeoutMs);
 
-        win.webContents.once('did-finish-load', () => {
+        win.webContents.once('did-finish-load', async () => {
           clearTimeout(timer);
-          // SPA'ların ilk render ve lazy-load sabitlemesi için bekleme (1000ms)
-          setTimeout(resolve, 1000);
+          try {
+            // OTO-KAYDIRMA
+            await win.webContents.executeJavaScript(`
+              new Promise((resolveStep) => {
+                let totalHeight = 0;
+                let distance = 600;
+                let scrolls = 0;
+                const maxScrolls = 15;
+                const scrollTimer = setInterval(() => {
+                  const scrollHeight = document.documentElement.scrollHeight;
+                  window.scrollBy(0, distance);
+                  totalHeight += distance;
+                  scrolls++;
+                  if (totalHeight >= scrollHeight || scrolls >= maxScrolls) {
+                    clearInterval(scrollTimer);
+                    window.scrollTo(0, 0);
+                    resolveStep();
+                  }
+                }, 250);
+              });
+            `);
+          } catch (e) {
+            console.warn('Oto-kaydirma basarisiz:', e);
+          }
+          // Network Idle
+          setTimeout(resolve, 1500);
         });
 
         win.webContents.once('did-fail-load', (_, errorCode, errorDescription) => {

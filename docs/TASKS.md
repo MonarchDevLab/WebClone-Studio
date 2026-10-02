@@ -1,10 +1,9 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] OTO-KAYDIRMA: `CrawlerEngine` içine sonsuz kaydırma (infinite scroll) ve ağ (network) idle bekleme mantığı eklenecek.
+- [~] SHADOW DOM: `DOM.getDocument({ pierce: true })` kullanılarak Shadow DOM piercing uygulanacak.
 
 ## SIRADAKİ
-- [ ] SHADOW DOM: `DOM.getDocument({ pierce: true })` kullanılarak Shadow DOM piercing uygulanacak.
 - [ ] YAPISAL VERİ ÇIKARIMI: `src/main/analyzers` altına AI tabanlı veya tekrarlayan kalıp tabanlı (List/Grid) veri çıkarımı modülü eklenecek.
 - [ ] COMPONENT EXPORT: İndirilen DOM ağacını React/Tailwind bileşenlerine çeviren dönüştürücü motor (AI/AST) geliştirilecek.
 
@@ -12,6 +11,7 @@
 - [!] Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - feat(browser): implement infinite scroll and network idle stabilization in PageRenderer
 - [x] 2026-10-02 - feat(browser): inject CDP anti-bot stealth mechanisms into PageRenderer for WAF evasion
 - [x] 2026-09-26 (HEAD) - build(portable): package WebClone-Studio-Portable.exe (77.6MB, reverse engineering suite, offline mock server, zero type errors)
 - [x] 2026-09-26 (5741e4c) - fix(ipc): resolve redundant meta path and update project documentation
