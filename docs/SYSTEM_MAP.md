@@ -11,28 +11,31 @@
 - **Text Primary:** `#F4F4F5` | **Secondary:** `#A1A1AA` | **Muted:** `#71717A` | **Dim:** `#52525B`
 - **Borders:** `rgba(255, 255, 255, 0.07)` (subtle) / `rgba(255, 255, 255, 0.12)` (medium) / `rgba(6, 182, 212, 0.50)` (focus)
 - **Fonts:** Inter (UI gövde/başlık, 400-700 tek değişken dosya, offline gömülü), JetBrains Mono (sayısal veriler, metrikler, kod ve log akışı, 400-500 tek değişken dosya, offline gömülü) — `src/renderer/src/assets/fonts/*.woff2` (latin + latin-ext, Türkçe karakter desteği için ikisi de gerekli), `@font-face` ile CDN'siz yükleniyor.
-- **Disiplin notu:** Tüm renkler bu 5 semantik token (accent/secondary/success/warning/error) + nötrler üzerinden ifade edilir. JSX'te `bg-[#hex]` veya Tailwind stok `cyan-400`/`purple-500` gibi ham/off-token sınıf YAZILMAZ — hepsi 2026-08-31 denetiminde token karşılıklarına taşındı (97 ham-hex + 278 stok-renk-sınıfı değişimi, script ile).
+- **Disiplin notu:** Tüm renkler bu 5 semantik token (accent/secondary/success/warning/error) + nötrler üzerinden ifade edilir. JSX'te `bg-[#hex]` veya Tailwind stok `cyan-400`/`purple-500` gibi ham/off-token sınıf YAZILMAZ.
 
 ## Teknoloji Yığını
 - **Shell / Runtime:** Electron 33 + Node.js 22
 - **Build & Dev:** electron-vite 3 + Vite 6 + TypeScript 5.8
-- **Browser / DOM Rendering:** Yerleşik Electron Offscreen `PageRenderer` (Playwright gereksinimi yok)
+- **Browser / DOM Rendering:** Yerleşik Electron Offscreen `PageRenderer` + Chrome DevTools Protocol (CDP Network & Page domain)
 - **Frontend:** React 19, Tailwind CSS 4, Lucide React, Zustand 5, Sonner, React Resizable Panels
 - **Scraping & Parsing:** got (v14), cheerio (v1), postcss, robots-parser, sanitize-filename
 - **Storage:** Node `fs/promises` + JSON kalıcı store (`SettingsStore`, `ProjectStore`)
-- **Packaging:** electron-builder 25 (Portable Windows x64 .exe)
+- **Packaging:** electron-builder 25 (Windows Setup .exe, Portable .exe, MSI .msi)
+- **Auto-Update:** In-App GitHub Releases Update Hub (`UpdateChecker` servisi)
 - **Developer & Architecture:** Monolith Works / MonarchDevLab
 
 ## Modül Sınırları & Mimarisi
 ```
 src/
 ├── main/
-│   ├── analyzers/      # TechDetector, DesignAnalyzer, SiteMapper, SecurityScanner, SizeEstimator
-│   ├── browser/        # PageRenderer (Yerleşik izole offscreen Chromium BrowserView)
+│   ├── analyzers/      # TechDetector, DesignAnalyzer, SiteMapper, SecurityScanner, SizeEstimator, StructuredDataExtractor
+│   ├── browser/        # PageRenderer (Offscreen Chromium, Autonomous State Explorer, Stealth CDP)
 │   ├── cloner/         # CrawlerEngine, PageProcessor, AssetDownloader, UrlRewriter, FileOrganizer
-│   ├── generators/     # SystemMapGenerator (.md sistem haritası ve kod şablonları)
+│   │   └── reverse-engineering/ # SourcemapReconstructor, FrameworkExtractor, TokenExtractor, ApiInterceptor
+│   ├── generators/     # ApiContractGenerator (OpenAPI 3.1 & TS), ComponentExporter (React TSX), SingleFileExporter, SystemMapGenerator
 │   ├── output/         # ManifestGenerator, ReadmeGenerator, ReportGenerator
-│   ├── server/         # PreviewServer (127.0.0.1 hafif HTTP statik sunucu)
+│   ├── server/         # PreviewServer (127.0.0.1 hafif HTTP statik ve mock API sunucusu)
+│   ├── services/       # UpdateChecker (GitHub Releases sürüm denetimi ve güncelleme servisi)
 │   ├── storage/        # SettingsStore (userData/settings.json), ProjectStore (manifest.json tarayıcı)
 │   ├── index.ts        # App lifecycle & Window management
 │   ├── window.ts       # BrowserWindow fabrika
@@ -43,7 +46,7 @@ src/
 │   └── src/
 │       ├── components/ # UI (Sidebar, UrlInput, StatusBar, TitleBar, CloneSetupModal, ErrorBoundary)
 │       ├── layouts/    # MainLayout (Resizable panels)
-│       ├── pages/      # OverviewPage, TechStackPage, SiteMapPage, ClonePage, SettingsPage
+│       ├── pages/      # OverviewPage, TechStackPage, SiteMapPage, ClonePage, SettingsPage (Update Hub)
 │       ├── stores/     # Zustand stores (ui-store, analyze-store, clone-store, project-store)
 │       └── hooks/      # useIpc
 └── shared/
