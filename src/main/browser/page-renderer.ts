@@ -396,7 +396,7 @@ export class PageRenderer {
             const svgCount = document.querySelectorAll('svg').length;
 
             return {
-              html: document.documentElement ? document.documentElement.outerHTML : '',
+              html: document.documentElement ? (() => { try { return '<html' + Array.from(document.documentElement.attributes).map(a => ' ' + a.name + '="' + a.value + '"').join('') + '>' + document.documentElement.getInnerHTML({ includeShadowRoots: true }) + '</html>'; } catch(e) { return document.documentElement.outerHTML; } })() : '',
               globals,
               colors: colorMap,
               fontFamilies: Array.from(fontFamilies),
@@ -417,7 +417,7 @@ export class PageRenderer {
             };
           } catch (e) {
             return {
-              html: document.documentElement ? document.documentElement.outerHTML : '',
+              html: document.documentElement ? (() => { try { return '<html' + Array.from(document.documentElement.attributes).map(a => ' ' + a.name + '="' + a.value + '"').join('') + '>' + document.documentElement.getInnerHTML({ includeShadowRoots: true }) + '</html>'; } catch(e) { return document.documentElement.outerHTML; } })() : '',
               globals: Object.keys(window).slice(0, 100),
               colors: {},
               fontFamilies: [],
