@@ -23,6 +23,7 @@ import { ApiTrafficInterceptor } from './reverse-engineering/api-interceptor';
 import { StructuredDataExtractor } from '../analyzers/structured-data-extractor';
 import { ComponentExporter } from '../generators/component-exporter';
 import { ApiContractGenerator } from '../generators/api-contract-generator';
+import { SingleFileExporter } from '../generators/singlefile-exporter';
 
 interface QueueItem {
   url: string;
@@ -797,6 +798,21 @@ export class CrawlerEngine extends EventEmitter {
       } catch (compErr: any) {
         this.emitLog('warn', `Bileşen dönüşümü başarısız: ${compErr.message}`);
       }
+    }
+
+    // 4.7 Bağımsız Tek Dosya Dışa Aktarma (SingleFile Standalone Export)
+    try {
+      const exportsDir = path.join(this.organizer.getFolders().projectDir, '_exports');
+      await fs.promises.mkdir(exportsDir, { recursive: true });
+
+      const indexPage = this.pagesToRewrite.find((p) => p.localPath.endsWith('index.html')) || this.pagesToRewrite[0];
+      if (indexPage) {
+        const standaloneHtml = await SingleFileExporter.export(indexPage.html, this.organizer.getFolders().siteDir);
+        await fs.promises.writeFile(path.join(exportsDir, 'index.standalone.html'), standaloneHtml, 'utf-8');
+        this.emitLog('info', 'Bağımsız tek dosya arşivi üretildi (_exports/index.standalone.html).');
+      }
+    } catch (singleErr: any) {
+      this.emitLog('warn', `Tek dosya dışa aktarma başarısız: ${singleErr.message}`);
     }
 
     // 5. manifest.json ve README.md üret
