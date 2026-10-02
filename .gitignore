@@ -33,6 +33,11 @@ secrets.json
 *.sqlite
 *.db
 
+# Internal agents & workflows
+.agent/
+.agents/
+.superpowers/
+
 # Logs & Debug
 *.log
 npm-debug.log*
