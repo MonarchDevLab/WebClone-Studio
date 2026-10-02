@@ -4,6 +4,11 @@ copyright: "Copyright © 2026 Monolith Works / MonarchDevLab"
 directories:
   output: dist
   buildResources: resources
+compression: maximum
+electronLanguages:
+  - tr
+  - en-US
+  - en
 files:
   - "out/**/*"
   - "!**/.env*"

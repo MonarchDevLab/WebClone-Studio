@@ -10,6 +10,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-02 - chore(optimization): optimize app footprint (app.asar 43.7MB->9.5MB, locales 40.2MB->1MB, unpacked 310MB->238MB, dist clean -321MB)
 - [x] 2026-10-02 - docs(readme): design and embed repository hero banner and UI showcase visuals
 - [x] 2026-10-02 - feat(dist): generate Windows Setup.exe, Portable.exe, and MSI packages
 - [x] 2026-10-02 - docs: rewrite comprehensive bilingual README for GitHub with zero emojis

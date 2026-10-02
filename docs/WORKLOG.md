@@ -1,18 +1,21 @@
 # WORKLOG
 
 ## Aktif Oturum
-- **Hedef:** Ouroboros v9.0 mimari analizinde tespit edilen tüm tersine mühendislik borçlarının kapatılması: SourceMap kurtarma pipeline'ı, çok sayfalı framework state toplayıcı, Tailwind token extractor, dinamik API trafik yakalayıcı & offline mock sunucu entegrasyonu, UI ayar kontrolleri ve IPC yol temizliği.
+- **Hedef:** Ouroboros v10.0 mimari zırhlama ve boyut optimizasyonu: Proje ve dağıtım paketlerindeki gereksiz yüklerin, frontend bağımlılıklarının ve Chromium dil paketlerinin sisteme zarar vermeden ayıklanması, `app.asar` ve derleme boyutunun radikal şekilde düşürülmesi.
 - **Yapılanlar:**
-  1. `PageProcessor` ve `CrawlerEngine` içine SourceMap keşif ve otomatik indirme hattı bağlandı; `site/_source-code/` altında orijinal kaynak ağacı inşa edildi.
-  2. `FrameworkExtractor` geliştirildi; `__NEXT_DATA__`, `__NUXT_DATA__`, `__INITIAL_STATE__`, `__PRELOADED_STATE__` tüm taranan sayfalardan toplanıp `_meta/extracted-state.json` içinde birleştirildi.
-  3. `TokenExtractor` yazıldı; CSS değişkenleri, palet renkleri ve fontlar ayrıştırılarak `_meta/tailwind.config.js` ve `_meta/design-tokens.json` üretildi.
-  4. `ApiInterceptor` yazıldı; Chromium CDP (`Network` domain) dinlenerek dinamik API trafiği `_meta/api-endpoints.json` olarak kaydedildi ve `PreviewServer` mock rota fallback'ine bağlandı.
-  5. `AppSettings`, `SettingsStore`, `SettingsPage` ve `CloneSetupModal` bileşenlerine tersine mühendislik kontrolleri eklendi.
-  6. `ipc-handlers.ts` içerisindeki yanlış konumlanan ve mükerrer `_meta/SYSTEM_MAP.md` yazımı kaldırıldı.
-  7. Vitest testleri (17/17), typecheck (0 hata) ve production bundle (`npm run build`) başarıyla doğrulandı.
-  8. `npm run build:portable` ile güncel kodları ve tersine mühendislik motorunu içeren Windows Portable uygulama paketi (`dist/WebClone-Studio-Portable.exe`, 77.6MB) 0 hata ile derlendi.
+  1. `package.json` analiz edildi: Yalnızca derleme anında Vite tarafından `out/renderer` içerisine paketlenen saf frontend kütüphaneleri (`clsx`, `lucide-react`, `postcss`, `react`, `react-dom`, `react-resizable-panels`, `sonner`, `tailwind-merge`, `zustand`) `dependencies` listesinden `devDependencies`'e taşındı. Sadece Node.js çalışma zamanında `main` süreci tarafından `require` edilen paketler (`bottleneck`, `cheerio`, `got`, `robots-parser`, `sanitize-filename`, `source-map`) `dependencies` altında muhafaza edildi.
+  2. `electron-builder.yml` yapılandırmasına `electronLanguages: ["tr", "en-US", "en"]` ve `compression: maximum` eklendi; 55 Chromium dil paketinden 53 tanesi budanarak `locales/` boyutu 40.25 MB'tan 1.02 MB'a indirildi (%97.5 tasarruf).
+  3. `app.asar` boyutu 43.70 MB'tan 9.53 MB'a düşürüldü (%78.2 tasarruf).
+  4. Açılmış uygulama ayak izi (`win-unpacked`) 310 MB'tan 238 MB'a indirildi (~72 MB tasarruf).
+  5. Derleme sonrası geçici `dist/win-unpacked` dizini temizlenerek yerel diskte 238.5 MB boş alan geri kazanıldı; `dist/` boyutu 551 MB'tan 230 MB'a indi.
+  6. Optimize edilmiş yeni Portable, NSIS Setup ve MSI paketleri derlendi; GitHub Release `v1.0.0` sürümündeki ikililer güncellendi.
+  7. Tip denetimi (`tsc --noEmit`), Vitest birim testleri (17/17) ve `electron-vite build` 0 hata ile doğrulandı.
 
 ## Mimari Kararlar
+- **[KARAR-025] Dağıtım Paketi ve Çalışma Zamanı Ayak İzi Budaması (Zero-Harm Size Optimization):**
+  1) Electron paketleyicisinin (`electron-builder`) `dependencies` altındaki tüm paketleri ve onların alt bağımlılıklarını `app.asar/node_modules` içerisine ham olarak kopyaladığı tespit edildi. 21.75 MB'lık `lucide-react` ve 7 MB'lık `react-dom` gibi frontend modüllerinin `devDependencies`'e taşınmasıyla `app.asar` boyutu 43.7 MB'tan 9.5 MB'a geriletildi.
+  2) Chromium'un varsayılan 55 dilden oluşan `.pak` dil paketi havuzundan yalnızca Türkçe ve İngilizce (`tr`, `en-US`, `en`) filtrelendi; 39.2 MB gereksiz dil dosyası elendi.
+  3) `dist/` altındaki geçici açılmış çalışma alanı `win-unpacked` derleme sonrası temizlenerek yerel disk şişmesi önlendi.
 - **[KARAR-024] Tersine Mühendislik Laboratuvarı & Tam Pipeline Entegrasyonu:**
   1) `SourceMapReconstructor` asset pipeline ile doğrudan birleştirildi; `.js` ve `.css` dosyalarındaki bağıl/mutlak/data-URI `sourceMappingURL` direktifleri ayrıştırılarak indirme kuyruğuna alındı ve indirme bitiminde atomik olarak `site/_source-code/` ağacına açıldı.
   2) Sayfa taramalarında React, Vue, Next.js ve Nuxt hydration durumları sayfa URL'si anahtarıyla hafızada biriktirilip `_meta/extracted-state.json` olarak serileştirildi.
