@@ -20,7 +20,7 @@
 - **Frontend:** React 19, Tailwind CSS 4, Lucide React, Zustand 5, Sonner, React Resizable Panels
 - **Scraping & Parsing:** got (v14), cheerio (v1), postcss, robots-parser, sanitize-filename
 - **Storage:** Node `fs/promises` + JSON kalıcı store (`SettingsStore`, `ProjectStore`)
-- **Packaging:** electron-builder 25 (Windows Setup .exe, Portable .exe, MSI .msi)
+- **Packaging:** electron-builder 25 (Windows Setup .exe, Portable .exe, MSI .msi; `app.asar` 9.5MB, `locales/` tr/en trimmed, maximum compression)
 - **Auto-Update:** In-App GitHub Releases Update Hub (`UpdateChecker` servisi)
 - **Developer & Architecture:** Monolith Works / MonarchDevLab
 

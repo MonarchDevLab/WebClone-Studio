@@ -17,34 +17,35 @@
 5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`, ~77MB) tamamen bağımsız (Playwright/Puppeteer vb. gerektirmeyen) native Electron altyapısıyla 0 hata ile derlenmeye hazır.
 6. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuluyor, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı.
 
-1. **Dağıtım ve Kurulum Paketleri (Windows x64):**
-   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.0.0.exe` (~77.9MB)
-   - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~77.6MB)
-   - **Kurumsal MSI:** `dist/WebClone-Studio-1.0.0.msi` (~97.2MB)
+1. **Dağıtım ve Kurulum Paketleri (Windows x64 - Optimize Edilmiş):**
+   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.0.0.exe` (~73.5MB)
+   - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~73.1MB)
+   - **Kurumsal MSI:** `dist/WebClone-Studio-1.0.0.msi` (~83.2MB)
+   - **Boyut Optimizasyonu:** `app.asar` 43.7MB'tan 9.53MB'a, `locales/` 40.25MB'tan 1.02MB'a, açılmış ayak izi 310MB'tan 238MB'a indirildi.
 2. **GitHub Güncelleme Entegrasyonu:**
    - `UpdateChecker` servisi ve `SettingsPage` içi Güncelleme Merkezi kuruldu.
    - GitHub Releases API üzerinden yeni sürüm denetimi ve indirme bağlantıları bağlandı.
-3. **Dokümantasyon & Hijyen:**
+3. **Dokümantasyon & Görsel Kimlik:**
    - GitHub için Türkçe & İngilizce, sıfır emojili, profesyonel `README.md` oluşturuldu.
+   - Hero banner (`resources/banner.png`) ve masaüstü arayüz vitrini (`resources/ui_showcase.png`) tasarlandı.
 
 ## Kritik Komutlar
 - Development: `npm run dev`
 - Test: `npm test`
 - Build (Production): `npm run build`
 - Build (Portable): `npm run build:portable`
+- Build (Tüm Paketler): `npm run build:all`
 - Check & Lint: `npm run typecheck`
 - Clean: `rm -rf dist release node_modules out`
 
 ## Commit Zinciri
 - **Son Commitler:**
-  - `1df3ea3` feat(generators): implement SingleFileExporter for self-contained standalone HTML archive
-  - `be8a24e` feat(generators): implement ApiContractGenerator for OpenAPI 3.1 and TypeScript definitions
-  - `4b87326` feat(renderer): implement autonomous state explorer to expand interactive tabs and accordions
-  - `6f1fa25` feat(cloner): implement Obfuscation Bypass to extract hidden fonts and assets from JS chunks
-  - `96041df` feat(cloner): implement HTML to React TSX component export
-  - `7df194c` feat(cloner): extract structured JSON data from grid/list layouts
-  - `b02fc68` feat(crawler): implement deep shadow dom piercing using getInnerHTML
-  - `4b13a7b` feat(evasion): add infinite scroll and stealth bot evasion scripts
+  - `d9dfbcb` chore(dist): optimize bundle footprint and strip unused locales
+  - `009ce3d` chore(docs): record visual asset integration in TASKS and WORKLOG
+  - `61f01b6` docs(readme): add visual hero banner and desktop UI showcase illustrations
+  - `453db2a` docs(readme): expand bilingual documentation with architectural diagrams and comparison matrix
+  - `d2d4800` chore(git): ignore internal agent configs and workflows
+  - `bdf62bd` chore(docs): update SYSTEM_MAP with new generators, services, and packaging details
 
 ## Riskler
 - Yok.
