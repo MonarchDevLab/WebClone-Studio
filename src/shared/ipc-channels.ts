@@ -42,6 +42,11 @@ export enum IpcChannel {
   SERVER_START_PREVIEW = 'server:start-preview',
   SERVER_STOP_PREVIEW = 'server:stop-preview',
 
+
+  // Updates
+  APP_CHECK_UPDATE = 'app:check-update',
+  APP_GET_VERSION = 'app:get-version',
+
   // System & Global Errors
   SYSTEM_ERROR = 'system:error',
 }

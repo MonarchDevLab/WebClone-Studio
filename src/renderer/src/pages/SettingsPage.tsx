@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Folder, Globe, Zap, Filter, Check } from 'lucide-react';
+import { Settings, Save, Folder, Globe, Zap, Filter, Check, RefreshCw, Download, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const SettingsPage: React.FC = () => {
@@ -17,6 +17,9 @@ export const SettingsPage: React.FC = () => {
   const [downloadExternalAssets, setDownloadExternalAssets] = useState<boolean>(true);
   const [reverseEngineering, setReverseEngineering] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.0');
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
+  const [updateInfo, setUpdateInfo] = useState<any>(null);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -38,6 +41,10 @@ export const SettingsPage: React.FC = () => {
             if (s.defaultDownloadExternalAssets !== undefined) setDownloadExternalAssets(s.defaultDownloadExternalAssets);
             if (s.defaultReverseEngineering !== undefined) setReverseEngineering(s.defaultReverseEngineering);
           }
+          if (window.electronAPI?.getAppVersion) {
+            const ver = await window.electronAPI.getAppVersion();
+            if (ver) setCurrentVersion(ver);
+          }
         } catch (e) {
           console.error('Ayarlar yüklenemedi:', e);
         } finally {
@@ -49,6 +56,27 @@ export const SettingsPage: React.FC = () => {
     };
     loadSettings();
   }, []);
+
+  
+  const handleCheckUpdate = async () => {
+    if (!window.electronAPI?.checkForUpdates) return;
+    setIsCheckingUpdate(true);
+    try {
+      const res = await window.electronAPI.checkForUpdates();
+      setUpdateInfo(res);
+      if (res.hasUpdate) {
+        toast.info(`Yeni sürüm hazır: v${res.latestVersion}`);
+      } else if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success('Uygulamanız güncel!');
+      }
+    } catch (e: any) {
+      toast.error('Güncelleme kontrolü yapılamadı.');
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   const handleSelectDir = async () => {
     if (window.electronAPI?.selectDirectory) {
@@ -303,6 +331,85 @@ export const SettingsPage: React.FC = () => {
               <span>Gelişmiş Tersine Mühendislik (Kaynak Kod Kurtarma, SPA State & Dinamik API Mock Yakalama)</span>
             </label>
           </div>
+        </div>
+
+        {/* GitHub Güncelleme Merkezi */}
+        <div className="bg-surface-2 border border-white/[0.07] rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-accent-primary/10 border border-accent-primary/20 rounded-lg flex items-center justify-center text-accent-hover">
+                <RefreshCw className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  <span>GitHub Güncelleme Merkezi</span>
+                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-white/[0.05] border border-white/[0.08] text-text-secondary">
+                    v{currentVersion}
+                  </span>
+                </h2>
+                <p className="text-xs text-text-dim mt-0.5">
+                  Resmi GitHub deposundan (MonarchDevLab/WebClone-Studio) en son sürümleri ve yamaları denetleyin.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCheckUpdate}
+              disabled={isCheckingUpdate}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.05] hover:bg-white/[0.1] text-text-primary border border-white/[0.1] transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+              <span>{isCheckingUpdate ? 'Kontrol Ediliyor...' : 'Güncellemeleri Denetle'}</span>
+            </button>
+          </div>
+
+          {updateInfo && (
+            <div className="pt-3 border-t border-white/[0.06]">
+              {updateInfo.hasUpdate ? (
+                <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Yeni Sürüm Hazır: v{updateInfo.latestVersion}</span>
+                      {updateInfo.releaseName && (
+                        <span className="text-text-secondary font-normal font-sans">({updateInfo.releaseName})</span>
+                      )}
+                    </div>
+                    {updateInfo.htmlUrl && (
+                      <button
+                        onClick={() => {
+                          if (window.electronAPI?.openBrowser) {
+                            window.electronAPI.openBrowser(updateInfo.htmlUrl);
+                          } else {
+                            window.open(updateInfo.htmlUrl, '_blank');
+                          }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium bg-emerald-500 text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>GitHub'dan İndir</span>
+                      </button>
+                    )}
+                  </div>
+                  {updateInfo.releaseNotes && (
+                    <div className="text-[11px] text-text-secondary bg-black/30 p-2.5 rounded border border-white/[0.05] max-h-32 overflow-y-auto whitespace-pre-wrap font-mono">
+                      {updateInfo.releaseNotes}
+                    </div>
+                  )}
+                </div>
+              ) : updateInfo.error ? (
+                <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{updateInfo.error}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  <span>WebClone Studio güncel. En son sürümü (v{currentVersion}) kullanıyorsunuz.</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Hakkında & Geliştirici Bilgisi */}

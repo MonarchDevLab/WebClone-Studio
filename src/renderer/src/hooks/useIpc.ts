@@ -43,6 +43,9 @@ declare global {
       startPreviewServer: (targetPath: string) => Promise<{ success: boolean; url?: string; error?: string }>;
       stopPreviewServer: () => Promise<{ success: boolean }>;
 
+      checkForUpdates: () => Promise<any>;
+      getAppVersion: () => Promise<string>;
+
       onProgress: (callback: (event: unknown, data: CloneProgress) => void) => () => void;
       onFileAdded: (callback: (event: unknown, data: FileAddedEvent) => void) => () => void;
       onLog: (callback: (event: unknown, data: CloneLogEntry) => void) => () => void;

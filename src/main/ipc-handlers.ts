@@ -17,6 +17,7 @@ import { ProjectStore } from './storage/project-store';
 import { PageRenderer } from './browser/page-renderer';
 import { SystemMapGenerator } from './generators/system-map-generator';
 import { PreviewServer } from './server/preview-server';
+import { UpdateChecker } from './services/update-checker';
 
 // Aktif çalışan klonlama işlerini tutar
 const activeJobs = new Map<string, CrawlerEngine>();
@@ -468,5 +469,15 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
   ipcMain.handle(IpcChannel.SERVER_STOP_PREVIEW, async () => {
     await PreviewServer.getInstance().stop();
     return { success: true };
+  });
+
+  // 15. APP_CHECK_UPDATE: GitHub Releases üzerinden yeni sürüm kontrolü
+  ipcMain.handle(IpcChannel.APP_CHECK_UPDATE, async () => {
+    return await UpdateChecker.checkForUpdates();
+  });
+
+  // 16. APP_GET_VERSION: Uygulama sürüm bilgisini döndürür
+  ipcMain.handle(IpcChannel.APP_GET_VERSION, async () => {
+    return UpdateChecker.getCurrentVersion();
   });
 }

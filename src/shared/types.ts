@@ -310,3 +310,22 @@ export interface AppSettings {
   defaultDownloadExternalAssets?: boolean;
   defaultReverseEngineering?: boolean;
 }
+
+/** GitHub güncelleme durumu ve sürüm bilgisi */
+export interface AppUpdateAsset {
+  name: string;
+  downloadUrl: string;
+  size: number;
+}
+
+export interface AppUpdateInfo {
+  hasUpdate: boolean;
+  currentVersion: string;
+  latestVersion: string;
+  releaseName?: string;
+  releaseNotes?: string;
+  publishedAt?: string;
+  htmlUrl?: string;
+  assets?: AppUpdateAsset[];
+  error?: string;
+}

@@ -91,6 +91,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startPreviewServer: (targetPath: string) => ipcRenderer.invoke(IpcChannel.SERVER_START_PREVIEW, targetPath),
   stopPreviewServer: () => ipcRenderer.invoke(IpcChannel.SERVER_STOP_PREVIEW),
 
+  // Güncelleme Yönetimi (GitHub Releases)
+  checkForUpdates: () => ipcRenderer.invoke(IpcChannel.APP_CHECK_UPDATE),
+  getAppVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
+
   // Klonlama süreci dinleyicileri
   onProgress: (callback: (event: IpcRendererEvent, data: CloneProgress) => void) => {
     const sub = (_event: IpcRendererEvent, data: CloneProgress) => callback(_event, data);
