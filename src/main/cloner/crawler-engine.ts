@@ -24,6 +24,7 @@ import { StructuredDataExtractor } from '../analyzers/structured-data-extractor'
 import { ComponentExporter } from '../generators/component-exporter';
 import { ApiContractGenerator } from '../generators/api-contract-generator';
 import { SingleFileExporter } from '../generators/singlefile-exporter';
+import { AdaptiveExtractor } from '../analyzers/adaptive-extractor';
 
 interface QueueItem {
   url: string;
@@ -859,6 +860,25 @@ export class CrawlerEngine extends EventEmitter {
         }
       } catch (dataErr: any) {
         this.emitLog('warn', `Yapısal veri çıkarımı başarısız: ${dataErr.message}`);
+      }
+    }
+
+    // 4.5.1 Tersine Mühendislik: Adaptif Semantik Varlık Çıkarımı (_meta/adaptive-entities.json)
+    if (this.settings.reverseEngineering) {
+      try {
+        const allAdaptiveData: Record<string, any> = {};
+        for (const page of this.pagesToRewrite) {
+          const adaptiveRes = AdaptiveExtractor.extract(page.html, page.url);
+          if (adaptiveRes.entities.length > 0 || adaptiveRes.paginationTrigger) {
+            allAdaptiveData[page.url] = adaptiveRes;
+          }
+        }
+        if (Object.keys(allAdaptiveData).length > 0) {
+          await this.organizer.writeMetaFile('adaptive-entities.json', allAdaptiveData);
+          this.emitLog('info', 'Tersine mühendislik self-healing adaptif semantik varlıklar çıkarıldı (_meta/adaptive-entities.json).');
+        }
+      } catch (adaptErr: any) {
+        this.emitLog('warn', `Adaptif varlık çıkarımı başarısız: ${adaptErr.message}`);
       }
     }
 

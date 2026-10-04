@@ -1,16 +1,16 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] 2026-10-04: Görev 4: CrawlerEngine Otomatik WAF Eskalasyonu ve Çerez Köprüsü (src/main/cloner/crawler-engine.ts) icra ediliyor.
+- [~] 2026-10-04: Görev 5: Self-Healing / Adaptif Semantik İçerik Çıkarıcı (src/main/analyzers/adaptive-extractor.ts) icra ediliyor.
 
 ## SIRADAKİ
-- [ ] Görev 5: Self-Healing / Adaptif Semantik İçerik Çıkarıcı (src/main/analyzers/adaptive-extractor.ts)
 - [ ] Görev 6: Uçtan Uca Doğrulama, Dokümantasyon ve Paket Testi
 
 ## BLOKLU
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-04 - feat(crawler): implement automatic waf escalation and clearance synchronization (965bf37)
 - [x] 2026-10-04 - feat(cloner): add cookie jar and clearance bridge to asset downloader (110c3a2)
 - [x] 2026-10-04 - feat(renderer): integrate ultra-stealth scripts and harvest session cookies (1ede5ad)
 - [x] 2026-10-04 - feat(stealth): implement ultra-stealth cdp script generator (b4f4f1f)
