@@ -17,7 +17,7 @@ export const SettingsPage: React.FC = () => {
   const [downloadExternalAssets, setDownloadExternalAssets] = useState<boolean>(true);
   const [reverseEngineering, setReverseEngineering] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentVersion, setCurrentVersion] = useState<string>('1.0.0');
+  const [currentVersion, setCurrentVersion] = useState<string>('1.1.0');
   const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
   const [updateInfo, setUpdateInfo] = useState<any>(null);
 

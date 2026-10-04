@@ -44,6 +44,8 @@
   - [7. JavaScript Obfuscation Bypass](#7-javascript-obfuscation-bypass)
   - [8. Embedded 127.0.0.1 Micro-Preview & Mock Server](#8-embedded-127001-micro-preview--mock-server)
   - [9. GitHub Releases Auto-Update Hub](#9-github-releases-auto-update-hub)
+  - [10. Ultra-Stealth CDP Anti-Bot Evasion & Clearance Bridge](#10-ultra-stealth-cdp-anti-bot-evasion--clearance-bridge)
+  - [11. Self-Healing Adaptive Semantic Extractor](#11-self-healing-adaptive-semantic-extractor)
 - [Workstation Benchmark & Comparison](#workstation-benchmark--comparison)
 - [Distribution Formats & Installation](#distribution-formats--installation)
 - [Developer Setup & Build Commands](#developer-setup--build-commands)
@@ -165,6 +167,17 @@ export interface GetApiV1ProductsResponse {
 - Built-in update service queries the official GitHub Releases API (`https://api.github.com/repos/MonarchDevLab/WebClone-Studio/releases/latest`).
 - In-app Settings page displays current version, latest release notes, total download counters, and direct download links for Windows Setup, Portable, and MSI installers.
 
+### 10. Ultra-Stealth CDP Anti-Bot Evasion & Clearance Bridge
+- Prototype-clean descriptor masking for `navigator.webdriver`, `window.chrome` (runtime/app/csi), `navigator.permissions.query`, and realistic WebGL GPU virtualization (NVIDIA RTX / Intel Iris).
+- Injects micro-jitter into Canvas and AudioContext buffers to invalidate deterministic bot fingerprint tracking without corrupting media assets.
+- **Clearance Bridge:** Harvests active `cf_clearance`, `__cf_bm`, and session cookies directly from Electron's Chromium session and synchronizes them into `AssetDownloader`'s HTTP/2 connection pool, bypassing Cloudflare 403 Forbidden errors across sub-resource downloads.
+- **Automated WAF Escalation:** Automatically promotes failed static downloads (403/503 Turnstile / Challenge pages) to the Ultra-Stealth Chromium renderer and re-syncs clearance tokens in real time.
+
+### 11. Self-Healing Adaptive Semantic Extractor
+- Analyzes heavily obfuscated and minified DOM structures (Tailwind arbitrary hashes, CSS Modules, compiled styled-components) using structural density heuristics rather than volatile CSS class names.
+- Discovers primary content containers, recurring product/article cards, and pagination/infinite load triggers.
+- Generates `_meta/adaptive-entities.json` containing structured entities (title, link, image, price/badge, description).
+
 ---
 
 ## Workstation Benchmark & Comparison
@@ -173,6 +186,8 @@ export interface GetApiV1ProductsResponse {
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Shadow DOM Piercing** | Full (Native CDP) | No | Partial | No | Manual script required |
 | **Autonomous State Explorer** | Built-in | No | No | No | Manual script required |
+| **Ultra-Stealth WAF Evasion** | Built-in (CDP + Bridge) | No | No | No | Plugin required |
+| **Self-Healing Adaptive Extractor**| Built-in (`_meta/`) | No | No | No | No |
 | **SourceMap Reconstruction** | Automatic | No | No | No | No |
 | **OpenAPI 3.1 & TS Generator** | Built-in | No | No | No | No |
 | **React 19 Component Export** | Automatic | No | No | No | No |
@@ -191,9 +206,9 @@ WebClone Studio releases provide three Windows x64 distribution packages:
 
 ```
 dist/
-├── WebClone-Studio-Setup-1.0.0.exe    # NSIS installer with desktop shortcuts and uninstaller (~77.9 MB)
+├── WebClone-Studio-Setup-1.1.0.exe    # NSIS installer with desktop shortcuts and uninstaller (~77.9 MB)
 ├── WebClone-Studio-Portable.exe       # Standalone portable executable. Zero installation (~77.6 MB)
-└── WebClone-Studio-1.0.0.msi          # Microsoft Windows Installer for enterprise GPO deployment (~97.2 MB)
+└── WebClone-Studio-1.1.0.msi          # Microsoft Windows Installer for enterprise GPO deployment (~97.2 MB)
 ```
 
 1. **Portable Edition:** Download `WebClone-Studio-Portable.exe`, place it in any folder or USB drive, and double-click to run. Requires no administrative privileges.
@@ -256,6 +271,8 @@ npm run build:all
   - [7. JavaScript Obfuscation Bypass (Gizli Varlık Çıkarımı)](#7-javascript-obfuscation-bypass-gizli-varlık-çıkarımı)
   - [8. Yerleşik 127.0.0.1 Önizleme ve Çevrimdışı Mock Sunucusu](#8-yerleşik-127001-önizleme-ve-çevrimdışı-mock-sunucusu)
   - [9. GitHub Releases Güncelleme Merkezi](#9-github-releases-güncelleme-merkezi-1)
+  - [10. Ultra-Stealth CDP Anti-Bot Kalkanı ve Clearance Köprüsü](#10-ultra-stealth-cdp-anti-bot-kalkanı-ve-clearance-köprüsü)
+  - [11. Self-Healing Adaptif Semantik İçerik Çıkarıcı](#11-self-healing-adaptif-semantik-içerik-çıkarıcı)
 - [Karşılaştırma ve Başarım Tablosu](#karşılaştırma-ve-başarım-tablosu)
 - [Kurulum ve Paket Seçenekleri](#kurulum-ve-paket-seçenekleri-1)
 - [Geliştirici Kılavuzu ve Komutlar](#geliştirici-kılavuzu-ve-komutlar)
@@ -375,6 +392,16 @@ export interface GetApiV1ProductsResponse {
 - Uygulama içi Ayarlar menüsünden resmi GitHub API'sini sorgulayarak yeni sürüm kontrolü yapar.
 - Canlı indirme sayaçlarını, sürüm notlarını ve Setup, Portable ve MSI formatlarındaki yükleme paketlerinin doğrudan indirme butonlarını sunar.
 
+### 10. Ultra-Stealth CDP Anti-Bot Kalkanı ve Clearance Köprüsü
+- `navigator.webdriver` (prototype-clean), `window.chrome` (`runtime`/`app`/`csi`), `navigator.permissions.query` ve gerçekçi WebGL GPU (NVIDIA RTX / Intel Iris) donanım simülasyonu.
+- Canvas ve AudioContext parmak izi takip mekanizmalarını bozmak için görsel/işitsel veriyi bozmayan mikro-gürültü enjeksiyonu.
+- **Clearance Köprüsü:** Chromium oturumundaki `cf_clearance`, `__cf_bm` ve yetkilendirme çerezlerini toplayarak `AssetDownloader`'ın HTTP/2 başlıklarına aktarır; alt varlıkların Cloudflare 403 engeline takılmadan indirilmesini sağlar.
+- **Otomatik WAF Eskalasyonu:** Statik indirmede 403/503 Cloudflare/WAF meydan okuması (`Turnstile`, `challenge-running`) tespit edildiğinde işi kesintiye uğratmaz; otomatik Ultra-Stealth Chromium motoruna eskalasyon yaparak çerezleri yeniler ve indirmeyi sürdürür.
+
+### 11. Self-Healing Adaptif Semantik İçerik Çıkarıcı
+- Obfuscate/hash sınıflı (Tailwind, CSS Modules) karmaşık DOM ağaçlarında sınıf isimlerine bağımlı kalmadan metin yoğunluğu ve kardeş düğüm benzerliği heuristiğiyle ana içerik bloğunu, ürün/makale kartlarını ve sayfalama tetikleyicilerini çıkarır.
+- Klonlama çıktısına `_meta/adaptive-entities.json` dosyasını ekler.
+
 ---
 
 ## Karşılaştırma ve Başarım Tablosu
@@ -383,6 +410,8 @@ export interface GetApiV1ProductsResponse {
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Shadow DOM Delme** | Tam (Native CDP) | Yok | Kısmi | Yok | Manuel betik gerektirir |
 | **Otonom Durum Gezgini** | Yerleşik | Yok | Yok | Yok | Manuel betik gerektirir |
+| **Ultra-Stealth WAF Kalkanı** | Yerleşik (CDP + Bridge) | Yok | Yok | Yok | Eklenti gerekir |
+| **Self-Healing Adaptif Çıkarıcı**| Yerleşik (`_meta/`) | Yok | Yok | Yok | Yok |
 | **SourceMap Kaynak Kurtarma**| Otomatik | Yok | Yok | Yok | Yok |
 | **OpenAPI 3.1 & TS Üretimi** | Yerleşik | Yok | Yok | Yok | Yok |
 | **React 19 Bileşen İhracı** | Otomatik | Yok | Yok | Yok | Yok |
@@ -401,9 +430,9 @@ WebClone Studio sürümleri üç farklı Windows x64 kurulum seçeneğiyle dağ�
 
 ```
 dist/
-├── WebClone-Studio-Setup-1.0.0.exe    # Masaüstü ve başlat menüsü kısayollarını içeren NSIS kurulumu (~77.9 MB)
+├── WebClone-Studio-Setup-1.1.0.exe    # Masaüstü ve başlat menüsü kısayollarını içeren NSIS kurulumu (~77.9 MB)
 ├── WebClone-Studio-Portable.exe       # Kurulum gerektirmeyen tek parça bağımsız çalıştırılabilir dosya (~77.6 MB)
-└── WebClone-Studio-1.0.0.msi          # Kurumsal ağlar ve GPO dağıtımı için Microsoft Windows Installer (~97.2 MB)
+└── WebClone-Studio-1.1.0.msi          # Kurumsal ağlar ve GPO dağıtımı için Microsoft Windows Installer (~97.2 MB)
 ```
 
 1. **Portable Sürüm:** `WebClone-Studio-Portable.exe` dosyasını indirin, dilediğiniz bir klasöre veya USB belleğe koyarak doğrudan çalıştırın. Yönetici yetkisi gerektirmez.

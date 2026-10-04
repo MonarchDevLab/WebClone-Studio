@@ -21,9 +21,9 @@
 6. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuluyor, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı.
 
 1. **Dağıtım ve Kurulum Paketleri (Windows x64 - Optimize Edilmiş):**
-   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.0.0.exe` (~73.5MB)
+   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.1.0.exe` (~73.5MB)
    - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~73.1MB)
-   - **Kurumsal MSI:** `dist/WebClone-Studio-1.0.0.msi` (~83.2MB)
+   - **Kurumsal MSI:** `dist/WebClone-Studio-1.1.0.msi` (~83.2MB)
    - **Boyut Optimizasyonu:** `app.asar` 43.7MB'tan 9.53MB'a, `locales/` 40.25MB'tan 1.02MB'a, açılmış ayak izi 310MB'tan 238MB'a indirildi.
 2. **GitHub Güncelleme Entegrasyonu:**
    - `UpdateChecker` servisi ve `SettingsPage` içi Güncelleme Merkezi kuruldu.
