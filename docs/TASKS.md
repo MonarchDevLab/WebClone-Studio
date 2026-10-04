@@ -1,10 +1,14 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] SİSTEM HAZIR. PROJE BEKLENİYOR.
+- [~] 2026-10-04: Görev 1: Ultra-Stealth CDP Enjeksiyon Motoru (src/main/browser/stealth-scripts.ts) icra ediliyor.
 
 ## SIRADAKİ
-- [ ] Yeni özellik talepleri beklenecek.
+- [ ] Görev 2: PageRenderer Stealth & Çerez İhracatı Entegrasyonu (src/main/browser/page-renderer.ts)
+- [ ] Görev 3: AssetDownloader Çerez Deposu ve Clearance Senkronizasyonu (src/main/cloner/asset-downloader.ts)
+- [ ] Görev 4: CrawlerEngine Otomatik WAF Eskalasyonu ve Çerez Köprüsü (src/main/cloner/crawler-engine.ts)
+- [ ] Görev 5: Self-Healing / Adaptif Semantik İçerik Çıkarıcı (src/main/analyzers/adaptive-extractor.ts)
+- [ ] Görev 6: Uçtan Uca Doğrulama, Dokümantasyon ve Paket Testi
 
 ## BLOKLU
 - Yok.
