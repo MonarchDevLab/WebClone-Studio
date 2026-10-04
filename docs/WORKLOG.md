@@ -1,17 +1,20 @@
 # WORKLOG
 
 ## Aktif Oturum
-- **Hedef:** Ouroboros v10.0 mimari zırhlama ve boyut optimizasyonu: Proje ve dağıtım paketlerindeki gereksiz yüklerin, frontend bağımlılıklarının ve Chromium dil paketlerinin sisteme zarar vermeden ayıklanması, `app.asar` ve derleme boyutunun radikal şekilde düşürülmesi.
+- **Hedef:** Scrapling mimarisinden esinlenerek Python bağımlılığı olmadan yerel TypeScript/Electron motoruna Ultra-Stealth CDP enjeksiyonu, Clearance Bridge (çerez senkronizasyonu), otomatik Cloudflare/WAF eskalasyonu ve self-healing adaptif semantik içerik çıkarıcı kazandırmak.
 - **Yapılanlar:**
-  1. `package.json` analiz edildi: Yalnızca derleme anında Vite tarafından `out/renderer` içerisine paketlenen saf frontend kütüphaneleri (`clsx`, `lucide-react`, `postcss`, `react`, `react-dom`, `react-resizable-panels`, `sonner`, `tailwind-merge`, `zustand`) `dependencies` listesinden `devDependencies`'e taşındı. Sadece Node.js çalışma zamanında `main` süreci tarafından `require` edilen paketler (`bottleneck`, `cheerio`, `got`, `robots-parser`, `sanitize-filename`, `source-map`) `dependencies` altında muhafaza edildi.
-  2. `electron-builder.yml` yapılandırmasına `electronLanguages: ["tr", "en-US", "en"]` ve `compression: maximum` eklendi; 55 Chromium dil paketinden 53 tanesi budanarak `locales/` boyutu 40.25 MB'tan 1.02 MB'a indirildi (%97.5 tasarruf).
-  3. `app.asar` boyutu 43.70 MB'tan 9.53 MB'a düşürüldü (%78.2 tasarruf).
-  4. Açılmış uygulama ayak izi (`win-unpacked`) 310 MB'tan 238 MB'a indirildi (~72 MB tasarruf).
-  5. Derleme sonrası geçici `dist/win-unpacked` dizini temizlenerek yerel diskte 238.5 MB boş alan geri kazanıldı; `dist/` boyutu 551 MB'tan 230 MB'a indi.
-  6. Optimize edilmiş yeni Portable, NSIS Setup ve MSI paketleri derlendi; GitHub Release `v1.0.0` sürümündeki ikililer güncellendi.
-  7. Tip denetimi (`tsc --noEmit`), Vitest birim testleri (17/17) ve `electron-vite build` 0 hata ile doğrulandı.
+  1. `src/main/browser/stealth-scripts.ts` oluşturuldu: Prototype-clean `navigator.webdriver`, `window.chrome` (runtime/app/csi), `navigator.permissions.query`, WebGL (NVIDIA/Intel), gerçekçi pencere ölçüleri (`outerWidth/Height` 0x0 düzeltmesi) ve canvas/audio mikro-gürültüsü sağlandı.
+  2. `src/main/browser/page-renderer.ts` güncellendi: CDP stealth enjeksiyonu entegre edildi, render sonu `win.webContents.session.cookies` toplanarak `PageRenderResult.cookies` ile dışa aktarıldı.
+  3. `src/main/cloner/asset-downloader.ts` güncellendi: Domain bazlı çerez deposu (`setCookies`, `clearCookies`) ve HTTP/2 header uyumu eklendi.
+  4. `src/main/cloner/crawler-engine.ts` güncellendi: `isWafChallenge` tespit fonksiyonu yazıldı. Statik indirme WAF engeline çarptığında otomatik Ultra-Stealth Chromium'a eskalasyon yapılıp çerezler yenilendi ve `downloader`'a aktarıldı.
+  5. `src/main/analyzers/adaptive-extractor.ts` oluşturuldu: Minified/obfuscated sınıf yapılarında semantik yoğunlukla ana içerik, tekrarlayan kartlar ve sayfalama tetikleyicilerini bulan motor yazıldı; `_meta/adaptive-entities.json` çıktısı bağlandı.
+  6. 26 Vitest birim testi, `tsc --noEmit` ve `electron-vite build` %100 başarıyla doğrulandı.
 
 ## Mimari Kararlar
+- **[KARAR-026] Python-Free Stealth Evasion, Clearance Köprüsü ve Self-Healing Adaptif Çıkarıcı:**
+  1) Scrapling'in Python tabanlı Camoufox/lxml mimarisini Electron projesine gömmek 73MB'lık taşınabilir Windows paketini +300MB şişireceğinden reddedildi. Bunun yerine Scrapling'in en güçlü stealth stratejileri yerel CDP (`Page.addScriptToEvaluateOnNewDocument`) ve Node.js katmanına taşındı.
+  2) Chromium render motoru ile `AssetDownloader` arasına `Clearance Bridge` kurularak Cloudflare `cf_clearance` ve `__cf_bm` oturum çerezleri paylaştırıldı; alt varlıkların statik indirilmesinde 403 engeli kalıcı olarak çözüldü.
+  3) Sayfa yapısı değişen veya sınıfları hashlenen modern web siteleri için Cheerio tabanlı `AdaptiveExtractor` geliştirilerek `_meta/adaptive-entities.json` ile tersine mühendislik çıktısı zenginleştirildi.
 - **[KARAR-025] Dağıtım Paketi ve Çalışma Zamanı Ayak İzi Budaması (Zero-Harm Size Optimization):**
   1) Electron paketleyicisinin (`electron-builder`) `dependencies` altındaki tüm paketleri ve onların alt bağımlılıklarını `app.asar/node_modules` içerisine ham olarak kopyaladığı tespit edildi. 21.75 MB'lık `lucide-react` ve 7 MB'lık `react-dom` gibi frontend modüllerinin `devDependencies`'e taşınmasıyla `app.asar` boyutu 43.7 MB'tan 9.5 MB'a geriletildi.
   2) Chromium'un varsayılan 55 dilden oluşan `.pak` dil paketi havuzundan yalnızca Türkçe ve İngilizce (`tr`, `en-US`, `en`) filtrelendi; 39.2 MB gereksiz dil dosyası elendi.

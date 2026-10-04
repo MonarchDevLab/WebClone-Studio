@@ -1,15 +1,17 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] 2026-10-04: Görev 5: Self-Healing / Adaptif Semantik İçerik Çıkarıcı (src/main/analyzers/adaptive-extractor.ts) icra ediliyor.
+- [~] SİSTEM HAZIR. PROJE BEKLENİYOR.
 
 ## SIRADAKİ
-- [ ] Görev 6: Uçtan Uca Doğrulama, Dokümantasyon ve Paket Testi
+- [ ] Yeni özellik veya analiz talepleri beklenecek.
 
 ## BLOKLU
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-04 - chore(system): verify stealth and clearance bridge integration, update docs
+- [x] 2026-10-04 - feat(analyzers): add self-healing adaptive semantic extractor (244dfbb)
 - [x] 2026-10-04 - feat(crawler): implement automatic waf escalation and clearance synchronization (965bf37)
 - [x] 2026-10-04 - feat(cloner): add cookie jar and clearance bridge to asset downloader (110c3a2)
 - [x] 2026-10-04 - feat(renderer): integrate ultra-stealth scripts and harvest session cookies (1ede5ad)

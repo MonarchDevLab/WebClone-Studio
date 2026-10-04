@@ -3,10 +3,13 @@
 ## Anlık Durum
 "Ultimate Web Clone" planı ve ileri seviye eklemeler tam başarıyla uygulandı ve proje Ouroboros protokolü kapsamında tamamlandı.
 1. **İleri Seviye ve Ultimate Özellikler:**
+   - **Ultra-Stealth CDP Enjeksiyon Motoru (`stealth-scripts.ts`):** Scrapling ve modern anti-bot atlatma standartlarında `navigator.webdriver` (prototype-clean), `window.chrome` (runtime/app/csi), `navigator.permissions.query`, WebGL (NVIDIA/Intel), gerçekçi pencere geometrisi (`outerWidth/Height` offscreen düzeltmesi) ve canvas/audio mikro-gürültüsü enjeksiyonu.
+   - **Clearance Bridge & Çerez Senkronizasyonu (`AssetDownloader` & `PageRenderer`):** Chromium offscreen render motoru Cloudflare Turnstile ve bot meydan okumalarını aştığında `cf_clearance`, `__cf_bm` ve session çerezlerini toplar, `AssetDownloader`'ın HTTP başlıklarına enjekte eder. Alt varlıklar Cloudflare 403 engeline takılmadan indirilir.
+   - **Otomatik WAF Eskalasyonu (`CrawlerEngine`):** Statik indirmede 403/503 Cloudflare/WAF meydan okuması (`challenge-running`, `Turnstile`) algılandığında indirme iptal edilmez; otomatik Ultra-Stealth Chromium render motoruna eskalasyon yapılarak çerezler yenilenir ve klonlama kesintisiz sürer.
+   - **Self-Healing / Adaptif Semantik Çıkarıcı (`AdaptiveExtractor`):** Minify veya hash sınıflı (Tailwind, CSS Modules) DOM ağaçlarında sınıf isimlerine bağımlı kalmadan ana içerik bloğunu, tekrarlayan veri kartlarını (ürün, makale) ve sayfalama/yükleme tetikleyicilerini çıkarıp `_meta/adaptive-entities.json` üretir.
    - **Otonom Durum Gezgini (State Explorer):** Chromium render aşamasında `aria-expanded="false"`, `role="tab"`, `details summary` ve akordeon menüleri güvenle tıklayarak gizli dinamik DOM durumlarını açar ve yakalar.
    - **OpenAPI 3.1 & TypeScript Generator:** Yakalanan dinamik API ağ trafiğinden (`_meta/api-endpoints.json`) otomatik standart `_meta/openapi.json` ve tip güvenli `_meta/api-types.d.ts` sözleşmeleri üretir.
    - **Tek Dosya Arşivleyici (SingleFile Exporter):** Klonlanan sayfayı tüm CSS, JS, font (WOFF2 Base64) ve görselleriyle bağımsız tek bir dosya haline getirerek `_exports/index.standalone.html` olarak sunar.
-   - **Stealth Evasion:** Cloudflare/Bot korumalarını aşmak için CDP `Page.addScriptToEvaluateOnNewDocument` ile `navigator.webdriver` ve özellik manipülasyonu sağlandı.
    - **Infinite Scroll:** Dinamik yüklenen içerikler (lazy-load) için native Chromium auto-scroll (aşağı/yukarı) entegre edildi.
    - **Shadow DOM Piercing:** Web components ve shadow-root kullanan modern siteler için DOM ayrıştırma algoritması Chromium `getInnerHTML` API'si ile derinlemesine delindi.
    - **Structured Data & React Export:** Sayfadaki liste/grid yapıları (Cheerio ile) analiz edilip `_meta/structured-data.json` olarak çıkartılıyor; temizlenmiş HTML yapısı `_components/` altında kullanıma hazır React `.tsx` bileşenlerine dönüştürülüyor.
