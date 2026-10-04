@@ -51,6 +51,45 @@ function isSpaShell(html: string): boolean {
   return (hasSpaMount || hasNoScriptWarning) && bodyText.length < 350;
 }
 
+export function isWafChallenge(statusCode: number, html: string = '', headers?: Record<string, string>): boolean {
+  if (statusCode !== 403 && statusCode !== 503 && statusCode !== 429) {
+    return false;
+  }
+
+  if (headers) {
+    const cfMitigated = headers['cf-mitigated'] || headers['CF-Mitigated'];
+    if (cfMitigated && cfMitigated.toLowerCase() === 'challenge') {
+      return true;
+    }
+  }
+
+  const lowerHtml = (html || '').toLowerCase();
+  const wafSignatures = [
+    'just a moment...',
+    'attention required! | cloudflare',
+    'checking your browser before accessing',
+    'cf-turnstile',
+    'cf-browser-verification',
+    'challenge-running',
+    'datadome',
+    'captcha-delivery.com',
+    'please wait while we verify your browser',
+    'enable javascript and cookies to continue'
+  ];
+
+  for (const sig of wafSignatures) {
+    if (lowerHtml.includes(sig)) {
+      return true;
+    }
+  }
+
+  if (lowerHtml.includes('ray id:') && (statusCode === 403 || statusCode === 503)) {
+    return true;
+  }
+
+  return false;
+}
+
 export class CrawlerEngine extends EventEmitter {
   private targetUrl: string;
   private settings: CloneSettings;

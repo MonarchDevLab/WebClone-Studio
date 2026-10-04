@@ -14,6 +14,13 @@ export interface DownloadResult {
   contentDispositionFilename?: string;
 }
 
+export interface StoredCookie {
+  name: string;
+  value: string;
+  domain?: string;
+  path?: string;
+}
+
 const MIME_EXTENSION_MAP: Record<string, string> = {
   'application/zip': '.zip',
   'application/x-zip-compressed': '.zip',
@@ -43,10 +50,31 @@ const REAL_BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5
 export class AssetDownloader {
   private userAgent: string;
   private timeoutMs: number;
+  private cookies: StoredCookie[] = [];
 
   constructor(userAgent?: string, timeoutMs: number = 30000) {
     this.userAgent = userAgent && !userAgent.includes('WebCloneStudio') ? userAgent : REAL_BROWSER_UA;
     this.timeoutMs = timeoutMs;
+  }
+
+  public setCookies(cookies: StoredCookie[]): void {
+    if (!Array.isArray(cookies)) return;
+    for (const cookie of cookies) {
+      if (!cookie.name || cookie.value === undefined) continue;
+      const normalizedDomain = (cookie.domain || '').toLowerCase().replace(/^\./, '');
+      const existingIdx = this.cookies.findIndex(
+        (c) => c.name === cookie.name && (c.domain || '').toLowerCase().replace(/^\./, '') === normalizedDomain
+      );
+      if (existingIdx >= 0) {
+        this.cookies[existingIdx] = cookie;
+      } else {
+        this.cookies.push(cookie);
+      }
+    }
+  }
+
+  public clearCookies(): void {
+    this.cookies = [];
   }
 
   private getBrowserHeaders(targetUrl: string): Record<string, string> {
@@ -70,6 +98,20 @@ export class AssetDownloader {
     if (originReferer) {
       headers['referer'] = originReferer;
     }
+
+    try {
+      const urlObj = new URL(targetUrl);
+      const reqHostname = urlObj.hostname.toLowerCase();
+      const matchedCookies = this.cookies.filter((c) => {
+        if (!c.domain) return true;
+        const cookieDomain = c.domain.toLowerCase().replace(/^\./, '');
+        return reqHostname === cookieDomain || reqHostname.endsWith('.' + cookieDomain);
+      });
+
+      if (matchedCookies.length > 0) {
+        headers['cookie'] = matchedCookies.map((c) => `${c.name}=${c.value}`).join('; ');
+      }
+    } catch {}
 
     return headers;
   }
