@@ -1,10 +1,9 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] 2026-10-04: Görev 3: AssetDownloader Çerez Deposu ve Clearance Senkronizasyonu (src/main/cloner/asset-downloader.ts) icra ediliyor.
+- [~] 2026-10-04: Görev 4: CrawlerEngine Otomatik WAF Eskalasyonu ve Çerez Köprüsü (src/main/cloner/crawler-engine.ts) icra ediliyor.
 
 ## SIRADAKİ
-- [ ] Görev 4: CrawlerEngine Otomatik WAF Eskalasyonu ve Çerez Köprüsü (src/main/cloner/crawler-engine.ts)
 - [ ] Görev 5: Self-Healing / Adaptif Semantik İçerik Çıkarıcı (src/main/analyzers/adaptive-extractor.ts)
 - [ ] Görev 6: Uçtan Uca Doğrulama, Dokümantasyon ve Paket Testi
 
@@ -12,6 +11,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-04 - feat(cloner): add cookie jar and clearance bridge to asset downloader (110c3a2)
 - [x] 2026-10-04 - feat(renderer): integrate ultra-stealth scripts and harvest session cookies (1ede5ad)
 - [x] 2026-10-04 - feat(stealth): implement ultra-stealth cdp script generator (b4f4f1f)
 - [x] 2026-10-02 - chore(optimization): optimize app footprint (app.asar 43.7MB->9.5MB, locales 40.2MB->1MB, unpacked 310MB->238MB, dist clean -321MB)

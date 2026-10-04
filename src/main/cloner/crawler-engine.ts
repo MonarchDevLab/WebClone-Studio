@@ -395,6 +395,9 @@ export class CrawlerEngine extends EventEmitter {
               this.apiInterceptor.record(ep);
             }
           }
+          if (rendered.cookies && rendered.cookies.length > 0) {
+            this.downloader.setCookies(rendered.cookies);
+          }
         } catch (renderErr: any) {
           this.emitLog('warn', `Dinamik render uyarısı (${item.url}), statik moda geçiliyor: ${renderErr.message}`);
           const staticRes = await this.downloader.downloadToBuffer(item.url, this.settings.maxFileSize);
@@ -411,19 +414,58 @@ export class CrawlerEngine extends EventEmitter {
         }
       } else {
         const staticRes = await this.downloader.downloadToBuffer(item.url, this.settings.maxFileSize);
-        if (!staticRes.buffer || staticRes.statusCode >= 400) {
-          this.stats.failedUrls++;
-          const errLabel = staticRes.statusCode === 404
-            ? 'HTTP 404 (Hedef sitede mevcut değil / kırık sayfa)'
-            : `HTTP ${staticRes.statusCode}`;
-          this.failedUrlsList.push({ url: item.url, error: errLabel, time: new Date().toISOString() });
-          this.emitError(item.url, errLabel, 'HTTP_ERROR');
-          return;
+        const staticHtml = staticRes.buffer ? staticRes.buffer.toString('utf-8') : '';
+        const isWaf = isWafChallenge(staticRes.statusCode, staticHtml);
+        let htmlStrResolved = false;
+
+        // Cloudflare / WAF Engeli Tespit Edildiğinde Otomatik Ultra-Stealth Eskalasyonu
+        if (isWaf) {
+          this.emitLog('info', `Cloudflare / WAF güvenlik kalkanı tespit edildi (${item.url}), Ultra-Stealth Chromium ile eskalasyon başlatılıyor...`);
+          try {
+            const rendered = await this.dynamicLimiter.schedule(() =>
+              this.pageRenderer.render(item.url, { 
+                timeoutMs: 30000,
+                captureApi: !!this.settings.reverseEngineering
+              })
+            );
+            if (rendered.html && !isWafChallenge(200, rendered.html)) {
+              htmlStr = rendered.html;
+              statusCode = 200;
+              sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
+              if (!this.screenshotBuffer && rendered.screenshot) {
+                this.screenshotBuffer = rendered.screenshot;
+              }
+              if (rendered.capturedEndpoints && rendered.capturedEndpoints.length > 0) {
+                for (const ep of rendered.capturedEndpoints) {
+                  this.apiInterceptor.record(ep);
+                }
+              }
+              if (rendered.cookies && rendered.cookies.length > 0) {
+                this.downloader.setCookies(rendered.cookies);
+                this.emitLog('info', `Clearance çerezleri (${rendered.cookies.length} adet) başarıyla senkronize edildi.`);
+              }
+              htmlStrResolved = true;
+            }
+          } catch (wafErr: any) {
+            this.emitLog('warn', `WAF eskalasyonu tamamlanamadı: ${wafErr.message}`);
+          }
         }
-        htmlStr = staticRes.buffer.toString('utf-8');
-        statusCode = staticRes.statusCode;
-        sizeBytes = staticRes.sizeBytes;
-        finalUrl = staticRes.finalUrl || item.url;
+
+        if (!htmlStrResolved) {
+          if (!staticRes.buffer || staticRes.statusCode >= 400) {
+            this.stats.failedUrls++;
+            const errLabel = staticRes.statusCode === 404
+              ? 'HTTP 404 (Hedef sitede mevcut değil / kırık sayfa)'
+              : `HTTP ${staticRes.statusCode}`;
+            this.failedUrlsList.push({ url: item.url, error: errLabel, time: new Date().toISOString() });
+            this.emitError(item.url, errLabel, 'HTTP_ERROR');
+            return;
+          }
+          htmlStr = staticHtml;
+          statusCode = staticRes.statusCode;
+          sizeBytes = staticRes.sizeBytes;
+          finalUrl = staticRes.finalUrl || item.url;
+        }
 
         // Akıllı SPA / İstemci Render Kurtarma: Sayfa boş iskeletse Chromium render motorunu devreye sok
         if (isSpaShell(htmlStr)) {
@@ -445,6 +487,9 @@ export class CrawlerEngine extends EventEmitter {
                 for (const ep of rendered.capturedEndpoints) {
                   this.apiInterceptor.record(ep);
                 }
+              }
+              if (rendered.cookies && rendered.cookies.length > 0) {
+                this.downloader.setCookies(rendered.cookies);
               }
             }
           } catch (spaErr: any) {
