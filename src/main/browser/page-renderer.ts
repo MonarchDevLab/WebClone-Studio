@@ -1,6 +1,14 @@
 import { BrowserWindow } from 'electron';
 import { ColorToken, TypoToken, DesignTokens } from '../../shared/types';
 import { CapturedApiEndpoint } from '../cloner/reverse-engineering/api-interceptor';
+import { generateStealthScript } from './stealth-scripts';
+
+export interface PageRenderCookie {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+}
 
 export interface PageRenderResult {
   html: string;
@@ -8,6 +16,7 @@ export interface PageRenderResult {
   screenshot: Buffer;
   designTokens: DesignTokens;
   capturedEndpoints?: CapturedApiEndpoint[];
+  cookies?: PageRenderCookie[];
 }
 
 export interface PageRenderOptions {
@@ -108,20 +117,10 @@ export class PageRenderer {
           debuggerAttached = true;
         }
 
-        // Anti-Bot Stealth Injection via CDP (Her renderda aktif)
+        // Anti-Bot Ultra-Stealth Injection via CDP (Her renderda aktif)
         await win.webContents.debugger.sendCommand('Page.enable').catch(() => {});
         await win.webContents.debugger.sendCommand('Page.addScriptToEvaluateOnNewDocument', {
-          source: `
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            Object.defineProperty(navigator, 'languages', { get: () => ['tr-TR', 'tr', 'en-US', 'en'] });
-            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-            const getParameter = WebGLRenderingContext.prototype.getParameter;
-            WebGLRenderingContext.prototype.getParameter = function(parameter) {
-              if (parameter === 37445) return 'Intel Inc.';
-              if (parameter === 37446) return 'Intel Iris OpenGL Engine';
-              return getParameter.call(this, parameter);
-            };
-          `
+          source: generateStealthScript()
         }).catch(() => {});
 
         if (options.captureApi) {
@@ -574,12 +573,24 @@ export class PageRenderer {
         assets: rawData.assets || {},
       };
 
+      let cookies: PageRenderCookie[] = [];
+      try {
+        const electronCookies = await win.webContents.session.cookies.get({ url });
+        cookies = electronCookies.map((c) => ({
+          name: c.name,
+          value: c.value,
+          domain: c.domain || new URL(url).hostname,
+          path: c.path || '/'
+        }));
+      } catch {}
+
       return {
         html: rawData.html || '',
         globals: rawData.globals || [],
         screenshot,
         designTokens,
         capturedEndpoints,
+        cookies,
       };
     } finally {
       cleanup();

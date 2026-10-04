@@ -1,10 +1,9 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] 2026-10-04: Görev 1: Ultra-Stealth CDP Enjeksiyon Motoru (src/main/browser/stealth-scripts.ts) icra ediliyor.
+- [~] 2026-10-04: Görev 2: PageRenderer Stealth & Çerez İhracatı Entegrasyonu (src/main/browser/page-renderer.ts) icra ediliyor.
 
 ## SIRADAKİ
-- [ ] Görev 2: PageRenderer Stealth & Çerez İhracatı Entegrasyonu (src/main/browser/page-renderer.ts)
 - [ ] Görev 3: AssetDownloader Çerez Deposu ve Clearance Senkronizasyonu (src/main/cloner/asset-downloader.ts)
 - [ ] Görev 4: CrawlerEngine Otomatik WAF Eskalasyonu ve Çerez Köprüsü (src/main/cloner/crawler-engine.ts)
 - [ ] Görev 5: Self-Healing / Adaptif Semantik İçerik Çıkarıcı (src/main/analyzers/adaptive-extractor.ts)
@@ -14,6 +13,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-04 - feat(stealth): implement ultra-stealth cdp script generator (b4f4f1f)
 - [x] 2026-10-02 - chore(optimization): optimize app footprint (app.asar 43.7MB->9.5MB, locales 40.2MB->1MB, unpacked 310MB->238MB, dist clean -321MB)
 - [x] 2026-10-02 - docs(readme): design and embed repository hero banner and UI showcase visuals
 - [x] 2026-10-02 - feat(dist): generate Windows Setup.exe, Portable.exe, and MSI packages
