@@ -11,6 +11,7 @@
 - **Text Primary:** `#F4F4F5` | **Secondary:** `#A1A1AA` | **Muted:** `#71717A` | **Dim:** `#52525B`
 - **Borders:** `rgba(255, 255, 255, 0.07)` (subtle) / `rgba(255, 255, 255, 0.12)` (medium) / `rgba(6, 182, 212, 0.50)` (focus)
 - **Fonts:** Inter (UI gövde/başlık, 400-700 tek değişken dosya, offline gömülü), JetBrains Mono (sayısal veriler, metrikler, kod ve log akışı, 400-500 tek değişken dosya, offline gömülü) — `src/renderer/src/assets/fonts/*.woff2` (latin + latin-ext, Türkçe karakter desteği için ikisi de gerekli), `@font-face` ile CDN'siz yükleniyor.
+- **Brand Identity & Assets:** 3D Cyber-Spider Crawler Bot (Bağımsız mekanik titanyum siber örümcek, neon siyan veri küresi ve lazer ağ matriksi). Varlıklar: `resources/icon.png` (1024x1024 RGBA), `resources/icon-256.png`, `resources/icon.ico` (16..256px multi-layer ICO), `src/renderer/src/assets/logo.png`, `resources/banner.png` (1376x768 16:9 Octane render), `resources/ui_showcase.png` (1376x768 16:9 yerleşik Chromium DirectWrite UI render).
 - **Disiplin notu:** Tüm renkler bu 5 semantik token (accent/secondary/success/warning/error) + nötrler üzerinden ifade edilir. JSX'te `bg-[#hex]` veya Tailwind stok `cyan-400`/`purple-500` gibi ham/off-token sınıf YAZILMAZ.
 
 ## Teknoloji Yığını

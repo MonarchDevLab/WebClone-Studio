@@ -10,7 +10,7 @@ export const TitleBar: React.FC = () => {
     <div className="h-9 bg-canvas flex items-center justify-between px-4 absolute top-0 left-0 right-0 z-50 select-none drag-region">
       {/* Sol: Uygulama Adı ve Logo */}
       <div className="flex items-center gap-2">
-        <img src={logoUrl} alt="Logo" className="w-5 h-5 rounded-md no-drag" />
+        <img src={logoUrl} alt="Logo" className="w-6 h-6 object-contain no-drag" />
         <div className="text-xs font-medium text-text-muted">
           {APP_NAME}
         </div>

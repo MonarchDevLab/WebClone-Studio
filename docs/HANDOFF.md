@@ -20,17 +20,18 @@
 5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`, ~77MB) tamamen bağımsız (Playwright/Puppeteer vb. gerektirmeyen) native Electron altyapısıyla 0 hata ile derlenmeye hazır.
 6. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuluyor, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı.
 
-1. **Dağıtım ve Kurulum Paketleri (Windows x64 - Optimize Edilmiş):**
-   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.1.0.exe` (~73.5MB)
-   - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~73.1MB)
-   - **Kurumsal MSI:** `dist/WebClone-Studio-1.1.0.msi` (~83.2MB)
+1. **Dağıtım ve Kurulum Paketleri (Windows x64 - v1.1.0):**
+   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.1.0.exe` (~77.3MB)
+   - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~76.9MB)
+   - **Kurumsal MSI:** `dist/WebClone-Studio-1.1.0.msi` (~87.5MB)
    - **Boyut Optimizasyonu:** `app.asar` 43.7MB'tan 9.53MB'a, `locales/` 40.25MB'tan 1.02MB'a, açılmış ayak izi 310MB'tan 238MB'a indirildi.
 2. **GitHub Güncelleme Entegrasyonu:**
    - `UpdateChecker` servisi ve `SettingsPage` içi Güncelleme Merkezi kuruldu.
    - GitHub Releases API üzerinden yeni sürüm denetimi ve indirme bağlantıları bağlandı.
-3. **Dokümantasyon & Görsel Kimlik:**
-   - GitHub için Türkçe & İngilizce, sıfır emojili, profesyonel `README.md` oluşturuldu.
-   - Hero banner (`resources/banner.png`) ve masaüstü arayüz vitrini (`resources/ui_showcase.png`) tasarlandı.
+3. **Dokümantasyon & Kurumsal Kimlik:**
+   - GitHub için Türkçe & İngilizce, sıfır emojili, profesyonel `README.md` güncellendi.
+   - Hero banner (`resources/banner.png`) 3D mekanik siber örümcek botu ve neon veri küresiyle derlendi.
+   - Masaüstü arayüz vitrini (`resources/ui_showcase.png`), yapay zeka halüsinasyonları ve kavis bozulmalarından arındırılarak Chromium DirectWrite motoruyla 1376x768 16:9 piksel keskinliğinde yeniden üretildi.
 
 ## Kritik Komutlar
 - Development: `npm run dev`

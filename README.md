@@ -61,6 +61,7 @@
 2. **Reverse Engineering Decompilation:** Reconstructs original development file trees from production source maps, extracts hydration states, outputs W3C design tokens and Tailwind v4 themes, and generates OpenAPI 3.1 specifications from background network traffic.
 3. **Modular Code Generation:** Synthesizes production-ready React 19 TSX components and creates self-contained single-file HTML deliverables.
 4. **Native Zero-Driver Architecture:** Embeds Chromium offscreen rendering directly within Electron 33, eliminating any requirement for external browser binaries (Playwright, Puppeteer, Selenium).
+5. **Cybernetic Spider Crawler Engine:** High-precision autonomous crawler core engineered to navigate complex DOM trees, crawl deep state spaces, and weave structured data webs with surgical accuracy.
 
 <br/>
 
@@ -206,13 +207,13 @@ WebClone Studio releases provide three Windows x64 distribution packages:
 
 ```
 dist/
-├── WebClone-Studio-Setup-1.1.0.exe    # NSIS installer with desktop shortcuts and uninstaller (~77.9 MB)
-├── WebClone-Studio-Portable.exe       # Standalone portable executable. Zero installation (~77.6 MB)
-└── WebClone-Studio-1.1.0.msi          # Microsoft Windows Installer for enterprise GPO deployment (~97.2 MB)
+├── WebClone-Studio-Setup-1.1.0.exe    # NSIS installer with desktop shortcuts and uninstaller (~77.3 MB)
+├── WebClone-Studio-Portable.exe       # Standalone portable executable. Zero installation (~76.9 MB)
+└── WebClone-Studio-1.1.0.msi          # Microsoft Windows Installer for enterprise GPO deployment (~87.5 MB)
 ```
 
 1. **Portable Edition:** Download `WebClone-Studio-Portable.exe`, place it in any folder or USB drive, and double-click to run. Requires no administrative privileges.
-2. **Setup Installer:** Run `WebClone-Studio-Setup-1.0.0.exe` for standard Windows installation with Start Menu and Desktop shortcuts.
+2. **Setup Installer:** Run `WebClone-Studio-Setup-1.1.0.exe` for standard Windows installation with Start Menu and Desktop shortcuts.
 3. **MSI Package:** Suitable for enterprise system administrators deploying across domain networks via Microsoft Intune or Group Policy.
 
 ---
@@ -288,6 +289,7 @@ npm run build:all
 2. **Tersine Mühendislik ve Dekompilasyon:** Canlı sitelerdeki kaynak haritalarından (source maps) orijinal kaynak kod ağacını (`site/_source-code/`) kurtarır; hydration durumlarını, W3C tasarım tokenlarını ve ağ trafiğinden OpenAPI 3.1 spesifikasyonunu üretir.
 3. **Modüler Kod Üretimi:** Klonlanan sayfaları temiz React 19 TSX bileşenlerine dönüştürür ve dağıtılabilir tek parça bağımsız HTML çıktıları oluşturur.
 4. **Sıfır Harici Sürücü Bağımlılığı:** Electron 33'ün yerleşik offscreen Chromium motorunu kullanır. Playwright, Puppeteer veya harici WebDriver kurulumu gerektirmez.
+5. **Siber Örümcek Botu (Spider Crawler) Mimarisi:** İleri düzey mekanik web kazıma ve tarama prensipleriyle tasarlanmış; iç içe geçmiş DOM ağaçlarını, durum uzaylarını ve varlık boru hatlarını zeki bir veri dokuma ajanı gibi çözer.
 
 <br/>
 
@@ -430,13 +432,13 @@ WebClone Studio sürümleri üç farklı Windows x64 kurulum seçeneğiyle dağ�
 
 ```
 dist/
-├── WebClone-Studio-Setup-1.1.0.exe    # Masaüstü ve başlat menüsü kısayollarını içeren NSIS kurulumu (~77.9 MB)
-├── WebClone-Studio-Portable.exe       # Kurulum gerektirmeyen tek parça bağımsız çalıştırılabilir dosya (~77.6 MB)
-└── WebClone-Studio-1.1.0.msi          # Kurumsal ağlar ve GPO dağıtımı için Microsoft Windows Installer (~97.2 MB)
+├── WebClone-Studio-Setup-1.1.0.exe    # Masaüstü ve başlat menüsü kısayollarını içeren NSIS kurulumu (~77.3 MB)
+├── WebClone-Studio-Portable.exe       # Kurulum gerektirmeyen tek parça bağımsız çalıştırılabilir dosya (~76.9 MB)
+└── WebClone-Studio-1.1.0.msi          # Kurumsal ağlar ve GPO dağıtımı için Microsoft Windows Installer (~87.5 MB)
 ```
 
 1. **Portable Sürüm:** `WebClone-Studio-Portable.exe` dosyasını indirin, dilediğiniz bir klasöre veya USB belleğe koyarak doğrudan çalıştırın. Yönetici yetkisi gerektirmez.
-2. **Setup Kurulumu:** `WebClone-Studio-Setup-1.0.0.exe` dosyasını çalıştırarak standart Windows kurulumunu tamamlayın.
+2. **Setup Kurulumu:** `WebClone-Studio-Setup-1.1.0.exe` dosyasını çalıştırarak standart Windows kurulumunu tamamlayın.
 3. **MSI Paketi:** Kurumsal sistem yöneticileri için Active Directory, Microsoft Intune veya Grup İlkesi (GPO) üzerinden toplu dağıtıma uygundur.
 
 ---

@@ -10,6 +10,9 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-19 - docs(readme): synchronize hero banner, UI showcase, and bilingual documentation with cyber-spider branding
+- [x] 2026-10-19 - feat(branding): integrate 3D cyber-spider crawler logo with data globe, clean alpha, and update Windows exes
+- [x] 2026-10-18 - feat(branding): apply ultra-quality 3D transparent WC cube logo to app assets and TitleBar
 - [x] 2026-10-04 - chore(system): verify stealth and clearance bridge integration, update docs
 - [x] 2026-10-04 - feat(analyzers): add self-healing adaptive semantic extractor (244dfbb)
 - [x] 2026-10-04 - feat(crawler): implement automatic waf escalation and clearance synchronization (965bf37)

@@ -1,16 +1,37 @@
 # WORKLOG
 
 ## Aktif Oturum
-- **Hedef:** Scrapling mimarisinden esinlenerek Python bağımlılığı olmadan yerel TypeScript/Electron motoruna Ultra-Stealth CDP enjeksiyonu, Clearance Bridge (çerez senkronizasyonu), otomatik Cloudflare/WAF eskalasyonu ve self-healing adaptif semantik içerik çıkarıcı kazandırmak.
+- **Hedef:** WebClone Studio için kurumsal kimliğe tam oturan, izometrik cam küp ve neon aydınlatmalı 3D 'WC' saydam logoyu üretmek ve eski logonun yerine sıfır bozulmayla tüm görsel varlık noktalarına entegre etmek.
 - **Yapılanlar:**
-  1. `src/main/browser/stealth-scripts.ts` oluşturuldu: Prototype-clean `navigator.webdriver`, `window.chrome` (runtime/app/csi), `navigator.permissions.query`, WebGL (NVIDIA/Intel), gerçekçi pencere ölçüleri (`outerWidth/Height` 0x0 düzeltmesi) ve canvas/audio mikro-gürültüsü sağlandı.
-  2. `src/main/browser/page-renderer.ts` güncellendi: CDP stealth enjeksiyonu entegre edildi, render sonu `win.webContents.session.cookies` toplanarak `PageRenderResult.cookies` ile dışa aktarıldı.
-  3. `src/main/cloner/asset-downloader.ts` güncellendi: Domain bazlı çerez deposu (`setCookies`, `clearCookies`) ve HTTP/2 header uyumu eklendi.
-  4. `src/main/cloner/crawler-engine.ts` güncellendi: `isWafChallenge` tespit fonksiyonu yazıldı. Statik indirme WAF engeline çarptığında otomatik Ultra-Stealth Chromium'a eskalasyon yapılıp çerezler yenilendi ve `downloader`'a aktarıldı.
-  5. `src/main/analyzers/adaptive-extractor.ts` oluşturuldu: Minified/obfuscated sınıf yapılarında semantik yoğunlukla ana içerik, tekrarlayan kartlar ve sayfalama tetikleyicilerini bulan motor yazıldı; `_meta/adaptive-entities.json` çıktısı bağlandı.
-  6. 26 Vitest birim testi, `tsc --noEmit` ve `electron-vite build` %100 başarıyla doğrulandı.
+  1. `image-generator` uzman alt ajanıyla WebClone Studio'nun siyan (`#06B6D4`) ve elektrik moru (`#A855F7`) renk paletine, koyu titanyum çerçeveye ve izometrik cammorfizm estetiğine sahip 3D 'WC' monogram küpü oluşturuldu.
+  2. Subpixel antialiasing ve un-premultiplied de-blacking algoritmasıyla 1024x1024 Format32bppArgb tam saydam (RGBA alpha) PNG üretildi; koyu ve açık arka planlarda halo/fringe bırakmadığı doğrulandı.
+  3. Projedeki eski logo ve ikon varlıkları güncellendi:
+     - `src/renderer/src/assets/logo.png` (1024x1024 RGBA)
+     - `resources/icon.png` (1024x1024 RGBA)
+     - `resources/icon-256.png` (256x256 RGBA Lanczos)
+     - `resources/icon.ico` (Multi-size Windows icon paketi: 16-256px)
+  4. `src/renderer/src/components/TitleBar.tsx` içindeki `rounded-md` kalıntısı temizlenerek saydam 3D logoya uygun `w-6 h-6 object-contain` nizamına geçirildi.
+  5. Vitest test paketi (26 test) ve `tsc --noEmit` başarıyla doğrulandı.
+  6. Görev çubuğunda (Windows Taskbar) diğer uygulama simgeleriyle (Outlook, Affinity vb.) optik dengeyi sağlamak için `icon.png` ve `logo.png` içerisindeki şeffaf boşluklar kırpıldı; 3D küpün görsel alanı %47.5 büyütüldü (içerik yüksekliği 807px'ten 980px'e çıkarıldı). 7 katmanlı ICO paketi (16..256px) yeniden derlendi.
+  7. PC görev çubuğu ve başlat menüsünde diğer uygulamalarla birebir aynı doluluk ve optik kütleyi elde etmek için WebClone Studio'ya özel 3D tam kanvas squircle rozet tasarlandı (karanlık fırçalanmış titanyum çerçeve, katmanlı cam tarayıcı pencereleri, neon siyan/mor siber halkalar ve 3D "WC" monogramı).
+  8. Arka plan BFS flood-fill ve un-premultiplied antialiasing algoritmasıyla sıfır hale ile şeffaflaştırıldı; %90-%94 kanvas doluluğu ile `resources/icon.png`, `src/renderer/src/assets/logo.png`, `resources/icon-256.png` ve 7 katmanlı `resources/icon.ico` (16..256px) yenilendi.
+  9. Kullanıcı geri bildirimi doğrultusunda "WC" monogramı tamamen kaldırılarak doğrudan web kazıma/tarama (scraper/crawler) kimliğini yansıtan 4 alternatif üretildi; kullanıcının seçtiği 2. Seçenek (bağımsız 3D titanyum siber örümcek, neon siyan veri küresi ve lazer ağ hatları) sisteme entegre edildi.
+  10. Küre çevresindeki ve ağ zeminindeki dağınık parazit gölgeler filtrelendi; kanvas genişliği %95.3 (976px) olarak hizalanıp 1024x1024 Format32bppArgb PNG, 256x256 PNG ve 7 katmanlı ICO (16..256px) yeniden derlendi.
+  11. Windows dağıtım paketleri güncellendi: `WebClone-Studio-Portable.exe` (76.9 MB), `WebClone-Studio-Setup-1.1.0.exe` (77.3 MB) ve `WebClone-Studio-1.1.0.msi` (87.5 MB). `dist/win-unpacked` temizlendi.
 
 ## Mimari Kararlar
+- **[KARAR-029] Biyomekanik 3D Siber Örümcek Botu (Scraper/Crawler) ve Saf Alfa Entegrasyonu:**
+  1) WebClone Studio'nun temel işlevi web kazıma (scraping) ve derin tarama (crawling) olduğundan, harf/monogram yerine doğrudan bu işlevi simgeleyen bağımsız 3D sibernetik örümcek robotu tercih edildi.
+  2) Örümceğin karnındaki neon siyan holografik veri küresi (data globe) ve ön bacaklarındaki lazer ağ matriksi korundu; küre etrafındaki ve bacaklar arasındaki difüz siyah gölgeler matematiksel sınır çemberi ve renk profili ayrıştırmasıyla tamamen temizlenerek saf saydam alfa üretildi.
+  3) 8 bacaklı geniş mekanik duruş kanvasın %95.3'ünü kaplayacak şekilde (976x731px) merkezlenerek görev çubuğunda ve masaüstünde yüksek optik görünürlük sağlandı.
+- **[KARAR-028] Tam Kanvas 3D Titanyum Squircle Uygulama Rozeti ve Masaüstü Ölçekleme:**
+  1) Windows 11 görev çubuğunda Outlook, Affinity, Teams ve Figma gibi birinci sınıf uygulamalar, kanvasın %85-%92'sini dolduran squircle / rounded-rectangle rozet mimarisi kullanır. Tekil izometrik objeler ise köşelerdeki boşluklar sebebiyle ölçek büyütülse dahi optik kütle olarak küçük algılanır.
+  2) WebClone Studio için doğrudan işlevsel metaforu yansıtan (web klonlama = katmanlı cam tarayıcı pencereleri, orbital halkalar, 3D "WC" monogramı) ve fırçalanmış koyu titanyum çerçeveye sahip tam kanvas 3D squircle rozet oluşturuldu.
+  3) Dış alandaki siyah arka plan saf alfa şeffaflığına çevrildi; kenar geçiş piksellerinde un-premultiplication uygulanarak siyah çizgi/hale oluşumu sıfırlandı. Kanvas doluluğu %90.4 (genişlik) ve %93.4 (yükseklik) olarak kilitlendi.
+- **[KARAR-027] Kurumsal 3D İzometrik 'WC' Saydam Logo ve Görsel Varlık Senkronizasyonu:**
+  1) Eski logo kare ve opak arka planlı olduğu için başlık çubuğunda yapay `rounded-md` kırpmasına ihtiyaç duyuyordu. Yeni 3D logo alfa kanallı Format32bppArgb olarak üretilerek koyu çalışma alanı zemininde doğal ve derinlikli bir görünüm kazandırıldı.
+  2) Windows masaüstü uygulaması gereksinimleri gözetilerek `resources/icon.ico` içine 16, 24, 32, 48, 64, 128 ve 256 piksel ebatlarında çok katmanlı ikon profili gömüldü.
+  3) Görev çubuğunda kare/squircle simgelerin aksine izometrik formların daha az optik kütleye sahip olması sebebiyle, simge kanvasındaki boşluklar asgari emniyet payına (üst/alt 24px) çekilerek optik hacim maksimize edildi.
 - **[KARAR-026] Python-Free Stealth Evasion, Clearance Köprüsü ve Self-Healing Adaptif Çıkarıcı:**
   1) Scrapling'in Python tabanlı Camoufox/lxml mimarisini Electron projesine gömmek 73MB'lık taşınabilir Windows paketini +300MB şişireceğinden reddedildi. Bunun yerine Scrapling'in en güçlü stealth stratejileri yerel CDP (`Page.addScriptToEvaluateOnNewDocument`) ve Node.js katmanına taşındı.
   2) Chromium render motoru ile `AssetDownloader` arasına `Clearance Bridge` kurularak Cloudflare `cf_clearance` ve `__cf_bm` oturum çerezleri paylaştırıldı; alt varlıkların statik indirilmesinde 403 engeli kalıcı olarak çözüldü.
@@ -119,6 +140,7 @@
 - **Electron main process doğrulaması `npm run build`/`typecheck`/`build:portable`'ın exit 0 vermesiyle BİTMEZ.** Bunlar sadece bundling'in başarılı olduğunu kanıtlar. `got`/`cheerio`/`undici`/`node:sqlite` zinciri (KARAR-009) bundle başarıyla üretildiği HALDE ana pencere açılmadan çöküyordu — hata sadece gerçekten `.exe`'yi (veya `npm run dev`'i) çalıştırıp süreç ağacının birkaç saniye stabil kaldığını gözlemleyerek yakalandı. Tarayıcı üzerinden (Vite renderer dev server) yapılan UI doğrulaması `window.electronAPI` mock-fallback'e düştüğü için gerçek IPC/main-process kodunu HİÇ egzersiz etmiyor — sahte bir güven verir. Kural: paketleme adımından sonra mutlaka gerçek exe'yi (veya `npm run dev`'i) çalıştırıp süreç sağlığını kontrol et.
 
 ## Geçmiş Oturumlar
+- **2026-10-19:** Kurumsal görsel kimlik ve marka varlıkları yenilendi. Bağımsız 3D Titanyum Siber Örümcek Botu (Cyber-Spider Crawler) ve neon veri küresi amblemi ikon seti (`icon.png`, `icon.ico`, `icon-256.png`, `logo.png`) ve `TitleBar.tsx` bileşenine uygulandı. Windows dağıtım paketleri (Setup .exe, Portable .exe, MSI) güncellendi. Depo ana görselleri (`resources/banner.png` ve `resources/ui_showcase.png`) yeni logoya ve Windows 11 siber arayüzüne göre 1376x768 16:9 formatında yeniden üretildi; `README.md` (TR/EN) bu yeni kimlikle senkronize edildi.
 - **2026-10-02 (d13c433):** Windows x64 için tüm paketler üretildi (Setup .exe, Portable .exe, MSI .msi). GitHub Releases API tabanlı UpdateChecker servisi ve arayüzdeki Güncelleme Merkezi entegre edildi. Kapsamlı çift dilli (TR/EN) README.md yazıldı.
 - **2026-10-02 (6f1fa25):** Ouroboros v6.0 ile başlatılan "Ultimate Web Clone" 5 fazlı projesi tamamlandı. Chromium CDP üzerinden stealth evasion, shadow DOM piercing, React/TSX export ve gizli JS assetlerinin (Obfuscation Bypass) AST & Regex tabanlı extraction işlemleri eklendi. Sistem kusursuz (0 hata) çalışacak şekilde finalize edildi.
 - **2026-09-02:** 33 mimari bulgu refactor edildi, yerleşik PageRenderer Electron offscreen'e bağlandı, portable build alındı.
