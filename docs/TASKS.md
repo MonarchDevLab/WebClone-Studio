@@ -10,6 +10,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-19 - release(dist): publish official WebClone Studio v1.1.0 release to GitHub with Setup, Portable, and MSI binaries
 - [x] 2026-10-19 - docs(readme): synchronize hero banner, UI showcase, and bilingual documentation with cyber-spider branding
 - [x] 2026-10-19 - feat(branding): integrate 3D cyber-spider crawler logo with data globe, clean alpha, and update Windows exes
 - [x] 2026-10-18 - feat(branding): apply ultra-quality 3D transparent WC cube logo to app assets and TitleBar
