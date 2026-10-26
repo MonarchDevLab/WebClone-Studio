@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import Bottleneck from 'bottleneck';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import robotsParser from 'robots-parser';
 import { 
   CloneSettings, CloneProgress, FileAddedEvent, CloneLogEntry, 
@@ -108,7 +109,9 @@ export class CrawlerEngine extends EventEmitter {
   private queueHead = 0;
   private visitedUrls = new Set<string>();
   private urlToLocalPathMap = new Map<string, string>(); // assetUrl -> absoluteLocalPath
-  private pagesToRewrite: Array<{ url: string; localPath: string; html: string }> = [];
+  private contentHashToLocalPath = new Map<string, string>(); // sha256 -> absoluteLocalPath (content deduplication)
+  // ponytail: stream raw HTML to disk immediately; keep only file pointers in RAM to prevent OOM on 1000+ page sites
+  private pagesToRewrite: Array<{ url: string; localPath: string }> = [];
   private failedUrlsList: Array<{ url: string; error: string; time: string }> = [];
 
   private isRunning = false;
@@ -117,8 +120,10 @@ export class CrawlerEngine extends EventEmitter {
   private resumeResolver: (() => void) | null = null;
   private robotsChecker: any = null;
   private screenshotBuffer: Buffer | null = null;
+  private mhtmlSnapshot: string | null = null;
   private processedSourceMaps = new Set<string>();
   private extractedStates: Record<string, any> = {};
+  private extractedAdaptiveData: Record<string, any> = {};
   private apiInterceptor = new ApiTrafficInterceptor();
 
   private stats = {
@@ -549,7 +554,7 @@ export class CrawlerEngine extends EventEmitter {
         }
       }
 
-      // Tersine Mühendislik (Reverse Engineering): SPA Framework State (Next.js, Nuxt vb.)
+      // Tersine Mühendislik (Reverse Engineering): SPA Framework State & Adaptif Varlıklar (Tek Geçiş)
       if (this.settings.reverseEngineering) {
         try {
           const state = extractFrameworkState(htmlStr);
@@ -560,12 +565,21 @@ export class CrawlerEngine extends EventEmitter {
         } catch (stateErr: any) {
           this.emitLog('debug', `Framework state ayıklanamadı: ${stateErr.message}`);
         }
+
+        try {
+          const adaptiveRes = AdaptiveExtractor.extract(htmlStr, item.url);
+          if (adaptiveRes.entities.length > 0 || adaptiveRes.paginationTrigger) {
+            this.extractedAdaptiveData[item.url] = adaptiveRes;
+          }
+        } catch (adaptErr: any) {
+          this.emitLog('debug', `Adaptif varlık ayıklanamadı: ${adaptErr.message}`);
+        }
       }
 
+      await this.organizer.writeAsset(mapping.absolutePath, Buffer.from(htmlStr, 'utf-8'));
       this.pagesToRewrite.push({
         url: item.url,
         localPath: mapping.absolutePath,
-        html: htmlStr,
       });
 
       this.recordFileStats('html', sizeBytes);
@@ -585,7 +599,23 @@ export class CrawlerEngine extends EventEmitter {
         return;
       }
 
-      const finalLocalPath = downloadRes.localPath || mapping.absolutePath;
+      let finalLocalPath = downloadRes.localPath || mapping.absolutePath;
+
+      // İçerik-Adresli Varlık Tekilleştirme (SHA-256 Deduplication): Aynı görsel/font farklı URL'den indiyse tek kopya tut
+      if (item.type !== 'css' && item.type !== 'js' && downloadRes.sizeBytes > 0 && downloadRes.sizeBytes <= 15 * 1024 * 1024) {
+        try {
+          const buf = await fs.promises.readFile(finalLocalPath);
+          const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
+          const existingPath = this.contentHashToLocalPath.get(sha256);
+          if (existingPath && existingPath !== finalLocalPath && fs.existsSync(existingPath)) {
+            await fs.promises.unlink(finalLocalPath).catch(() => {});
+            finalLocalPath = existingPath;
+          } else {
+            this.contentHashToLocalPath.set(sha256, finalLocalPath);
+          }
+        } catch {}
+      }
+
       this.registerUrlMapping(item.url, finalLocalPath, downloadRes.finalUrl);
 
       // CSS Varlık Keşfi: İndirilen stil dosyasından font ve arka plan görsellerini ayrıştır
@@ -675,10 +705,12 @@ export class CrawlerEngine extends EventEmitter {
 
     const siteRoot = this.organizer.getFolders().siteDir;
 
-    // 1. HTML sayfalarını offline linklerle yeniden yaz
+    // 1. HTML sayfalarını diskten okuyup offline linklerle yeniden yaz
     for (const page of this.pagesToRewrite) {
       try {
-        const rewrittenHtml = UrlRewriter.rewriteHtml(page.html, {
+        if (!fs.existsSync(page.localPath)) continue;
+        const rawHtml = await fs.promises.readFile(page.localPath, 'utf-8');
+        const rewrittenHtml = UrlRewriter.rewriteHtml(rawHtml, {
           currentPageUrl: page.url,
           currentLocalFilePath: page.localPath,
           siteRootPath: siteRoot,
@@ -843,26 +875,16 @@ export class CrawlerEngine extends EventEmitter {
 
     
     // 4.5 Tersine Mühendislik: Adaptif Semantik Varlık Çıkarımı (_meta/adaptive-entities.json)
-    // ponytail: StructuredDataExtractor kaldırıldı; AdaptiveExtractor tek geçişte hem kartları hem sayfalama tetikleyicisini çıkarır
-    if (this.settings.reverseEngineering) {
+    // ponytail: StructuredDataExtractor kaldırıldı; AdaptiveExtractor sayfa indirilirken tek geçişte çalıştırılır
+    if (this.settings.reverseEngineering && Object.keys(this.extractedAdaptiveData).length > 0) {
       try {
-        const allAdaptiveData: Record<string, any> = {};
-        for (const page of this.pagesToRewrite) {
-          const adaptiveRes = AdaptiveExtractor.extract(page.html, page.url);
-          if (adaptiveRes.entities.length > 0 || adaptiveRes.paginationTrigger) {
-            allAdaptiveData[page.url] = adaptiveRes;
-          }
-        }
-        if (Object.keys(allAdaptiveData).length > 0) {
-          await this.organizer.writeMetaFile('adaptive-entities.json', allAdaptiveData);
-          this.emitLog('info', 'Tersine mühendislik self-healing adaptif semantik varlıklar çıkarıldı (_meta/adaptive-entities.json).');
-        }
+        await this.organizer.writeMetaFile('adaptive-entities.json', this.extractedAdaptiveData);
+        this.emitLog('info', 'Tersine mühendislik self-healing adaptif semantik varlıklar çıkarıldı (_meta/adaptive-entities.json).');
       } catch (adaptErr: any) {
         this.emitLog('warn', `Adaptif varlık çıkarımı başarısız: ${adaptErr.message}`);
       }
     }
 
-    
     // 4.6 Tersine Mühendislik: React Component Export
     if (this.settings.reverseEngineering) {
       try {
@@ -871,11 +893,12 @@ export class CrawlerEngine extends EventEmitter {
         
         let exportedCount = 0;
         for (const page of this.pagesToRewrite) {
-          if (page.localPath.endsWith('index.html')) {
-             const compName = 'Page_' + Math.random().toString(36).substring(2, 8);
-             const tsx = ComponentExporter.generateReactComponent(page.html, compName);
-             await fs.promises.writeFile(path.join(componentsDir, compName + '.tsx'), tsx, 'utf-8');
-             exportedCount++;
+          if (page.localPath.endsWith('index.html') && fs.existsSync(page.localPath)) {
+            const pageHtml = await fs.promises.readFile(page.localPath, 'utf-8');
+            const compName = 'Page_' + Math.random().toString(36).substring(2, 8);
+            const tsx = ComponentExporter.generateReactComponent(pageHtml, compName);
+            await fs.promises.writeFile(path.join(componentsDir, compName + '.tsx'), tsx, 'utf-8');
+            exportedCount++;
           }
         }
         this.emitLog('info', `Tersine mühendislik ${exportedCount} sayfa React bileşenine dönüştürüldü (_components/).`);
@@ -884,16 +907,22 @@ export class CrawlerEngine extends EventEmitter {
       }
     }
 
-    // 4.7 Bağımsız Tek Dosya Dışa Aktarma (SingleFile Standalone Export)
+    // 4.7 Bağımsız Tek Dosya Dışa Aktarma (SingleFile Standalone Export & Native CDP MHTML)
     try {
       const exportsDir = path.join(this.organizer.getFolders().projectDir, '_exports');
       await fs.promises.mkdir(exportsDir, { recursive: true });
 
       const indexPage = this.pagesToRewrite.find((p) => p.localPath.endsWith('index.html')) || this.pagesToRewrite[0];
-      if (indexPage) {
-        const standaloneHtml = await SingleFileExporter.export(indexPage.html, this.organizer.getFolders().siteDir);
+      if (indexPage && fs.existsSync(indexPage.localPath)) {
+        const indexHtml = await fs.promises.readFile(indexPage.localPath, 'utf-8');
+        const standaloneHtml = await SingleFileExporter.export(indexHtml, this.organizer.getFolders().siteDir);
         await fs.promises.writeFile(path.join(exportsDir, 'index.standalone.html'), standaloneHtml, 'utf-8');
         this.emitLog('info', 'Bağımsız tek dosya arşivi üretildi (_exports/index.standalone.html).');
+      }
+
+      if (this.mhtmlSnapshot) {
+        await fs.promises.writeFile(path.join(exportsDir, 'index.mhtml'), this.mhtmlSnapshot, 'utf-8');
+        this.emitLog('info', 'Native Chromium MHTML tam sayfa arşivi üretildi (_exports/index.mhtml).');
       }
     } catch (singleErr: any) {
       this.emitLog('warn', `Tek dosya dışa aktarma başarısız: ${singleErr.message}`);
