@@ -725,6 +725,7 @@ export class CrawlerEngine extends EventEmitter {
       : 'Tüm dosyalar indirildi. URL rewriting ve offline link dönüştürme başlatılıyor...');
 
     const siteRoot = this.organizer.getFolders().siteDir;
+    const mockApiDb = this.settings.reverseEngineering ? this.apiInterceptor.exportMockDatabase() : undefined;
 
     // 1. HTML sayfalarını diskten okuyup offline linklerle yeniden yaz
     for (const page of this.pagesToRewrite) {
@@ -736,6 +737,7 @@ export class CrawlerEngine extends EventEmitter {
           currentLocalFilePath: page.localPath,
           siteRootPath: siteRoot,
           urlMap: this.urlToLocalPathMap,
+          mockApiDb,
         });
 
         await this.organizer.writeAsset(page.localPath, Buffer.from(rewrittenHtml, 'utf-8'));

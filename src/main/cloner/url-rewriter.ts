@@ -6,6 +6,7 @@ export interface UrlRewriteContext {
   currentLocalFilePath: string;
   siteRootPath: string;
   urlMap: Map<string, string>; // assetUrl -> absoluteLocalFilePath
+  mockApiDb?: Record<string, Record<string, { status: number; contentType: string; data: any }>>;
 }
 
 /**
@@ -197,14 +198,40 @@ export class UrlRewriter {
       $(elem).html(rewrittenCss);
     });
 
-    // 6. Service Worker Etkisizleştirme (Offline gezinmede çökme veya sahte ağ yönlendirmelerini önler)
+    // 6. Service Worker Etkisizleştirme ve Offline Fetch API Mock Shim
+    const hasMocks = context.mockApiDb && Object.keys(context.mockApiDb).length > 0;
+    const safeMockJson = hasMocks
+      ? JSON.stringify(context.mockApiDb).replace(/<\//g, '<\\/')
+      : '';
+    const fetchShimCode = hasMocks
+      ? `
+  var __wcMocks = ${safeMockJson};
+  if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+    var __origFetch = window.fetch.bind(window);
+    window.fetch = function(input, init) {
+      try {
+        var reqUrl = typeof input === 'string' ? input : (input && input.url ? input.url : String(input));
+        var parsed = new URL(reqUrl, window.location.href);
+        var pathKey = (parsed.pathname || '/').replace(/\\/+$/, '') || '/';
+        var method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+        var hit = (__wcMocks[pathKey] && __wcMocks[pathKey][method]) || (__wcMocks[pathKey + '/'] && __wcMocks[pathKey + '/'][method]);
+        if (hit) {
+          var bodyStr = typeof hit.data === 'string' ? hit.data : JSON.stringify(hit.data);
+          return Promise.resolve(new Response(bodyStr, { status: hit.status || 200, headers: { 'Content-Type': hit.contentType || 'application/json' } }));
+        }
+      } catch (e) {}
+      return __origFetch(input, init);
+    };
+  }`
+      : '';
+
     const swBypassScript = `
 <script>
-  /* WebClone Studio Offline Service Worker Bypass */
+  /* WebClone Studio Offline Service Worker & Fetch Mock Shim */
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register = function() { return new Promise(function(){}); };
     navigator.serviceWorker.getRegistrations = function() { return Promise.resolve([]); };
-  }
+  }${fetchShimCode}
 </script>`;
     if ($('head').length > 0) {
       $('head').prepend(swBypassScript);
