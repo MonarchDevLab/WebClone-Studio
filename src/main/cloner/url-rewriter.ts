@@ -34,19 +34,7 @@ export class UrlRewriter {
     const slashToggled = noQuery.endsWith('/') ? noQuery.slice(0, -1) : `${noQuery}/`;
     if (urlMap.has(slashToggled)) return urlMap.get(slashToggled);
 
-    // 5. Origin ve Pathname Eşleşmesi (Farklı query parametrelerine sahip aynı varlıklar için)
-    try {
-      const targetParsed = new URL(targetUrl);
-      for (const [key, localPath] of urlMap.entries()) {
-        try {
-          const keyParsed = new URL(key);
-          if (keyParsed.origin === targetParsed.origin && keyParsed.pathname === targetParsed.pathname) {
-            return localPath;
-          }
-        } catch {}
-      }
-    } catch {}
-
+    // ponytail: O(1) origin+pathname lookup replaces O(N) map scan; registerUrlMapping indexes noQuery keys at insert time
     return undefined;
   }
 

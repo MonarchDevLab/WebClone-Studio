@@ -20,7 +20,6 @@ import { reconstructSourceTree } from './reverse-engineering/sourcemap-reconstru
 import { extractFrameworkState } from './reverse-engineering/framework-extractor';
 import { extractDesignTokensFromCss } from './reverse-engineering/token-extractor';
 import { ApiTrafficInterceptor } from './reverse-engineering/api-interceptor';
-import { StructuredDataExtractor } from '../analyzers/structured-data-extractor';
 import { ComponentExporter } from '../generators/component-exporter';
 import { ApiContractGenerator } from '../generators/api-contract-generator';
 import { SingleFileExporter } from '../generators/singlefile-exporter';
@@ -843,27 +842,8 @@ export class CrawlerEngine extends EventEmitter {
     }
 
     
-    // 4.5 Tersine Mühendislik: Yapısal Veri Çıkarımı (_meta/structured-data.json)
-    if (this.settings.reverseEngineering) {
-      try {
-        const extractor = new StructuredDataExtractor();
-        const allStructuredData: Record<string, any> = {};
-        for (const page of this.pagesToRewrite) {
-          const collections = extractor.extract(page.html);
-          if (collections.length > 0) {
-            allStructuredData[page.url] = collections;
-          }
-        }
-        if (Object.keys(allStructuredData).length > 0) {
-          await this.organizer.writeMetaFile('structured-data.json', allStructuredData);
-          this.emitLog('info', 'Tersine mühendislik yapısal veri (List/Grid) çıkarıldı (_meta/structured-data.json).');
-        }
-      } catch (dataErr: any) {
-        this.emitLog('warn', `Yapısal veri çıkarımı başarısız: ${dataErr.message}`);
-      }
-    }
-
-    // 4.5.1 Tersine Mühendislik: Adaptif Semantik Varlık Çıkarımı (_meta/adaptive-entities.json)
+    // 4.5 Tersine Mühendislik: Adaptif Semantik Varlık Çıkarımı (_meta/adaptive-entities.json)
+    // ponytail: StructuredDataExtractor kaldırıldı; AdaptiveExtractor tek geçişte hem kartları hem sayfalama tetikleyicisini çıkarır
     if (this.settings.reverseEngineering) {
       try {
         const allAdaptiveData: Record<string, any> = {};
