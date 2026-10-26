@@ -58,6 +58,26 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
 
   const [includePatternText, setIncludePatternText] = useState<string>('');
   const [excludePatternText, setExcludePatternText] = useState<string>('/admin/*, /api/*, /login*');
+  const [authCookieCount, setAuthCookieCount] = useState<number>(0);
+  const [isAuthOpening, setIsAuthOpening] = useState<boolean>(false);
+
+  const handleOpenAuthSession = async () => {
+    if (!url || !window.electronAPI?.openAuthSession) return;
+    setIsAuthOpening(true);
+    try {
+      const res = await window.electronAPI.openAuthSession(url);
+      setAuthCookieCount(res.cookieCount || 0);
+      if (res.cookieCount > 0) {
+        toast.success(`${res.cookieCount} adet oturum çerezi yakalandı ve klonlama motoruna bağlandı.`);
+      } else {
+        toast.info('Oturum penceresi kapatıldı.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Oturum penceresi açılamadı.');
+    } finally {
+      setIsAuthOpening(false);
+    }
+  };
 
   useEffect(() => {
     if (url) {
@@ -467,6 +487,32 @@ export const CloneSetupModal: React.FC<CloneSetupModalProps> = ({ isOpen, onClos
                   />
                   <span className="text-[10px] text-text-dim block mt-1 font-mono">Aynı anda havuzda çalışan indirme</span>
                 </div>
+              </div>
+
+              {/* Kilitli İçerik / Etkileşimli Oturum Yakalama (persist:webclone) */}
+              <div className="bg-surface-2 border border-white/[0.08] rounded-xl p-3.5 flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-text-primary">
+                    <Shield size={14} className="text-accent-hover" />
+                    <span>Kilitli İçerik / Oturum Aç (Auth Session)</span>
+                    {authCookieCount > 0 && (
+                      <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-success/20 text-success-hover border border-success/30 rounded-full">
+                        {authCookieCount} Çerez Aktif
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-text-dim leading-relaxed">
+                    Giriş gerektiren panel veya korumalı sayfalar için yerleşik oturum penceresinde giriş yapıp kapatın; çerezler otomatik devralınır.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!url || isAuthOpening}
+                  onClick={handleOpenAuthSession}
+                  className="px-3.5 py-2 bg-surface-3 hover:bg-white/[0.08] disabled:opacity-50 border border-white/[0.12] rounded-lg text-xs font-mono font-semibold text-accent-hover transition-all flex-shrink-0 cursor-pointer"
+                >
+                  {isAuthOpening ? 'Oturum Açık...' : authCookieCount > 0 ? 'Oturumu Yenile' : 'Tarayıcıda Giriş Yap'}
+                </button>
               </div>
 
               {/* Checkbox Seçenekleri */}

@@ -471,6 +471,12 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
     return { success: true };
   });
 
+  // 14.1 AUTH_OPEN_SESSION: Hedef sitede etkileşimli oturum açıp persist:webclone çerezlerini yakalar
+  ipcMain.handle(IpcChannel.AUTH_OPEN_SESSION, async (_event, targetUrl: string) => {
+    const parentWin = mainWindow || BrowserWindow.getFocusedWindow() || undefined;
+    return await PageRenderer.openAuthSession(targetUrl, parentWin);
+  });
+
   // 15. APP_CHECK_UPDATE: GitHub Releases üzerinden yeni sürüm kontrolü
   ipcMain.handle(IpcChannel.APP_CHECK_UPDATE, async () => {
     return await UpdateChecker.checkForUpdates();

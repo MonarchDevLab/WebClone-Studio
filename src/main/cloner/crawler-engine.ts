@@ -196,6 +196,15 @@ export class CrawlerEngine extends EventEmitter {
 
     await this.organizer.initializeDirectories();
 
+    // Paylaşımlı persist:webclone oturumunda önceden açılmış Auth çerezleri varsa yükle
+    try {
+      const authCookies = await PageRenderer.getSessionCookies(this.targetUrl);
+      if (authCookies.length > 0) {
+        this.downloader.setCookies(authCookies);
+        this.emitLog('info', `Kalıcı oturum çerezleri (${authCookies.length} adet) klonlama motoruna aktarıldı.`);
+      }
+    } catch {}
+
     // robots.txt tarama izinleri kontrolü
     if (this.settings.respectRobotsTxt) {
       try {
@@ -387,13 +396,17 @@ export class CrawlerEngine extends EventEmitter {
           const rendered = await this.dynamicLimiter.schedule(() => 
             this.pageRenderer.render(item.url, { 
               timeoutMs: 25000,
-              captureApi: !!this.settings.reverseEngineering
+              captureApi: !!this.settings.reverseEngineering,
+              captureMhtml: item.depth === 0
             })
           );
           htmlStr = rendered.html;
           sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
           if (!this.screenshotBuffer && rendered.screenshot) {
             this.screenshotBuffer = rendered.screenshot;
+          }
+          if (!this.mhtmlSnapshot && rendered.mhtmlSnapshot) {
+            this.mhtmlSnapshot = rendered.mhtmlSnapshot;
           }
           if (rendered.capturedEndpoints && rendered.capturedEndpoints.length > 0) {
             for (const ep of rendered.capturedEndpoints) {
@@ -430,7 +443,8 @@ export class CrawlerEngine extends EventEmitter {
             const rendered = await this.dynamicLimiter.schedule(() =>
               this.pageRenderer.render(item.url, { 
                 timeoutMs: 30000,
-                captureApi: !!this.settings.reverseEngineering
+                captureApi: !!this.settings.reverseEngineering,
+                captureMhtml: item.depth === 0
               })
             );
             if (rendered.html && !isWafChallenge(200, rendered.html)) {
@@ -439,6 +453,9 @@ export class CrawlerEngine extends EventEmitter {
               sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
               if (!this.screenshotBuffer && rendered.screenshot) {
                 this.screenshotBuffer = rendered.screenshot;
+              }
+              if (!this.mhtmlSnapshot && rendered.mhtmlSnapshot) {
+                this.mhtmlSnapshot = rendered.mhtmlSnapshot;
               }
               if (rendered.capturedEndpoints && rendered.capturedEndpoints.length > 0) {
                 for (const ep of rendered.capturedEndpoints) {
@@ -479,7 +496,8 @@ export class CrawlerEngine extends EventEmitter {
             const rendered = await this.dynamicLimiter.schedule(() =>
               this.pageRenderer.render(item.url, { 
                 timeoutMs: 25000,
-                captureApi: !!this.settings.reverseEngineering
+                captureApi: !!this.settings.reverseEngineering,
+                captureMhtml: item.depth === 0
               })
             );
             if (rendered.html && rendered.html.length > htmlStr.length) {
@@ -487,6 +505,9 @@ export class CrawlerEngine extends EventEmitter {
               sizeBytes = Buffer.byteLength(htmlStr, 'utf-8');
               if (!this.screenshotBuffer && rendered.screenshot) {
                 this.screenshotBuffer = rendered.screenshot;
+              }
+              if (!this.mhtmlSnapshot && rendered.mhtmlSnapshot) {
+                this.mhtmlSnapshot = rendered.mhtmlSnapshot;
               }
               if (rendered.capturedEndpoints && rendered.capturedEndpoints.length > 0) {
                 for (const ep of rendered.capturedEndpoints) {

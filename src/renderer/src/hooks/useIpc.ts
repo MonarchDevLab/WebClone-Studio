@@ -42,6 +42,7 @@ declare global {
       saveSystemMapFile: (content: string, defaultName?: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean }>;
       startPreviewServer: (targetPath: string) => Promise<{ success: boolean; url?: string; error?: string }>;
       stopPreviewServer: () => Promise<{ success: boolean }>;
+      openAuthSession: (url: string) => Promise<{ cookieCount: number; cookies: Array<{ name: string; value: string; domain: string; path: string }> }>;
 
       checkForUpdates: () => Promise<any>;
       getAppVersion: () => Promise<string>;

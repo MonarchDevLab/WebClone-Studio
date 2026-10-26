@@ -91,6 +91,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startPreviewServer: (targetPath: string) => ipcRenderer.invoke(IpcChannel.SERVER_START_PREVIEW, targetPath),
   stopPreviewServer: () => ipcRenderer.invoke(IpcChannel.SERVER_STOP_PREVIEW),
 
+  // Etkileşimli Oturum Açma (persist:webclone)
+  openAuthSession: (url: string) => ipcRenderer.invoke(IpcChannel.AUTH_OPEN_SESSION, url),
+
   // Güncelleme Yönetimi (GitHub Releases)
   checkForUpdates: () => ipcRenderer.invoke(IpcChannel.APP_CHECK_UPDATE),
   getAppVersion: () => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),

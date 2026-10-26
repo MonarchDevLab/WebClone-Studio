@@ -42,6 +42,8 @@ export enum IpcChannel {
   SERVER_START_PREVIEW = 'server:start-preview',
   SERVER_STOP_PREVIEW = 'server:stop-preview',
 
+  // Auth Session Capture
+  AUTH_OPEN_SESSION = 'auth:open-session',
 
   // Updates
   APP_CHECK_UPDATE = 'app:check-update',

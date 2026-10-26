@@ -1,7 +1,9 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, session } from 'electron';
 import { ColorToken, TypoToken, DesignTokens } from '../../shared/types';
 import { CapturedApiEndpoint } from '../cloner/reverse-engineering/api-interceptor';
 import { generateStealthScript } from './stealth-scripts';
+
+export const PERSISTENT_AUTH_PARTITION = 'persist:webclone';
 
 export interface PageRenderCookie {
   name: string;
@@ -17,12 +19,14 @@ export interface PageRenderResult {
   designTokens: DesignTokens;
   capturedEndpoints?: CapturedApiEndpoint[];
   cookies?: PageRenderCookie[];
+  mhtmlSnapshot?: string;
 }
 
 export interface PageRenderOptions {
   timeoutMs?: number;
   viewport?: { width: number; height: number };
   captureApi?: boolean;
+  captureMhtml?: boolean;
 }
 
 /**
@@ -64,6 +68,7 @@ export class PageRenderer {
       height: viewport.height,
       webPreferences: {
         offscreen: true,
+        partition: PERSISTENT_AUTH_PARTITION,
         sandbox: true,
         contextIsolation: true,
         nodeIntegration: false,
@@ -584,6 +589,16 @@ export class PageRenderer {
         }));
       } catch {}
 
+      let mhtmlSnapshot: string | undefined;
+      if (options.captureMhtml && debuggerAttached) {
+        try {
+          const snap = await win.webContents.debugger.sendCommand('Page.captureSnapshot', { format: 'mhtml' }) as any;
+          if (snap && typeof snap.data === 'string') {
+            mhtmlSnapshot = snap.data;
+          }
+        } catch {}
+      }
+
       return {
         html: rawData.html || '',
         globals: rawData.globals || [],
@@ -591,9 +606,81 @@ export class PageRenderer {
         designTokens,
         capturedEndpoints,
         cookies,
+        mhtmlSnapshot,
       };
     } finally {
       cleanup();
     }
+  }
+
+  /**
+   * Paylaşımlı persist:webclone oturumundan hedef URL'ye ait çerezleri okur.
+   */
+  public static async getSessionCookies(url: string): Promise<PageRenderCookie[]> {
+    try {
+      if (!session || typeof session.fromPartition !== 'function') return [];
+      const ses = session.fromPartition(PERSISTENT_AUTH_PARTITION);
+      const electronCookies = await ses.cookies.get({ url });
+      const fallbackHost = new URL(url).hostname;
+      return electronCookies.map((c) => ({
+        name: c.name,
+        value: c.value,
+        domain: c.domain || fallbackHost,
+        path: c.path || '/',
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Kilitli / giriş gerektiren siteler için etkileşimli oturum açma penceresi açar.
+   * Kullanıcı giriş yapıp pencereyi kapattığında persist:webclone çerezlerini döndürür.
+   */
+  public static async openAuthSession(
+    url: string,
+    parentWindow?: BrowserWindow
+  ): Promise<{ cookieCount: number; cookies: PageRenderCookie[] }> {
+    const parsed = new URL(url.trim());
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new Error('Yalnızca http:// ve https:// protokolleri desteklenmektedir.');
+    }
+
+    const authWin = new BrowserWindow({
+      width: 1120,
+      height: 760,
+      parent: parentWindow,
+      title: `WebClone Studio - Oturum Aç (${parsed.hostname}) - Giriş yaptıktan sonra bu pencereyi kapatın`,
+      autoHideMenuBar: true,
+      webPreferences: {
+        partition: PERSISTENT_AUTH_PARTITION,
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        webSecurity: true,
+      },
+    });
+
+    authWin.webContents.setWindowOpenHandler(({ url: popupUrl }) => {
+      try {
+        const p = new URL(popupUrl);
+        if (['http:', 'https:'].includes(p.protocol)) {
+          authWin.loadURL(popupUrl).catch(() => {});
+        }
+      } catch {}
+      return { action: 'deny' };
+    });
+
+    await authWin.loadURL(parsed.href).catch(() => {});
+
+    await new Promise<void>((resolve) => {
+      authWin.once('closed', () => resolve());
+    });
+
+    const cookies = await PageRenderer.getSessionCookies(parsed.href);
+    return {
+      cookieCount: cookies.length,
+      cookies,
+    };
   }
 }
