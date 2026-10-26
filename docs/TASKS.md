@@ -10,6 +10,11 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-26 - test(suite): verify ponytail ultra optimizations and update docs
+- [x] 2026-10-26 - feat(rewriter): inject client-side fetch/xhr offline mock shim (8ac4924)
+- [x] 2026-10-26 - feat(browser): add native cdp mhtml snapshot and persistent auth session (6484b2d)
+- [x] 2026-10-26 - perf(cloner): stream raw html to disk and eliminate memory accumulation (14e9a64)
+- [x] 2026-10-26 - refactor(cloner): remove redundant extractor and O(N) url lookup (b6f31d2)
 - [x] 2026-10-19 - release(dist): publish official WebClone Studio v1.1.0 release to GitHub with Setup, Portable, and MSI binaries
 - [x] 2026-10-19 - docs(readme): synchronize hero banner, UI showcase, and bilingual documentation with cyber-spider branding
 - [x] 2026-10-19 - feat(branding): integrate 3D cyber-spider crawler logo with data globe, clean alpha, and update Windows exes

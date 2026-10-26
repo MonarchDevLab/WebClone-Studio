@@ -20,6 +20,10 @@
   11. Windows dağıtım paketleri güncellendi: `WebClone-Studio-Portable.exe` (76.9 MB), `WebClone-Studio-Setup-1.1.0.exe` (77.3 MB) ve `WebClone-Studio-1.1.0.msi` (87.5 MB). `dist/win-unpacked` temizlendi.
 
 ## Mimari Kararlar
+- **[PROTOKOL-030] Ponytail Ultra v1.2.0 Mimari Budama, O(1) Rewriter, Disk-Stream HTML ve Native CDP Yetenekleri:**
+  1) **Bağlam:** Büyük sitelerde (1.000+ sayfa) `pagesToRewrite` dizisinde ham HTML birikmesi RAM OOM riski yaratıyor, `UrlRewriter.findMappedLocalPath` içindeki $O(N)$ döngü CPU'yu kilitliyor ve `StructuredDataExtractor` ile `AdaptiveExtractor` aynı DOM'u iki kez parse ediyordu.
+  2) **Karar:** `StructuredDataExtractor` tamamen silinip `AdaptiveExtractor` sayfa indirme anında tek geçişe alındı; ham HTML doğrudan diske yazılıp bellekte yalnız `{ url, localPath }` tutuldu; `UrlRewriter` $O(1)$ Map erişimine indirgendi; SHA-256 içerik tekilleştirmesi, CDP `Page.captureSnapshot` (`index.mhtml`), `persist:webclone` etkileşimli Auth oturumu ve çevrimdışı `window.fetch` mock shim eklendi.
+  3) **Reddedilen Seçenekler:** Harici AST kütüphaneleri (`@babel/parser`, `@swc/core`) ve Playwright entegrasyonu (`app.asar` boyutunu 9.5MB'tan >100MB'a şişireceği için reddedildi).
 - **[KARAR-029] Biyomekanik 3D Siber Örümcek Botu (Scraper/Crawler) ve Saf Alfa Entegrasyonu:**
   1) WebClone Studio'nun temel işlevi web kazıma (scraping) ve derin tarama (crawling) olduğundan, harf/monogram yerine doğrudan bu işlevi simgeleyen bağımsız 3D sibernetik örümcek robotu tercih edildi.
   2) Örümceğin karnındaki neon siyan holografik veri küresi (data globe) ve ön bacaklarındaki lazer ağ matriksi korundu; küre etrafındaki ve bacaklar arasındaki difüz siyah gölgeler matematiksel sınır çemberi ve renk profili ayrıştırmasıyla tamamen temizlenerek saf saydam alfa üretildi.

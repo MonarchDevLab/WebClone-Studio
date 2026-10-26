@@ -29,9 +29,9 @@
 ```
 src/
 ├── main/
-│   ├── analyzers/      # TechDetector, DesignAnalyzer, SiteMapper, SecurityScanner, SizeEstimator, StructuredDataExtractor, AdaptiveExtractor
-│   ├── browser/        # PageRenderer (Offscreen Chromium, Autonomous State Explorer, StealthScripts CDP Generator)
-│   ├── cloner/         # CrawlerEngine (WAF Escalation), PageProcessor, AssetDownloader (CookieJar/ClearanceBridge), UrlRewriter, FileOrganizer
+│   ├── analyzers/      # TechDetector, DesignAnalyzer, SiteMapper, SecurityScanner, SizeEstimator, AdaptiveExtractor
+│   ├── browser/        # PageRenderer (Offscreen Chromium, persist:webclone Auth Session, Native CDP MHTML, StealthScripts)
+│   ├── cloner/         # CrawlerEngine (Disk-Stream HTML, SHA-256 Content Dedup, WAF Escalation), PageProcessor, AssetDownloader, UrlRewriter (O(1) Lookup & Offline Fetch Shim), FileOrganizer
 │   │   └── reverse-engineering/ # SourcemapReconstructor, FrameworkExtractor, TokenExtractor, ApiInterceptor
 │   ├── generators/     # ApiContractGenerator (OpenAPI 3.1 & TS), ComponentExporter (React TSX), SingleFileExporter, SystemMapGenerator
 │   ├── output/         # ManifestGenerator, ReadmeGenerator, ReportGenerator
