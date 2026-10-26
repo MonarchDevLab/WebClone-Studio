@@ -40,12 +40,16 @@
   - [3. Frontend Reverse Engineering Lab](#3-frontend-reverse-engineering-lab)
   - [4. API Traffic Interception to OpenAPI 3.1 & TypeScript](#4-api-traffic-interception-to-openapi-31--typescript)
   - [5. React 19 Component Exporter](#5-react-19-component-exporter)
-  - [6. SingleFile Standalone Portable HTML Exporter](#6-singlefile-standalone-portable-html-exporter)
-  - [7. JavaScript Obfuscation Bypass](#7-javascript-obfuscation-bypass)
-  - [8. Embedded 127.0.0.1 Micro-Preview & Mock Server](#8-embedded-127001-micro-preview--mock-server)
-  - [9. GitHub Releases Auto-Update Hub](#9-github-releases-auto-update-hub)
-  - [10. Ultra-Stealth CDP Anti-Bot Evasion & Clearance Bridge](#10-ultra-stealth-cdp-anti-bot-evasion--clearance-bridge)
-  - [11. Self-Healing Adaptive Semantic Extractor](#11-self-healing-adaptive-semantic-extractor)
+  - [6. Dual Standalone Archive: SingleFile HTML & Native CDP MHTML](#6-dual-standalone-archive-singlefile-html--native-cdp-mhtml)
+  - [7. Persistent Auth Session for Authenticated Portals](#7-persistent-auth-session-for-authenticated-portals)
+  - [8. Client-Side Offline Fetch & XHR Mock Shim](#8-client-side-offline-fetch--xhr-mock-shim)
+  - [9. Zero-OOM Disk-Streaming Pipeline & SHA-256 Deduplication](#9-zero-oom-disk-streaming-pipeline--sha-256-deduplication)
+  - [10. O(1) Local URL Rewriter](#10-o1-local-url-rewriter)
+  - [11. JavaScript Obfuscation Bypass](#11-javascript-obfuscation-bypass)
+  - [12. Embedded 127.0.0.1 Micro-Preview & Mock Server](#12-embedded-127001-micro-preview--mock-server)
+  - [13. Ultra-Stealth CDP Anti-Bot Evasion & Clearance Bridge](#13-ultra-stealth-cdp-anti-bot-evasion--clearance-bridge)
+  - [14. Self-Healing Adaptive Semantic Extractor](#14-self-healing-adaptive-semantic-extractor)
+  - [15. GitHub Releases Auto-Update Hub](#15-github-releases-auto-update-hub)
 - [Workstation Benchmark & Comparison](#workstation-benchmark--comparison)
 - [Distribution Formats & Installation](#distribution-formats--installation)
 - [Developer Setup & Build Commands](#developer-setup--build-commands)
@@ -58,10 +62,11 @@
 **WebClone Studio** is an enterprise-grade desktop workstation designed for web architects, reverse engineers, security analysts, and senior frontend developers. Rather than merely downloading static assets like legacy crawlers, WebClone Studio operates as an autonomous digital reconstruction laboratory:
 
 1. **Complete Offline Mirroring:** Crawls, resolves, and rewrites complex Single Page Applications (Next.js, Nuxt, Remix, Vite, Angular) and multi-page portals for 100% offline fidelity.
-2. **Reverse Engineering Decompilation:** Reconstructs original development file trees from production source maps, extracts hydration states, outputs W3C design tokens and Tailwind v4 themes, and generates OpenAPI 3.1 specifications from background network traffic.
-3. **Modular Code Generation:** Synthesizes production-ready React 19 TSX components and creates self-contained single-file HTML deliverables.
-4. **Native Zero-Driver Architecture:** Embeds Chromium offscreen rendering directly within Electron 33, eliminating any requirement for external browser binaries (Playwright, Puppeteer, Selenium).
-5. **Cybernetic Spider Crawler Engine:** High-precision autonomous crawler core engineered to navigate complex DOM trees, crawl deep state spaces, and weave structured data webs with surgical accuracy.
+2. **Reverse Engineering Decompilation:** Reconstructs original development file trees from production source maps, extracts hydration states, outputs W3C design tokens and Tailwind v4 themes, and compiles OpenAPI 3.1 specifications from background network traffic.
+3. **Modular Code Generation:** Synthesizes production-ready React 19 TSX components, exports self-contained single-file HTML deliverables, and generates Chromium-native MHTML snapshots.
+4. **Persistent Authenticated Crawling:** Enables interactive browser login sessions with shared cookie vaults (`persist:webclone`), allowing seamless mirroring of authenticated SaaS consoles and behind-the-login dashboards.
+5. **Zero-Driver Embedded Runtime:** Embeds Chromium offscreen rendering directly within Electron 33, eliminating any requirement for external browser binaries (Playwright, Puppeteer, Selenium).
+6. **Zero-OOM Ponytail Architecture:** Streams raw HTML directly to disk and indexes URL mappings in $O(1)$ time, allowing massive enterprise crawls (10,000+ pages) without memory spikes or CPU locks.
 
 <br/>
 
@@ -73,11 +78,15 @@
 
 ## Architecture & Engine Pipeline
 
-The system is organized around a multi-stage cognitive extraction pipeline:
+The system is organized around a multi-stage cognitive extraction and reconstruction pipeline:
 
 ```mermaid
 flowchart TD
-    Target[Target Web Application] --> Network[Chromium Network Engine & Stealth CDP]
+    Target[Target Web Application] --> AuthCheck{Auth Required?}
+    AuthCheck -- Yes --> AuthSession[Interactive Browser Window: persist:webclone Session]
+    AuthCheck -- No --> Network[Chromium Network Engine & Stealth CDP]
+    AuthSession --> Network
+
     Network --> Evasion[Anti-Bot Evasion & Fingerprint Sanitization]
     Evasion --> Render[Offscreen Chromium Render Loop]
     Render --> Scroll[Asynchronous Infinite Auto-Scroll]
@@ -86,19 +95,24 @@ flowchart TD
     
     ShadowDOM --> CoreEngine[Crawler Engine & Asset Scheduler]
     
-    CoreEngine --> AssetDL[Static & Dynamic Asset Pipeline]
-    AssetDL --> ObfuscationBypass[JS Chunk Scanner: Web Fonts & Hidden Endpoints]
+    CoreEngine --> DiskStream[Zero-OOM Disk-Streaming HTML Buffer]
+    CoreEngine --> Dedup[Content-Addressed SHA-256 Asset Deduplication]
+    CoreEngine --> ObfuscationBypass[JS Chunk Scanner: Web Fonts & Hidden Endpoints]
     
     CoreEngine --> ReverseLab[Reverse Engineering Lab]
     ReverseLab --> SourceMap[SourceMap Tree Reconstructor: site/_source-code/]
     ReverseLab --> Hydration[Hydration State Harvester: _meta/extracted-state.json]
     ReverseLab --> Tokens[Design Tokens & Tailwind v4: _meta/tailwind.config.js]
-    ReverseLab --> DataMining[Structured Data Miner: _meta/structured-data.json]
+    ReverseLab --> AdaptiveEntities[Self-Healing Adaptive Entities: _meta/adaptive-entities.json]
     ReverseLab --> ApiSpec[OpenAPI 3.1 & TypeScript Generator: _meta/openapi.json]
     
-    CoreEngine --> CodeGen[Component & Archive Generators]
+    CoreEngine --> Rewriter[O 1 Indexed Offline URL Rewriter]
+    Rewriter --> FetchShim[Client-Side Offline Fetch / XHR Mock Injection]
+    
+    Rewriter --> CodeGen[Component & Archive Generators]
     CodeGen --> ReactExport[React 19 TSX Components: _components/]
-    CodeGen --> SingleFile[SingleFile Standalone HTML: _exports/]
+    CodeGen --> SingleFile[SingleFile Standalone HTML: _exports/index.standalone.html]
+    CodeGen --> MhtmlExport[Native CDP MHTML Snapshot: _exports/index.mhtml]
     CodeGen --> Preview[Local 127.0.0.1 HTTP & Mock API Server]
 ```
 
@@ -121,7 +135,6 @@ Web components built with Stencil, Lit, or native Custom Elements encapsulate th
 - **SourceMap Virtual Tree Reconstructor:** Scans all JS and CSS bundles for `sourceMappingURL` directives (relative, absolute, or data URIs). It resolves and decodes `.map` files, reconstructing the original developer file hierarchy inside `site/_source-code/` (e.g. `src/components/Button.tsx`, `src/hooks/useCart.ts`).
 - **Framework Hydration Harvester:** Captures server-rendered hydration state containers including `window.__NEXT_DATA__`, `window.__NUXT_DATA__`, `window.__INITIAL_STATE__`, and Apollo/Redux preloaded caches, outputting a consolidated dataset into `_meta/extracted-state.json`.
 - **Design Tokens & Tailwind v4 Theme:** Aggregates `:root` CSS variables, active computed colors, typography scales, border radii, and box shadows. Generates ready-to-use W3C Design Tokens (`_meta/design-tokens.json`) and an idiomatic Tailwind CSS v4 `@theme` configuration (`_meta/tailwind.config.js`).
-- **Structured Data Mining:** Scans repetitive DOM structures (grids, product lists, article feeds) using Cheerio heuristic clustering. Outputs structured JSON collections containing titles, links, images, prices, and descriptions (`_meta/structured-data.json`).
 
 ### 4. API Traffic Interception to OpenAPI 3.1 & TypeScript
 - **CDP Network Hooking:** Connects to Chrome DevTools Protocol (`Network.enable`) to capture all background asynchronous requests (XHR, Fetch, JSON responses).
@@ -147,37 +160,54 @@ export interface GetApiV1ProductsResponse {
 - Translates SVG attributes to camelCase (`stroke-width` -> `strokeWidth`, `fill-rule` -> `fillRule`).
 - Formats self-closing tags (`<img>`, `<input>`, `<br>`, `<hr>`).
 
-### 6. SingleFile Standalone Portable HTML Exporter
-- Packages the entire mirrored page into an all-in-one standalone file (`_exports/index.standalone.html`).
-- Inlines stylesheets (`<link rel="stylesheet">` -> `<style>`).
-- Encodes font files (`.woff2`, `.ttf`) inside CSS into Base64 Data URIs (`url("data:font/woff2;base64,...")`).
-- Converts images, logos, and icons into Base64 Data URIs.
-- Eliminates the need for a web server when sharing landing pages or archival records via email or Slack.
+### 6. Dual Standalone Archive: SingleFile HTML & Native CDP MHTML
+WebClone Studio delivers two complementary standalone archive formats:
+- **SingleFile Portable HTML (`_exports/index.standalone.html`):** Inlines stylesheets into `<style>` blocks, converts web fonts into Base64 Data URIs (`url("data:font/woff2;base64,...")`), and encodes all images and vector icons as inline Data URIs.
+- **Native CDP MHTML Snapshot (`_exports/index.mhtml`):** Calls Chromium DevTools Protocol `Page.captureSnapshot({ format: 'mhtml' })` on the live rendered DOM. It produces an uncompressed MIME multipart HTML archive containing the exact render tree, canvas elements, and dynamically fetched sub-resources, viewable natively in Google Chrome, Microsoft Edge, and Opera with zero dependencies.
 
-### 7. JavaScript Obfuscation Bypass
+### 7. Persistent Auth Session for Authenticated Portals
+Cloning password-protected web apps, SaaS dashboards, or sites protected by 2FA/CAPTCHA is handled natively:
+- **Interactive Authentication Hub:** The Clone Setup Wizard offers an interactive login window powered by a shared `persist:webclone` session partition.
+- **Cookie & LocalStorage Synchronization:** Users authenticate manually in the secure browser window; once closed, the engine harvests active session cookies, bearer tokens, and clearance tickets.
+- **Dual-Engine Inheritance:** Both the Chromium offscreen renderer (`PageRenderer`) and the multi-threaded HTTP downloader (`AssetDownloader`) inherit the session, enabling authenticated asset mirroring.
+
+### 8. Client-Side Offline Fetch & XHR Mock Shim
+Modern Single Page Applications break offline when JavaScript code triggers runtime `fetch()` or `axios` calls against external origin APIs:
+- **Client-Side Mock Injection:** During HTML rewriting, WebClone Studio injects an XSS-sanitized runtime shim (`window.fetch` interceptor) right alongside the offline Service Worker bypass.
+- **Zero-Latency Mock Resolution:** When cloned client scripts query endpoints recorded in `_meta/api-endpoints.json`, the browser intercepts the request and instantly responds with the recorded JSON payload, keeping interactive search, filtering, and tab navigation working without an active internet connection.
+
+### 9. Zero-OOM Disk-Streaming Pipeline & SHA-256 Deduplication
+- **Immediate Disk-Streaming:** Rather than buffering gigabytes of raw HTML across hundreds of pages in process memory, pages are immediately written to disk upon retrieval. The rewrite queue stores lightweight pointers (`{ url, localPath }`), slashing heap memory consumption by over 90%.
+- **Content-Addressed SHA-256 Deduplication:** Assets under 15MB are hashed via SHA-256. Duplicate vendor scripts, logos, or icon sets hosted across divergent URLs are deduplicated to a single physical disk file, with all local references transparently linked.
+
+### 10. O(1) Local URL Rewriter
+- **Indexed Map Resolution:** Replaces $O(N)$ sequential map scans with an indexed hash lookup that resolves exact, query-stripped, hash-stripped, and trailing-slash URL variations in $O(1)$ constant time.
+- **Zero-Lock Finalization:** Thousands of internal resource references across massive crawls finalize in seconds without stalling CPU cores.
+
+### 11. JavaScript Obfuscation Bypass
 - Heuristic AST and regex parser scans minified production JS chunks (Webpack, Vite, Rollup).
 - Extracts dynamic asset paths, vendor CDN URLs, and hidden web font endpoints that are never linked directly in HTML or CSS.
 - Automatically pushes discovered assets into the download scheduler queue.
 
-### 8. Embedded 127.0.0.1 Micro-Preview & Mock Server
+### 12. Embedded 127.0.0.1 Micro-Preview & Mock Server
 - Bundles a built-in Node.js HTTP server configured with path-traversal guards and MIME type negotiation.
 - Serves cloned projects locally over `http://127.0.0.1:<port>` to eliminate browser `file:///` security and CORS errors.
-- **Offline API Mock Fallback:** When the cloned frontend makes an AJAX request that has no static file on disk, the server falls back to `_meta/api-endpoints.json` to respond with the recorded JSON payload, keeping search and filter UI functional offline.
+- **Offline API Mock Fallback:** When the cloned frontend makes an AJAX request that has no static file on disk, the server falls back to `_meta/api-endpoints.json` to respond with the recorded JSON payload.
 
-### 9. GitHub Releases Auto-Update Hub
-- Built-in update service queries the official GitHub Releases API (`https://api.github.com/repos/MonarchDevLab/WebClone-Studio/releases/latest`).
-- In-app Settings page displays current version, latest release notes, total download counters, and direct download links for Windows Setup, Portable, and MSI installers.
-
-### 10. Ultra-Stealth CDP Anti-Bot Evasion & Clearance Bridge
+### 13. Ultra-Stealth CDP Anti-Bot Evasion & Clearance Bridge
 - Prototype-clean descriptor masking for `navigator.webdriver`, `window.chrome` (runtime/app/csi), `navigator.permissions.query`, and realistic WebGL GPU virtualization (NVIDIA RTX / Intel Iris).
 - Injects micro-jitter into Canvas and AudioContext buffers to invalidate deterministic bot fingerprint tracking without corrupting media assets.
-- **Clearance Bridge:** Harvests active `cf_clearance`, `__cf_bm`, and session cookies directly from Electron's Chromium session and synchronizes them into `AssetDownloader`'s HTTP/2 connection pool, bypassing Cloudflare 403 Forbidden errors across sub-resource downloads.
+- **Clearance Bridge:** Harvests active `cf_clearance`, `__cf_bm`, and session cookies directly from Electron's Chromium session and synchronizes them into `AssetDownloader`'s HTTP/2 connection pool.
 - **Automated WAF Escalation:** Automatically promotes failed static downloads (403/503 Turnstile / Challenge pages) to the Ultra-Stealth Chromium renderer and re-syncs clearance tokens in real time.
 
-### 11. Self-Healing Adaptive Semantic Extractor
+### 14. Self-Healing Adaptive Semantic Extractor
 - Analyzes heavily obfuscated and minified DOM structures (Tailwind arbitrary hashes, CSS Modules, compiled styled-components) using structural density heuristics rather than volatile CSS class names.
 - Discovers primary content containers, recurring product/article cards, and pagination/infinite load triggers.
 - Generates `_meta/adaptive-entities.json` containing structured entities (title, link, image, price/badge, description).
+
+### 15. GitHub Releases Auto-Update Hub
+- Built-in update service queries the official GitHub Releases API (`https://api.github.com/repos/MonarchDevLab/WebClone-Studio/releases/latest`).
+- In-app Settings page displays current version, latest release notes, total download counters, and direct download links for Windows Setup, Portable, and MSI installers.
 
 ---
 
@@ -185,6 +215,10 @@ export interface GetApiV1ProductsResponse {
 
 | Feature / Capability | WebClone Studio | HTTrack | SingleFile | Cyotek WebCopy | Raw Puppeteer Scripts |
 | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Interactive Auth Session Vault**| Built-in (`persist:webclone`) | No | No | No | Manual script required |
+| **Native CDP MHTML Snapshot** | Built-in (`_exports/`) | No | No | No | Manual script required |
+| **Offline Fetch Mock Shim** | Built-in (`UrlRewriter`) | No | No | No | No |
+| **Zero-OOM Disk-Streaming** | Built-in ($O(1)$ RAM) | Partial | No | Partial | Manual file streams |
 | **Shadow DOM Piercing** | Full (Native CDP) | No | Partial | No | Manual script required |
 | **Autonomous State Explorer** | Built-in | No | No | No | Manual script required |
 | **Ultra-Stealth WAF Evasion** | Built-in (CDP + Bridge) | No | No | No | Plugin required |
@@ -207,13 +241,13 @@ WebClone Studio releases provide three Windows x64 distribution packages:
 
 ```
 dist/
-├── WebClone-Studio-Setup-1.1.0.exe    # NSIS installer with desktop shortcuts and uninstaller (~77.3 MB)
+├── WebClone-Studio-Setup-1.2.0.exe    # NSIS installer with desktop shortcuts and uninstaller (~77.3 MB)
 ├── WebClone-Studio-Portable.exe       # Standalone portable executable. Zero installation (~76.9 MB)
-└── WebClone-Studio-1.1.0.msi          # Microsoft Windows Installer for enterprise GPO deployment (~87.5 MB)
+└── WebClone-Studio-1.2.0.msi          # Microsoft Windows Installer for enterprise GPO deployment (~87.5 MB)
 ```
 
 1. **Portable Edition:** Download `WebClone-Studio-Portable.exe`, place it in any folder or USB drive, and double-click to run. Requires no administrative privileges.
-2. **Setup Installer:** Run `WebClone-Studio-Setup-1.1.0.exe` for standard Windows installation with Start Menu and Desktop shortcuts.
+2. **Setup Installer:** Run `WebClone-Studio-Setup-1.2.0.exe` for standard Windows installation with Start Menu and Desktop shortcuts.
 3. **MSI Package:** Suitable for enterprise system administrators deploying across domain networks via Microsoft Intune or Group Policy.
 
 ---
@@ -268,12 +302,16 @@ npm run build:all
   - [3. Tersine Mühendislik ve Dekompilasyon Laboratuvarı](#3-tersine-mühendislik-ve-dekompilasyon-laboratuvarı)
   - [4. Ağ Trafiğinden OpenAPI 3.1 ve TypeScript Üretimi](#4-ağ-trafiğinden-openapi-31-ve-typescript-üretimi)
   - [5. React 19 Fonksiyonel Bileşen İhracı](#5-react-19-fonksiyonel-bileşen-ihracı)
-  - [6. Bağımsız Tek Dosya Arşivleyici (SingleFile)](#6-bağımsız-tek-dosya-arşivleyici-singlefile-1)
-  - [7. JavaScript Obfuscation Bypass (Gizli Varlık Çıkarımı)](#7-javascript-obfuscation-bypass-gizli-varlık-çıkarımı)
-  - [8. Yerleşik 127.0.0.1 Önizleme ve Çevrimdışı Mock Sunucusu](#8-yerleşik-127001-önizleme-ve-çevrimdışı-mock-sunucusu)
-  - [9. GitHub Releases Güncelleme Merkezi](#9-github-releases-güncelleme-merkezi-1)
-  - [10. Ultra-Stealth CDP Anti-Bot Kalkanı ve Clearance Köprüsü](#10-ultra-stealth-cdp-anti-bot-kalkanı-ve-clearance-köprüsü)
-  - [11. Self-Healing Adaptif Semantik İçerik Çıkarıcı](#11-self-healing-adaptif-semantik-içerik-çıkarıcı)
+  - [6. Çift Bağımsız Arşiv: SingleFile HTML ve Native CDP MHTML](#6-çift-bağımsız-arşiv-singlefile-html-ve-native-cdp-mhtml)
+  - [7. Kilitli İçerikler İçin Kalıcı Oturum Açma (persist:webclone)](#7-kilitli-içerikler-için-kalıcı-oturum-açma-persistwebclone)
+  - [8. İstemci Tarafı Çevrimdışı Fetch ve XHR Mock Yakalayıcısı](#8-istemci-tarafı-çevrimdışı-fetch-ve-xhr-mock-yakalayıcısı)
+  - [9. Sıfır-OOM Bellek Akışı ve SHA-256 İçerik Tekilleştirmesi](#9-sıfır-oom-bellek-akışı-ve-sha-256-içerik-tekilleştirmesi)
+  - [10. O(1) Sabit Zamanlı Yerel URL Dönüştürücü](#10-o1-sabit-zamanlı-yerel-url-dönüştürücü)
+  - [11. JavaScript Obfuscation Bypass (Gizli Varlık Çıkarımı)](#11-javascript-obfuscation-bypass-gizli-varlık-çıkarımı)
+  - [12. Yerleşik 127.0.0.1 Önizleme ve Çevrimdışı Mock Sunucusu](#12-yerleşik-127001-önizleme-ve-çevrimdışı-mock-sunucusu)
+  - [13. Ultra-Stealth CDP Anti-Bot Kalkanı ve Clearance Köprüsü](#13-ultra-stealth-cdp-anti-bot-kalkanı-ve-clearance-köprüsü)
+  - [14. Self-Healing Adaptif Semantik İçerik Çıkarıcı](#14-self-healing-adaptif-semantik-içerik-çıkarıcı)
+  - [15. GitHub Releases Güncelleme Merkezi](#15-github-releases-güncelleme-merkezi-1)
 - [Karşılaştırma ve Başarım Tablosu](#karşılaştırma-ve-başarım-tablosu)
 - [Kurulum ve Paket Seçenekleri](#kurulum-ve-paket-seçenekleri-1)
 - [Geliştirici Kılavuzu ve Komutlar](#geliştirici-kılavuzu-ve-komutlar)
@@ -287,9 +325,10 @@ npm run build:all
 
 1. **Kayıpsız Çevrimdışı Klonlama:** Modern SPA (Next.js, Nuxt, Remix, Vite, Angular) ve geleneksel çok sayfalı portalları %100 çevrimdışı sadakatle yerel dosya sistemine aktarır.
 2. **Tersine Mühendislik ve Dekompilasyon:** Canlı sitelerdeki kaynak haritalarından (source maps) orijinal kaynak kod ağacını (`site/_source-code/`) kurtarır; hydration durumlarını, W3C tasarım tokenlarını ve ağ trafiğinden OpenAPI 3.1 spesifikasyonunu üretir.
-3. **Modüler Kod Üretimi:** Klonlanan sayfaları temiz React 19 TSX bileşenlerine dönüştürür ve dağıtılabilir tek parça bağımsız HTML çıktıları oluşturur.
-4. **Sıfır Harici Sürücü Bağımlılığı:** Electron 33'ün yerleşik offscreen Chromium motorunu kullanır. Playwright, Puppeteer veya harici WebDriver kurulumu gerektirmez.
-5. **Siber Örümcek Botu (Spider Crawler) Mimarisi:** İleri düzey mekanik web kazıma ve tarama prensipleriyle tasarlanmış; iç içe geçmiş DOM ağaçlarını, durum uzaylarını ve varlık boru hatlarını zeki bir veri dokuma ajanı gibi çözer.
+3. **Modüler Kod Üretimi:** Klonlanan sayfaları temiz React 19 TSX bileşenlerine dönüştürür, dağıtılabilir tek parça bağımsız HTML çıktıları ve Chromium yerleşik MHTML arşivleri oluşturur.
+4. **Kilitli ve Yetkilendirilmiş Sayfa Klonlama:** Paylaşımlı oturum kasası (`persist:webclone`) ile etkileşimli giriş pencereleri açar; login arkasındaki SaaS panellerini ve üyelik sayfalarını yetkilendirilmiş olarak klonlar.
+5. **Sıfır Harici Sürücü Bağımlılığı:** Electron 33'ün yerleşik offscreen Chromium motorunu kullanır. Playwright, Puppeteer veya harici WebDriver kurulumu gerektirmez.
+6. **Sıfır-OOM Ponytail Mimarisi:** Ham HTML sayfalarını bellekte tutmadan doğrudan diske akıtır ve URL haritasını $O(1)$ sürede çözer; 10.000+ sayfalık kurumsal sitelerde bile RAM taşması veya CPU kilitlenmesi yaşanmaz.
 
 <br/>
 
@@ -305,7 +344,11 @@ Sistem, çok aşamalı otonom bir analiz ve çıkarma boru hattı üzerine kurul
 
 ```mermaid
 flowchart TD
-    Hedef[Hedef Web Uygulaması] --> AgMotoru[Chromium Ağ Motoru & Stealth CDP]
+    Hedef[Hedef Web Uygulaması] --> AuthKontrol{Giriş Gerekli mi?}
+    AuthKontrol -- Evet --> AuthPencere[Etkileşimli Tarayıcı: persist:webclone Oturumu]
+    AuthKontrol -- Hayır --> AgMotoru[Chromium Ağ Motoru & Stealth CDP]
+    AuthPencere --> AgMotoru
+
     AgMotoru --> Atlatma[Anti-Bot Atlatma & Parmak İzi Temizliği]
     Atlatma --> RenderMotoru[Offscreen Chromium Render Döngüsü]
     RenderMotoru --> OtoKaydirma[Asenkron Sonsuz Kaydırma: Infinite Scroll]
@@ -314,19 +357,24 @@ flowchart TD
     
     ShadowDelme --> Cekirdek[Klonlama Motoru & Zamanlayıcı]
     
-    Cekirdek --> VarlikBorusu[Statik ve Dinamik Varlık İndirme]
-    VarlikBorusu --> Obfuscation[JS Chunk Analizi: Web Fontları & Gizli Yollar]
+    Cekirdek --> DiskAkisi[Sıfır-OOM Disk-Stream HTML Tamponu]
+    Cekirdek --> Tekillestirme[İçerik-Adresli SHA-256 Varlık Tekilleştirme]
+    Cekirdek --> Obfuscation[JS Chunk Analizi: Web Fontları & Gizli Yollar]
     
     Cekirdek --> Lab[Tersine Mühendislik Laboratuvarı]
     Lab --> SourceMap[Kaynak Kod Ağacı: site/_source-code/]
     Lab --> Hydration[Hydration Durumu: _meta/extracted-state.json]
     Lab --> Tokens[Tasarım Tokenları & Tailwind v4: _meta/tailwind.config.js]
-    Lab --> YapisalVeri[Yapısal Veri Madenciliği: _meta/structured-data.json]
+    Lab --> AdaptifVarlik[Self-Healing Adaptif Varlıklar: _meta/adaptive-entities.json]
     Lab --> ApiSozlesme[OpenAPI 3.1 & TypeScript: _meta/openapi.json]
     
-    Cekirdek --> Ureticiler[Bileşen ve Arşiv Üreticileri]
+    Cekirdek --> Rewriter[O 1 İndeksli Çevrimdışı URL Dönüştürücü]
+    Rewriter --> FetchMock[İstemci Tarafı Çevrimdışı Fetch Mock Enjeksiyonu]
+    
+    Rewriter --> Ureticiler[Bileşen ve Arşiv Üreticileri]
     Ureticiler --> ReactBilesen[React 19 TSX Bileşenleri: _components/]
-    Ureticiler --> TekDosya[Bağımsız Tek Dosya HTML: _exports/]
+    Ureticiler --> TekDosya[Bağımsız Tek Dosya HTML: _exports/index.standalone.html]
+    Ureticiler --> MhtmlArsiv[Yerleşik CDP MHTML Arşivi: _exports/index.mhtml]
     Ureticiler --> Onizleme[Yerleşik 127.0.0.1 HTTP & Mock API Sunucusu]
 ```
 
@@ -349,7 +397,6 @@ Modern web bileşenleri (Web Components, Lit, Stencil) içeriklerini Shadow Root
 - **SourceMap Kaynak Kod Ağacı Kurtarma:** JS ve CSS paketlerindeki `sourceMappingURL` direktiflerini izler. `.map` dosyalarını çözerek projenin geliştirme aşamasındaki orijinal klasör hiyerarşisini `site/_source-code/` altında birebir oluşturur (örn. `src/components/Navbar.tsx`, `src/hooks/useCart.ts`).
 - **Framework Hydration Durum Toplama:** SSR/SPA sayfalarında bulunan `window.__NEXT_DATA__`, `window.__NUXT_DATA__`, `window.__INITIAL_STATE__` ve Redux/Apollo önbelleklerini ayıklayıp tek bir `_meta/extracted-state.json` dosyasında birleştirir.
 - **Tasarım Sistemi & Tailwind v4 Teması:** Canlı stillerdeki `:root` CSS değişkenlerini, hesaplanmış renk skalalarını ve font ailelerini çıkarır. W3C Design Tokens standart dosyasını (`_meta/design-tokens.json`) ve kullanıma hazır Tailwind CSS v4 `@theme` yapılandırmasını (`_meta/tailwind.config.js`) üretir.
-- **Yapısal Veri Madenciliği:** Sayfadaki tekrarlayan ürün listelerini, makale kartlarını ve veri tablolarını Cheerio tabanlı kümeleme algoritmalarıyla tarayarak temiz `_meta/structured-data.json` nesnelerine dönüştürür.
 
 ### 4. Ağ Trafiğinden OpenAPI 3.1 ve TypeScript Üretimi
 - **CDP Ağ Yakalama:** Chrome DevTools Protocol (`Network.enable`) üzerinden arka planda gerçekleşen tüm dinamik XHR, Fetch ve JSON isteklerini kaydeder.
@@ -375,34 +422,52 @@ export interface GetApiV1ProductsResponse {
 - SVG niteliklerini camelCase formatına çevirir (`stroke-width` -> `strokeWidth`).
 - Kapanmayan etiketleri (`<img>`, `<input>`, `<br>`) JSX standartlarına uygun şekilde kapatır.
 
-### 6. Bağımsız Tek Dosya Arşivleyici (SingleFile)
-- Klonlanan sayfayı harici klasör ve dosya ihtiyacı olmaksızın tek bir bağımsız `.html` dosyasında toplar (`_exports/index.standalone.html`).
-- Stilleri `<style>` bloklarına dönüştürür.
-- Font dosyalarını (`.woff2`, `.ttf`) ve görselleri Base64 Data URI olarak kodlar.
-- Çevrimdışı sayfaları e-posta veya Slack üzerinden tek tıkla paylaşılabilir hale getirir.
+### 6. Çift Bağımsız Arşiv: SingleFile HTML ve Native CDP MHTML
+WebClone Studio iki farklı bağımsız arşivleme seçeneği üretir:
+- **SingleFile Taşınabilir HTML (`_exports/index.standalone.html`):** CSS stillerini `<style>` içine gömer, web fontlarını (`.woff2`, `.ttf`) ve görselleri Base64 Data URI formatına çevirir; e-posta veya mesajlaşma yoluyla tek dosyada paylaşım sağlar.
+- **Yerleşik CDP MHTML Arşivi (`_exports/index.mhtml`):** Chromium CDP motorunun `Page.captureSnapshot({ format: 'mhtml' })` komutunu çalıştırarak sayfanın aktif halini, tüm Canvas ve dinamik varlıklarıyla birlikte Chrome/Edge üzerinde sıfır kayıpla açılan saf MHTML arşivine dönüştürür.
 
-### 7. JavaScript Obfuscation Bypass (Gizli Varlık Çıkarımı)
+### 7. Kilitli İçerikler İçin Kalıcı Oturum Açma (persist:webclone)
+Giriş formu, iki faktörlü doğrulama (2FA) veya CAPTCHA arkasındaki portalları klonlamak için:
+- **Etkileşimli Oturum Penceresi:** Klonlama Kurulum Sihirbazı içinden tek tıkla açılan izole `persist:webclone` tarayıcı penceresinde kullanıcı güvenle oturum açar.
+- **Otomatik Çerez Devri:** Pencere kapatıldığında toplanan oturum çerezleri hem dinamik Chromium render motoruna (`PageRenderer`) hem de yüksek hızlı indirme motoruna (`AssetDownloader`) aktarılır.
+- **Korumalı Panel Klonlama:** SaaS yönetim panelleri, intranet portalları ve üye alanları eksiksiz yetkiyle yerel diske aktarılır.
+
+### 8. İstemci Tarafı Çevrimdışı Fetch ve XHR Mock Yakalayıcısı
+Modern SPA sitelerinde JavaScript kodunun çalışma zamanında attığı dinamik `fetch()` ve `axios` çağrıları çevrimdışı ortamda çökmeye yol açar:
+- **XSS Korumalı Mock Enjeksiyonu:** HTML yeniden yazılırken sayfa başlığına Service Worker bypass betiğiyle birlikte hafif bir `window.fetch` yakalayıcısı eklenir.
+- **Sıfır Gecikmeli Mock Yanıtı:** Klonlanan sayfa `_meta/api-endpoints.json` içinde önceden kaydedilmiş bir adrese istek attığında yerel mock yanıtı 0ms gecikmeyle döner; böylece filtreleme, arama ve sekmeler internet olmadan da çalışır.
+
+### 9. Sıfır-OOM Bellek Akışı ve SHA-256 İçerik Tekilleştirmesi
+- **Doğrudan Diske Akış:** İndirilen ham HTML sayfaları RAM'de biriktirilmeden anında diske yazılır; kuyrukta yalnızca dosya işaretçileri (`{ url, localPath }`) tutularak bellek tüketimi %90'dan fazla azaltılır.
+- **İçerik-Adresli SHA-256 Tekilleştirmesi:** 15MB altındaki statik dosyalar SHA-256 özetinden geçirilir. Farklı URL'lerdeki aynı görsel ve font dosyaları diskte tek bir kopya olarak tutulur, gereksiz disk şişmesi engellenir.
+
+### 10. O(1) Sabit Zamanlı Yerel URL Dönüştürücü
+- **İndeksli Harita Çözümlemesi:** $O(N)$ taranan döngüler kaldırılarak tam eşleşme, parametresiz ve son slash toleranslı URL aramaları $O(1)$ sabit zamanlı Map erişimiyle gerçekleştirilir.
+- **Hızlı Dönüştürme:** Binlerce sayfalık projelerde CPU kilidi oluşmaz, bağlantı dönüştürme işlemi saniyeler içinde tamamlanır.
+
+### 11. JavaScript Obfuscation Bypass (Gizli Varlık Çıkarımı)
 - Minify edilmiş JS chunk'larını (Webpack, Vite, Rollup) statik regex ve AST desenleriyle analiz eder.
 - HTML veya CSS dosyalarında açıkça belirtilmeyen gizli web fontlarını, arka plan görsellerini ve dinamik asset yollarını keşfederek indirme kuyruğuna otomatik dahil eder.
 
-### 8. Yerleşik 127.0.0.1 Önizleme ve Çevrimdışı Mock Sunucusu
+### 12. Yerleşik 127.0.0.1 Önizleme ve Çevrimdışı Mock Sunucusu
 - Güvenli yol denetimine (path-traversal protection) ve dinamik MIME eşlemesine sahip yerleşik Node.js HTTP sunucusu barındırır.
 - Klonlanan projeleri yerel porttan sunarak tarayıcı `file:///` güvenlik engellerini ve CORS hatalarını ortadan kaldırır.
-- **Çevrimdışı Dinamik API Yanıtı:** Sayfa üzerinde yapılan bir API çağrısı yerel diskte statik bir dosya bulamazsa, sunucu otomatik olarak `_meta/api-endpoints.json` veritabanından yakalanan yanıtı döner; böylece arama ve filtreleme özellikleri internet olmadan da çalışır.
+- **Çevrimdışı Dinamik API Yanıtı:** Sayfa üzerinde yapılan bir API çağrısı yerel diskte statik bir dosya bulamazsa, sunucu otomatik olarak `_meta/api-endpoints.json` veritabanından yakalanan yanıtı döner.
 
-### 9. GitHub Releases Güncelleme Merkezi
-- Uygulama içi Ayarlar menüsünden resmi GitHub API'sini sorgulayarak yeni sürüm kontrolü yapar.
-- Canlı indirme sayaçlarını, sürüm notlarını ve Setup, Portable ve MSI formatlarındaki yükleme paketlerinin doğrudan indirme butonlarını sunar.
-
-### 10. Ultra-Stealth CDP Anti-Bot Kalkanı ve Clearance Köprüsü
+### 13. Ultra-Stealth CDP Anti-Bot Kalkanı ve Clearance Köprüsü
 - `navigator.webdriver` (prototype-clean), `window.chrome` (`runtime`/`app`/`csi`), `navigator.permissions.query` ve gerçekçi WebGL GPU (NVIDIA RTX / Intel Iris) donanım simülasyonu.
 - Canvas ve AudioContext parmak izi takip mekanizmalarını bozmak için görsel/işitsel veriyi bozmayan mikro-gürültü enjeksiyonu.
 - **Clearance Köprüsü:** Chromium oturumundaki `cf_clearance`, `__cf_bm` ve yetkilendirme çerezlerini toplayarak `AssetDownloader`'ın HTTP/2 başlıklarına aktarır; alt varlıkların Cloudflare 403 engeline takılmadan indirilmesini sağlar.
 - **Otomatik WAF Eskalasyonu:** Statik indirmede 403/503 Cloudflare/WAF meydan okuması (`Turnstile`, `challenge-running`) tespit edildiğinde işi kesintiye uğratmaz; otomatik Ultra-Stealth Chromium motoruna eskalasyon yaparak çerezleri yeniler ve indirmeyi sürdürür.
 
-### 11. Self-Healing Adaptif Semantik İçerik Çıkarıcı
+### 14. Self-Healing Adaptif Semantik İçerik Çıkarıcı
 - Obfuscate/hash sınıflı (Tailwind, CSS Modules) karmaşık DOM ağaçlarında sınıf isimlerine bağımlı kalmadan metin yoğunluğu ve kardeş düğüm benzerliği heuristiğiyle ana içerik bloğunu, ürün/makale kartlarını ve sayfalama tetikleyicilerini çıkarır.
 - Klonlama çıktısına `_meta/adaptive-entities.json` dosyasını ekler.
+
+### 15. GitHub Releases Güncelleme Merkezi
+- Uygulama içi Ayarlar menüsünden resmi GitHub API'sini sorgulayarak yeni sürüm kontrolü yapar.
+- Canlı indirme sayaçlarını, sürüm notlarını ve Setup, Portable ve MSI formatlarındaki yükleme paketlerinin doğrudan indirme butonlarını sunar.
 
 ---
 
@@ -410,6 +475,10 @@ export interface GetApiV1ProductsResponse {
 
 | Özellik / Yetenek | WebClone Studio | HTTrack | SingleFile | Cyotek WebCopy | Saf Puppeteer Kodları |
 | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Kalıcı Oturum Açma Kasası** | Yerleşik (`persist:webclone`)| Yok | Yok | Yok | Manuel betik gerektirir |
+| **Yerleşik CDP MHTML Arşivi** | Yerleşik (`_exports/`) | Yok | Yok | Yok | Manuel betik gerektirir |
+| **Çevrimdışı Fetch Mock Shim** | Yerleşik (`UrlRewriter`)| Yok | Yok | Yok | Yok |
+| **Sıfır-OOM Bellek Akışı** | Yerleşik ($O(1)$ RAM) | Kısmi | Yok | Kısmi | Manuel dosya akışı |
 | **Shadow DOM Delme** | Tam (Native CDP) | Yok | Kısmi | Yok | Manuel betik gerektirir |
 | **Otonom Durum Gezgini** | Yerleşik | Yok | Yok | Yok | Manuel betik gerektirir |
 | **Ultra-Stealth WAF Kalkanı** | Yerleşik (CDP + Bridge) | Yok | Yok | Yok | Eklenti gerekir |
@@ -432,13 +501,13 @@ WebClone Studio sürümleri üç farklı Windows x64 kurulum seçeneğiyle dağ�
 
 ```
 dist/
-├── WebClone-Studio-Setup-1.1.0.exe    # Masaüstü ve başlat menüsü kısayollarını içeren NSIS kurulumu (~77.3 MB)
+├── WebClone-Studio-Setup-1.2.0.exe    # Masaüstü ve başlat menüsü kısayollarını içeren NSIS kurulumu (~77.3 MB)
 ├── WebClone-Studio-Portable.exe       # Kurulum gerektirmeyen tek parça bağımsız çalıştırılabilir dosya (~76.9 MB)
-└── WebClone-Studio-1.1.0.msi          # Kurumsal ağlar ve GPO dağıtımı için Microsoft Windows Installer (~87.5 MB)
+└── WebClone-Studio-1.2.0.msi          # Kurumsal ağlar ve GPO dağıtımı için Microsoft Windows Installer (~87.5 MB)
 ```
 
 1. **Portable Sürüm:** `WebClone-Studio-Portable.exe` dosyasını indirin, dilediğiniz bir klasöre veya USB belleğe koyarak doğrudan çalıştırın. Yönetici yetkisi gerektirmez.
-2. **Setup Kurulumu:** `WebClone-Studio-Setup-1.1.0.exe` dosyasını çalıştırarak standart Windows kurulumunu tamamlayın.
+2. **Setup Kurulumu:** `WebClone-Studio-Setup-1.2.0.exe` dosyasını çalıştırarak standart Windows kurulumunu tamamlayın.
 3. **MSI Paketi:** Kurumsal sistem yöneticileri için Active Directory, Microsoft Intune veya Grup İlkesi (GPO) üzerinden toplu dağıtıma uygundur.
 
 ---

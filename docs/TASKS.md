@@ -10,6 +10,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-10-26 - docs(readme): synchronize bilingual README with Ponytail Ultra v1.2.0 capabilities, diagrams, and benchmarks
 - [x] 2026-10-26 - test(suite): verify ponytail ultra optimizations and update docs
 - [x] 2026-10-26 - feat(rewriter): inject client-side fetch/xhr offline mock shim (8ac4924)
 - [x] 2026-10-26 - feat(browser): add native cdp mhtml snapshot and persistent auth session (6484b2d)

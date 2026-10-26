@@ -47,12 +47,13 @@
 
 ## Commit Zinciri
 - **Son Commitler:**
-  - `d9dfbcb` chore(dist): optimize bundle footprint and strip unused locales
-  - `009ce3d` chore(docs): record visual asset integration in TASKS and WORKLOG
-  - `61f01b6` docs(readme): add visual hero banner and desktop UI showcase illustrations
-  - `453db2a` docs(readme): expand bilingual documentation with architectural diagrams and comparison matrix
-  - `d2d4800` chore(git): ignore internal agent configs and workflows
-  - `bdf62bd` chore(docs): update SYSTEM_MAP with new generators, services, and packaging details
+  - `cea0888` test(suite): verify ponytail ultra optimizations and update docs
+  - `8ac4924` feat(rewriter): inject client-side fetch/xhr offline mock shim
+  - `6484b2d` feat(browser): add native cdp mhtml snapshot and persistent auth session
+  - `14e9a64` perf(cloner): stream raw html to disk and eliminate memory accumulation
+  - `b6f31d2` refactor(cloner): remove redundant extractor and O(N) url lookup
+  - `0059ecf` docs(release): record v1.1.0 production release publication
+  - `48d773c` feat(branding): update 3D cyber-spider visual assets, banner and documentation
 
 ## Riskler
 - Yok.
