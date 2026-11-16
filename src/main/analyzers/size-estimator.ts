@@ -1,6 +1,7 @@
 import { SiteMapper } from './site-mapper';
 import { SiteMapNode, SizeEstimate, AnalyzeResult } from '../../shared/types';
-import got from 'got';
+import { HttpClient } from '../browser/http-client';
+import { buildDefaultUserAgent } from '../../shared/version';
 import * as cheerio from 'cheerio';
 
 export class SizeEstimator {
@@ -69,8 +70,13 @@ export class SizeEstimator {
     } catch {
       // 3. Durum: Ağ engeli durumunda tek sayfa hızlı GET ile gerçek DOM tabanlı dinamik tahmin
       try {
-        const res = await got.get(url, { timeout: { request: 3500 }, throwHttpErrors: false });
-        const $ = cheerio.load(res.body);
+        const res = await HttpClient.fetchText({
+          url,
+          timeoutMs: 3500,
+          maxRetries: 0,
+          headers: { 'user-agent': buildDefaultUserAgent() },
+        });
+        const $ = cheerio.load(res.text);
         const domAssets = $('img, script[src], link[rel="stylesheet"]').length;
         const multiplier = depth === 1 ? 4 : depth === 2 ? 15 : 40;
         const estimatedPages = multiplier;

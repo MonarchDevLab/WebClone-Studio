@@ -1,14 +1,11 @@
-import got from 'got';
 import { app } from 'electron';
 import { AppUpdateInfo, AppUpdateAsset } from '../../shared/types';
 import { APP_VERSION } from '../../shared/version';
+import { HttpClient } from '../browser/http-client';
 
 export class UpdateChecker {
   private static GITHUB_REPO = 'MonarchDevLab/WebClone-Studio';
 
-  /**
-   * Mevcut uygulama sürümünü döndürür.
-   */
   public static getCurrentVersion(): string {
     try {
       if (app && app.isPackaged) {
@@ -18,26 +15,36 @@ export class UpdateChecker {
     return APP_VERSION;
   }
 
-  /**
-   * GitHub API üzerinden en son yayınlanmış sürümü sorgular ve karşılaştırır.
-   */
   public static async checkForUpdates(): Promise<AppUpdateInfo> {
     const currentVersion = this.getCurrentVersion();
     const apiUrl = `https://api.github.com/repos/${this.GITHUB_REPO}/releases/latest`;
 
     try {
-      const response = await got.get(apiUrl, {
+      const response = await HttpClient.fetchText({
+        url: apiUrl,
+        method: 'GET',
+        timeoutMs: 8000,
+        maxRetries: 0,
         headers: {
-          'User-Agent': 'WebCloneStudio-Updater',
-          'Accept': 'application/vnd.github.v3+json',
+          'user-agent': 'WebCloneStudio-Updater',
+          accept: 'application/vnd.github.v3+json',
         },
-        timeout: {
-          request: 8000,
-        },
-        responseType: 'json',
       });
 
-      const release = response.body as any;
+      if (response.statusCode === 404) {
+        return {
+          hasUpdate: false,
+          currentVersion,
+          latestVersion: currentVersion,
+          releaseNotes: 'GitHub üzerinde henüz yayınlanmış bir sürüm bulunmuyor.',
+        };
+      }
+
+      if (response.statusCode >= 400) {
+        throw new Error(`HTTP ${response.statusCode}`);
+      }
+
+      const release = JSON.parse(response.text) as any;
       if (!release || !release.tag_name) {
         return {
           hasUpdate: false,
@@ -73,16 +80,6 @@ export class UpdateChecker {
         totalDownloads,
       };
     } catch (err: any) {
-      // 404 (henüz release açılmamışsa) veya internet bağlantısı yoksa
-      if (err.response?.statusCode === 404) {
-        return {
-          hasUpdate: false,
-          currentVersion,
-          latestVersion: currentVersion,
-          releaseNotes: 'GitHub üzerinde henüz yayınlanmış bir sürüm bulunmuyor.',
-        };
-      }
-
       return {
         hasUpdate: false,
         currentVersion,
@@ -92,9 +89,6 @@ export class UpdateChecker {
     }
   }
 
-  /**
-   * Basit semver karşılaştırması: v1 > v2 ise 1, v1 < v2 ise -1, eşitse 0 döner.
-   */
   private static compareVersions(v1: string, v2: string): number {
     const p1 = v1.split('.').map((n) => parseInt(n, 10) || 0);
     const p2 = v2.split('.').map((n) => parseInt(n, 10) || 0);

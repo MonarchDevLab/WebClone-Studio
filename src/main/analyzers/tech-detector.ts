@@ -1,12 +1,14 @@
-import got from 'got';
 import * as cheerio from 'cheerio';
 import { TechSignature } from '../../shared/types';
 import { TECH_SIGNATURES, TechSignatureRule } from './tech-signatures';
+import { HttpClient } from '../browser/http-client';
+import { buildDefaultUserAgent } from '../../shared/version';
 
 export interface TechDetectorInput {
   html?: string;
   headers?: Record<string, any>;
   globals?: string[];
+  allowLocalhostTargets?: boolean;
 }
 
 export class TechDetector {
@@ -30,18 +32,21 @@ export class TechDetector {
     let headers: Record<string, any> = pageData?.headers || {};
     const globals = pageData?.globals || [];
 
-    // Eğer statik veri gelmediyse HTTP GET ile headers ve body'yi çek
-    if (!htmlBody || Object.keys(headers).length === 0) {
+    // Fetch via HttpClient ONLY when caller supplied neither rendered nor static HTML
+    if (!htmlBody) {
       try {
-        const response = await got(url, {
-          timeout: { request: 10000 },
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          },
-          throwHttpErrors: false,
+        const res = await HttpClient.fetchText({
+          url,
+          method: 'GET',
+          timeoutMs: 10000,
+          maxRetries: 1,
+          headers: { 'user-agent': buildDefaultUserAgent() },
+          allowLocalhostTargets: pageData?.allowLocalhostTargets,
         });
-        htmlBody = response.body;
-        headers = response.headers;
+        htmlBody = res.text;
+        if (Object.keys(headers).length === 0) {
+          headers = res.headers;
+        }
       } catch (e) {
         console.warn(`[TechDetector] Statik HTTP isteği uyarısı [${url}]:`, e);
       }

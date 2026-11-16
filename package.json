@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "bottleneck": "^2.19.5",
-    "got": "^14.4.7",
     "robots-parser": "^3.0.1",
     "sanitize-filename": "^1.6.3",
     "source-map": "^0.8.0"

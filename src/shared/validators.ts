@@ -1,6 +1,32 @@
 import { AppSettings, CloneSettings } from './types';
 import { buildDefaultUserAgent } from './version';
 
+const COMMON_SECOND_LEVEL_TLDS = new Set([
+  'com.tr',
+  'edu.tr',
+  'gov.tr',
+  'org.tr',
+  'net.tr',
+  'co.uk',
+  'org.uk',
+  'com.au',
+  'co.nz',
+]);
+
+/**
+ * Extracts the canonical registrable root domain (handling common two-label ccTLDs).
+ */
+export function getRootDomain(hostname: string): string {
+  const cleanHost = hostname.toLowerCase().trim();
+  const parts = cleanHost.split('.');
+  if (parts.length <= 2) return cleanHost;
+  const lastTwo = parts.slice(-2).join('.');
+  if (COMMON_SECOND_LEVEL_TLDS.has(lastTwo) && parts.length > 2) {
+    return parts.slice(-3).join('.');
+  }
+  return lastTwo;
+}
+
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return fallback;

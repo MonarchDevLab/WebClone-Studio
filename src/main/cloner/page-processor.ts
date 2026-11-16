@@ -1,5 +1,8 @@
 import * as cheerio from 'cheerio';
 import { CloneSettings } from '../../shared/types';
+import { getRootDomain } from '../../shared/validators';
+
+export { getRootDomain };
 
 export interface DiscoveredAsset {
   url: string;
@@ -36,18 +39,6 @@ export interface ProcessedPageResult {
   pageTitle: string;
   discoveredAssets: DiscoveredAsset[];
   discoveredPages: string[];
-}
-
-export function getRootDomain(hostname: string): string {
-  const cleanHost = hostname.toLowerCase().trim();
-  const parts = cleanHost.split('.');
-  if (parts.length <= 2) return cleanHost;
-  const commonDoubleExts = ['com.tr', 'edu.tr', 'gov.tr', 'org.tr', 'net.tr', 'co.uk', 'org.uk', 'com.au', 'co.nz'];
-  const lastTwo = parts.slice(-2).join('.');
-  if (commonDoubleExts.includes(lastTwo) && parts.length > 2) {
-    return parts.slice(-3).join('.');
-  }
-  return parts.slice(-2).join('.');
 }
 
 export function isInternalDomain(targetUrl: string, baseOriginUrl: string): boolean {

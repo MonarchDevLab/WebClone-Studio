@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src/renderer/src'),
       '@shared': resolve(__dirname, 'src/shared'),
+      cheerio: 'cheerio/slim',
       electron: resolve(__dirname, 'tests/setup/electron-mock.ts'),
     },
   },

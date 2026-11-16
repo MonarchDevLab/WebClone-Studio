@@ -1,25 +1,32 @@
-import got from 'got';
 import * as cheerio from 'cheerio';
 import { URL } from 'url';
 import { SiteMapNode } from '../../shared/types';
+import { HttpClient } from '../browser/http-client';
+import { buildDefaultUserAgent } from '../../shared/version';
 
 export class SiteMapper {
   /**
    * XML sitemap veya robots.txt üzerinden sayfaları hızlıca çeker.
    */
-  private async tryFetchXmlSitemap(origin: string): Promise<string[] | null> {
+  private async tryFetchXmlSitemap(
+    origin: string,
+    allowLocalhostTargets?: boolean
+  ): Promise<string[] | null> {
     const candidates = [`${origin}/sitemap.xml`, `${origin}/sitemap_index.xml`];
+    const ua = buildDefaultUserAgent();
     for (const sitemapUrl of candidates) {
       try {
-        const res = await got.get(sitemapUrl, {
-          timeout: { request: 4000 },
-          throwHttpErrors: false,
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) WebCloneStudio/1.0' },
+        const res = await HttpClient.fetchText({
+          url: sitemapUrl,
+          timeoutMs: 4000,
+          maxRetries: 0,
+          headers: { 'user-agent': ua },
+          allowLocalhostTargets,
         });
 
-        if (res.statusCode === 200 && res.body.includes('<loc>')) {
+        if (res.statusCode === 200 && res.text.includes('<loc>')) {
           const urls: string[] = [];
-          const $ = cheerio.load(res.body, { xmlMode: true });
+          const $ = cheerio.load(res.text, { xmlMode: true });
           $('loc').each((_, el) => {
             const foundUrl = $(el).text().trim();
             if (foundUrl && !foundUrl.endsWith('.xml')) {
@@ -93,16 +100,15 @@ export class SiteMapper {
       pageCount++;
 
       try {
-        const res = await got.get(urlToCrawl, { 
-          timeout: { request: 5000 },
-          throwHttpErrors: false,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) WebCloneStudio/1.0',
-          }
+        const res = await HttpClient.fetchText({
+          url: urlToCrawl,
+          timeoutMs: 5000,
+          maxRetries: 0,
+          headers: { 'user-agent': buildDefaultUserAgent() },
         });
 
-        const contentType = (res.headers['content-type'] as string) || 'text/html';
-        const size = res.rawBody?.length || parseInt(res.headers['content-length'] || '0', 10) || 25000;
+        const contentType = res.mimeType || 'text/html';
+        const size = res.body.length || parseInt(res.headers['content-length'] || '0', 10) || 25000;
         const statusCode = res.statusCode;
 
         let title = '';
@@ -110,7 +116,7 @@ export class SiteMapper {
         let assetCount = 0;
 
         if (contentType.includes('text/html') && statusCode < 400 && currentDepth < maxDepth) {
-          const $ = cheerio.load(res.body);
+          const $ = cheerio.load(res.text);
           title = $('title').text().trim() || urlToCrawl;
 
           const assets = new Set<string>();

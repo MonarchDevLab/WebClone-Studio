@@ -1,10 +1,15 @@
-import { DesignTokens, ColorToken, TypoToken } from '../../shared/types';
+import { DesignTokens, ColorToken } from '../../shared/types';
 import { PageRenderer } from '../browser/page-renderer';
+import { HttpClient } from '../browser/http-client';
+import { buildDefaultUserAgent } from '../../shared/version';
 import * as cheerio from 'cheerio';
-import got from 'got';
 
 export class DesignAnalyzer {
-  private renderer = new PageRenderer();
+  private renderer: PageRenderer;
+
+  constructor(renderer?: PageRenderer) {
+    this.renderer = renderer || new PageRenderer();
+  }
 
   /**
    * Sayfa tasarım token'larını analiz eder (Renkler, Tipografi, Spacing).
@@ -41,14 +46,20 @@ export class DesignAnalyzer {
     };
 
     try {
-      const res = await got(url, { timeout: { request: 6000 }, throwHttpErrors: false });
-      const $ = cheerio.load(res.body);
+      const res = await HttpClient.fetchText({
+        url,
+        timeoutMs: 6000,
+        maxRetries: 0,
+        headers: { 'user-agent': buildDefaultUserAgent() },
+      });
+      const bodyText = res.text;
+      const $ = cheerio.load(bodyText);
 
       const colorMap = new Map<string, number>();
       const hexRegex = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g;
       let match;
 
-      while ((match = hexRegex.exec(res.body)) !== null) {
+      while ((match = hexRegex.exec(bodyText)) !== null) {
         let hex = match[0].toLowerCase();
         if (hex.length === 4) {
           hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;

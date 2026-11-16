@@ -1,9 +1,13 @@
-import got from 'got';
 import { URL } from 'url';
 import { SecurityInfo } from '../../shared/types';
+import { HttpClient } from '../browser/http-client';
+import { buildDefaultUserAgent } from '../../shared/version';
 
 export class SecurityScanner {
-  async scan(url: string): Promise<SecurityInfo> {
+  async scan(
+    url: string,
+    options?: { existingHeaders?: Record<string, string>; allowLocalhostTargets?: boolean }
+  ): Promise<SecurityInfo> {
     let https = false;
     let hsts = false;
     let csp = false;
@@ -17,48 +21,61 @@ export class SecurityScanner {
     }
 
     https = parsedUrl.protocol === 'https:';
+    const ua = buildDefaultUserAgent();
+    const allowLocalhostTargets = Boolean(options?.allowLocalhostTargets);
 
-    try {
-      const response = await got.head(url, { 
-        timeout: { request: 5000 },
-        throwHttpErrors: false,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) WebCloneStudio/1.0',
-        }
-      });
-
-      for (const [key, value] of Object.entries(response.headers)) {
-        if (value !== undefined) {
-          formattedHeaders[key] = Array.isArray(value) ? value.join(', ') : String(value);
-        }
+    if (options?.existingHeaders && Object.keys(options.existingHeaders).length > 0) {
+      for (const [k, v] of Object.entries(options.existingHeaders)) {
+        if (v !== undefined) formattedHeaders[k.toLowerCase()] = String(v);
       }
-
-      // HSTS kontrolü
-      if (formattedHeaders['strict-transport-security']) {
-        hsts = true;
+    } else {
+      try {
+        const res = await HttpClient.fetchBuffer({
+          url,
+          method: 'HEAD',
+          timeoutMs: 5000,
+          maxRetries: 0,
+          headers: { 'user-agent': ua },
+          allowLocalhostTargets,
+        });
+        Object.assign(formattedHeaders, res.headers);
+      } catch (e) {
+        console.warn(`[SecurityScanner] Ana bağlantı uyarısı [${url}]:`, e);
       }
-
-      // CSP kontrolü
-      if (formattedHeaders['content-security-policy']) {
-        csp = true;
-      }
-    } catch (e) {
-      console.warn(`[SecurityScanner] Ana bağlantı uyarısı [${url}]:`, e);
     }
 
-    // robots.txt varlığı
+    if (formattedHeaders['strict-transport-security']) {
+      hsts = true;
+    }
+    if (formattedHeaders['content-security-policy']) {
+      csp = true;
+    }
+
     let robotsTxt = false;
     try {
       const robotsUrl = `${parsedUrl.protocol}//${parsedUrl.host}/robots.txt`;
-      const res = await got.head(robotsUrl, { timeout: { request: 3000 }, throwHttpErrors: false });
+      const res = await HttpClient.fetchBuffer({
+        url: robotsUrl,
+        method: 'HEAD',
+        timeoutMs: 3000,
+        maxRetries: 0,
+        headers: { 'user-agent': ua },
+        allowLocalhostTargets,
+      });
       if (res.statusCode === 200) robotsTxt = true;
     } catch {}
 
-    // sitemap.xml varlığı
     let sitemap = false;
     try {
       const sitemapUrl = `${parsedUrl.protocol}//${parsedUrl.host}/sitemap.xml`;
-      const res = await got.head(sitemapUrl, { timeout: { request: 3000 }, throwHttpErrors: false });
+      const res = await HttpClient.fetchBuffer({
+        url: sitemapUrl,
+        method: 'HEAD',
+        timeoutMs: 3000,
+        maxRetries: 0,
+        headers: { 'user-agent': ua },
+        allowLocalhostTargets,
+      });
       if (res.statusCode === 200) sitemap = true;
     } catch {}
 

@@ -10,7 +10,7 @@ const appVersionDefine = {
 };
 
 // Bundle ESM-only main-process dependencies so Rollup compiles them cleanly to CJS.
-const ESM_ONLY_DEPS = ['got', 'cheerio'];
+const ESM_ONLY_DEPS = ['cheerio'];
 
 export default defineConfig({
   main: {
@@ -19,12 +19,14 @@ export default defineConfig({
     resolve: {
       alias: {
         '@shared': resolve('src/shared'),
+        cheerio: 'cheerio/slim',
       },
     },
     build: {
+      minify: 'esbuild',
       rollupOptions: {
-        // Keep undici and Node built-in node:sqlite external to preserve lazy CJS semantics.
-        external: ['undici', 'node:sqlite'],
+        // Keep Node built-in node:sqlite external to preserve native built-in loading semantics.
+        external: ['node:sqlite'],
       },
     },
   },

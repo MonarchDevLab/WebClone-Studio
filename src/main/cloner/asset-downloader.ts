@@ -1,7 +1,8 @@
-import got, { Response } from 'got';
-import { pipeline } from 'stream/promises';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import { HttpClient, decodeTextBuffer } from '../browser/http-client';
+import { SessionManager } from '../browser/session-manager';
+import { buildDefaultUserAgent, getRuntimeChromeMajor } from '../../shared/version';
 
 export interface DownloadResult {
   url: string;
@@ -11,6 +12,9 @@ export interface DownloadResult {
   sizeBytes: number;
   localPath: string;
   buffer?: Buffer;
+  textEncoding?: string;
+  etag?: string;
+  lastModified?: string;
   contentDispositionFilename?: string;
 }
 
@@ -19,6 +23,11 @@ export interface StoredCookie {
   value: string;
   domain?: string;
   path?: string;
+}
+
+export interface DownloaderPolicyOptions {
+  ignoreSslErrors?: boolean;
+  allowLocalhostTargets?: boolean;
 }
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
@@ -39,22 +48,41 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
   'application/json': '.json',
   'application/xml': '.xml',
   'text/xml': '.xml',
+  'image/webp': '.webp',
+  'image/avif': '.avif',
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/gif': '.gif',
+  'image/svg+xml': '.svg',
+  'font/woff2': '.woff2',
+  'font/woff': '.woff',
+  'application/wasm': '.wasm',
+  'text/vtt': '.vtt',
 };
 
-const REAL_BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
-
 /**
- * Web varlıklarını yüksek performanslı, stream tabanlı ve anti-bot/anti-hotlink korumalarını
- * aşabilen modern tarayıcı başlıklarıyla indiren yönetici.
+ * Unified BoringSSL asset downloader sharing Chromium's session.fetch, JA4 TLS fingerprint,
+ * HTTP/2 connection pool, and isolated per-domain cookie jar with PageRenderer.
  */
 export class AssetDownloader {
   private userAgent: string;
   private timeoutMs: number;
   private cookies: StoredCookie[] = [];
+  private policy: DownloaderPolicyOptions;
 
-  constructor(userAgent?: string, timeoutMs: number = 30000) {
-    this.userAgent = userAgent && !userAgent.includes('WebCloneStudio') ? userAgent : REAL_BROWSER_UA;
+  constructor(
+    userAgent?: string,
+    timeoutMs: number = 30_000,
+    policy: DownloaderPolicyOptions = {}
+  ) {
+    this.userAgent =
+      userAgent && !userAgent.includes('WebCloneStudio') ? userAgent : buildDefaultUserAgent();
     this.timeoutMs = timeoutMs;
+    this.policy = policy;
+  }
+
+  public setPolicy(policy: DownloaderPolicyOptions): void {
+    this.policy = { ...this.policy, ...policy };
   }
 
   public setCookies(cookies: StoredCookie[]): void {
@@ -63,7 +91,9 @@ export class AssetDownloader {
       if (!cookie.name || cookie.value === undefined) continue;
       const normalizedDomain = (cookie.domain || '').toLowerCase().replace(/^\./, '');
       const existingIdx = this.cookies.findIndex(
-        (c) => c.name === cookie.name && (c.domain || '').toLowerCase().replace(/^\./, '') === normalizedDomain
+        (c) =>
+          c.name === cookie.name &&
+          (c.domain || '').toLowerCase().replace(/^\./, '') === normalizedDomain
       );
       if (existingIdx >= 0) {
         this.cookies[existingIdx] = cookie;
@@ -77,19 +107,24 @@ export class AssetDownloader {
     this.cookies = [];
   }
 
-  private getBrowserHeaders(targetUrl: string): Record<string, string> {
+  private getBrowserHeaders(
+    targetUrl: string,
+    conditional?: { ifNoneMatch?: string; ifModifiedSince?: string }
+  ): Record<string, string> {
     let originReferer = '';
     try {
       originReferer = new URL(targetUrl).origin + '/';
     } catch {}
 
+    const chromeMajor = getRuntimeChromeMajor();
     const headers: Record<string, string> = {
       'user-agent': this.userAgent,
-      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,font/woff2,*/*;q=0.8',
+      accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,font/woff2,*/*;q=0.8',
       'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
       'cache-control': 'no-cache',
-      'pragma': 'no-cache',
-      'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      pragma: 'no-cache',
+      'sec-ch-ua': `"Google Chrome";v="${chromeMajor}", "Chromium";v="${chromeMajor}", "Not_A Brand";v="24"`,
       'sec-ch-ua-mobile': '?0',
       'sec-ch-ua-platform': '"Windows"',
       'upgrade-insecure-requests': '1',
@@ -99,9 +134,15 @@ export class AssetDownloader {
       headers['referer'] = originReferer;
     }
 
+    if (conditional?.ifNoneMatch) {
+      headers['if-none-match'] = conditional.ifNoneMatch;
+    }
+    if (conditional?.ifModifiedSince) {
+      headers['if-modified-since'] = conditional.ifModifiedSince;
+    }
+
     try {
-      const urlObj = new URL(targetUrl);
-      const reqHostname = urlObj.hostname.toLowerCase();
+      const reqHostname = new URL(targetUrl).hostname.toLowerCase();
       const matchedCookies = this.cookies.filter((c) => {
         if (!c.domain) return true;
         const cookieDomain = c.domain.toLowerCase().replace(/^\./, '');
@@ -117,231 +158,104 @@ export class AssetDownloader {
   }
 
   /**
-   * Bir URL'yi stream olarak doğrudan diske kaydeder.
-   * 4xx/5xx veya hata durumunda diske yazılan çöp dosyayı temizler.
+   * Streams an asset directly to disk with cumulative byte limit enforcement and clean error cleanup.
    */
-  public async downloadToFile(url: string, destinationPath: string, maxSizeBytes?: number): Promise<DownloadResult> {
-    const parentDir = path.dirname(destinationPath);
-    await fs.promises.mkdir(parentDir, { recursive: true });
+  public async downloadToFile(
+    url: string,
+    destinationPath: string,
+    maxSizeBytes?: number,
+    signal?: AbortSignal
+  ): Promise<DownloadResult> {
+    const partition = SessionManager.getPartitionForUrl(url);
+    const res = await HttpClient.downloadToFile(
+      {
+        url,
+        method: 'GET',
+        headers: this.getBrowserHeaders(url),
+        timeoutMs: this.timeoutMs,
+        maxBytes: maxSizeBytes,
+        maxRetries: 2,
+        signal,
+        partition,
+        ignoreSslErrors: this.policy.ignoreSslErrors,
+        allowLocalhostTargets: this.policy.allowLocalhostTargets,
+      },
+      destinationPath
+    );
 
-    let statusCode = 200;
-    let mimeType = 'application/octet-stream';
-    let sizeBytes = 0;
-    let finalUrl = url;
+    let finalLocalPath = destinationPath;
+    if (res.statusCode < 400 && fs.existsSync(destinationPath)) {
+      const currentExt = path.extname(destinationPath).toLowerCase();
+      const cleanMime = res.mimeType.split(';')[0].trim().toLowerCase();
 
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const downloadStream = got.stream(url, {
-          headers: this.getBrowserHeaders(url),
-          https: {
-            rejectUnauthorized: false,
-          },
-          timeout: {
-            request: this.timeoutMs,
-          },
-          retry: {
-            limit: 2,
-            methods: ['GET'],
-            errorCodes: ['ETIMEDOUT', 'ECONNRESET', 'EADDRINUSE', 'ECONNREFUSED', 'EPIPE', 'ENOTFOUND', 'ENETUNREACH', 'EAI_AGAIN'],
-          },
-          throwHttpErrors: false,
-        });
-
-        let dispositionFilename: string | undefined;
-
-        downloadStream.on('response', (response: Response) => {
-          statusCode = response.statusCode;
-          mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
-          if (response.url) {
-            finalUrl = response.url;
-          }
-
-          const cd = response.headers['content-disposition'] as string | undefined;
-          if (cd) {
-            const filenameMatch = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
-            if (filenameMatch && filenameMatch[1]) {
-              try {
-                dispositionFilename = decodeURIComponent(filenameMatch[1].trim());
-              } catch {
-                dispositionFilename = filenameMatch[1].trim();
-              }
-            }
-          }
-
-          // Boyut kontrolü
-          const contentLength = parseInt(response.headers['content-length'] || '0', 10);
-          if (maxSizeBytes && contentLength > maxSizeBytes) {
-            downloadStream.destroy(new Error(`Dosya boyutu (${contentLength} bytes) maksimum sınırı (${maxSizeBytes} bytes) aşıyor.`));
-          }
-        });
-
-        let downloadedBytes = 0;
-        downloadStream.on('data', (chunk: Buffer) => {
-          downloadedBytes += chunk.length;
-          if (maxSizeBytes && downloadedBytes > maxSizeBytes) {
-            downloadStream.destroy(new Error(`Dosya boyutu kümülatif sınırı (${maxSizeBytes} bytes) aşıyor.`));
-          }
-        });
-
-        let fileStream: fs.WriteStream | null = null;
-        try {
-          fileStream = fs.createWriteStream(destinationPath);
-          await pipeline(downloadStream, fileStream);
-
-          if (statusCode === 429 || (statusCode >= 500 && statusCode <= 504)) {
-            // Geçici CDN/Sunucu hatası, backoff ile tekrar dene
-            if (fileStream && !fileStream.destroyed) fileStream.destroy();
-            if (fs.existsSync(destinationPath)) await fs.promises.unlink(destinationPath);
-            if (attempt < 3) {
-              await new Promise((r) => setTimeout(r, 600 * attempt));
-              continue;
-            }
-          }
-
-          if (statusCode >= 400) {
-            try {
-              if (fileStream && !fileStream.destroyed) fileStream.destroy();
-              if (fs.existsSync(destinationPath)) {
-                await fs.promises.unlink(destinationPath);
-              }
-            } catch {}
-          } else {
-            const stats = await fs.promises.stat(destinationPath);
-            sizeBytes = stats.size;
-          }
-
-          let finalLocalPath = destinationPath;
-          if (statusCode < 400 && fs.existsSync(destinationPath)) {
-            const currentExt = path.extname(destinationPath).toLowerCase();
-            const cleanMime = mimeType.split(';')[0].trim().toLowerCase();
-
-            // Eğer dosyanın uzantısı yoksa ve Content-Disposition veya Content-Type'tan uzantı tespit edildiyse tamamla
-            if (!currentExt || currentExt === '.other') {
-              let suggestedExt = '';
-              if (dispositionFilename) {
-                const cdExt = path.extname(dispositionFilename).toLowerCase();
-                if (cdExt) suggestedExt = cdExt;
-              }
-              if (!suggestedExt && MIME_EXTENSION_MAP[cleanMime]) {
-                suggestedExt = MIME_EXTENSION_MAP[cleanMime];
-              }
-              if (suggestedExt && !destinationPath.endsWith(suggestedExt)) {
-                const newPath = `${destinationPath}${suggestedExt}`;
-                try {
-                  await fs.promises.rename(destinationPath, newPath);
-                  finalLocalPath = newPath;
-                } catch {}
-              }
-            }
-          }
-
-          return {
-            url,
-            finalUrl,
-            statusCode,
-            mimeType,
-            sizeBytes,
-            localPath: statusCode < 400 ? finalLocalPath : '',
-            contentDispositionFilename: dispositionFilename,
-          };
-        } catch (err) {
+      if (!currentExt || currentExt === '.other') {
+        let suggestedExt = '';
+        if (res.contentDispositionFilename) {
+          const cdExt = path.extname(res.contentDispositionFilename).toLowerCase();
+          if (cdExt) suggestedExt = cdExt;
+        }
+        if (!suggestedExt && MIME_EXTENSION_MAP[cleanMime]) {
+          suggestedExt = MIME_EXTENSION_MAP[cleanMime];
+        }
+        if (suggestedExt && !destinationPath.endsWith(suggestedExt)) {
+          const newPath = `${destinationPath}${suggestedExt}`;
           try {
-            if (fileStream && !fileStream.destroyed) fileStream.destroy();
-            if (fs.existsSync(destinationPath)) {
-              await fs.promises.unlink(destinationPath);
-            }
+            await fs.promises.rename(destinationPath, newPath);
+            finalLocalPath = newPath;
           } catch {}
-          if (attempt < 3) {
-            await new Promise((r) => setTimeout(r, 600 * attempt));
-            continue;
-          }
-          throw err;
         }
-      } catch (err) {
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, 600 * attempt));
-          continue;
-        }
-        throw err;
       }
     }
 
     return {
       url,
-      finalUrl,
-      statusCode: statusCode || 500,
-      mimeType,
-      sizeBytes: 0,
-      localPath: '',
+      finalUrl: res.finalUrl,
+      statusCode: res.statusCode,
+      mimeType: res.mimeType,
+      sizeBytes: res.sizeBytes,
+      localPath: res.statusCode < 400 ? finalLocalPath : '',
+      etag: res.headers['etag'],
+      lastModified: res.headers['last-modified'],
+      contentDispositionFilename: res.contentDispositionFilename,
     };
   }
 
   /**
-   * HTML veya CSS gibi hemen işlenmesi gereken içerikleri RAM'e (Buffer) çeker.
+   * Downloads HTML, CSS, or script content into memory with charset detection and conditional header support.
    */
-  public async downloadToBuffer(url: string, maxSizeBytes?: number): Promise<DownloadResult> {
-    let lastError: Error | null = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const response = await got(url, {
-          headers: this.getBrowserHeaders(url),
-          timeout: {
-            request: this.timeoutMs,
-          },
-          https: {
-            rejectUnauthorized: false,
-          },
-          retry: {
-            limit: 2,
-            methods: ['GET'],
-            statusCodes: [408, 413, 429, 500, 502, 503, 504],
-            errorCodes: [
-              'ETIMEDOUT',
-              'ECONNRESET',
-              'EADDRINUSE',
-              'ECONNREFUSED',
-              'EPIPE',
-              'ENOTFOUND',
-              'ENETUNREACH',
-              'EAI_AGAIN',
-            ],
-          },
-          responseType: 'buffer',
-          throwHttpErrors: false,
-        });
+  public async downloadToBuffer(
+    url: string,
+    maxSizeBytes?: number,
+    signal?: AbortSignal,
+    conditional?: { ifNoneMatch?: string; ifModifiedSince?: string }
+  ): Promise<DownloadResult> {
+    const partition = SessionManager.getPartitionForUrl(url);
+    const res = await HttpClient.fetchBuffer({
+      url,
+      method: 'GET',
+      headers: this.getBrowserHeaders(url, conditional),
+      timeoutMs: this.timeoutMs,
+      maxBytes: maxSizeBytes,
+      maxRetries: 2,
+      signal,
+      partition,
+      ignoreSslErrors: this.policy.ignoreSslErrors,
+      allowLocalhostTargets: this.policy.allowLocalhostTargets,
+    });
 
-        const mimeType = (response.headers['content-type'] as string) || 'application/octet-stream';
-        const sizeBytes = response.rawBody.length;
+    const decoded = decodeTextBuffer(res.body, res.mimeType);
 
-        if (maxSizeBytes && sizeBytes > maxSizeBytes) {
-          throw new Error(`İçerik boyutu (${sizeBytes} bytes) sınırı (${maxSizeBytes} bytes) aşıyor.`);
-        }
-
-        if (response.statusCode === 429 || (response.statusCode >= 500 && response.statusCode <= 504)) {
-          if (attempt < 3) {
-            await new Promise((r) => setTimeout(r, 600 * attempt));
-            continue;
-          }
-        }
-
-        return {
-          url,
-          finalUrl: response.url || url,
-          statusCode: response.statusCode,
-          mimeType,
-          sizeBytes,
-          localPath: '',
-          buffer: response.rawBody,
-        };
-      } catch (err: any) {
-        lastError = err;
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, 600 * attempt));
-          continue;
-        }
-      }
-    }
-
-    throw lastError || new Error(`İndirme başarısız: ${url}`);
+    return {
+      url,
+      finalUrl: res.finalUrl,
+      statusCode: res.statusCode,
+      mimeType: res.mimeType,
+      sizeBytes: res.body.length,
+      localPath: '',
+      buffer: res.body,
+      textEncoding: decoded.encoding,
+      etag: res.headers['etag'],
+      lastModified: res.headers['last-modified'],
+    };
   }
 }

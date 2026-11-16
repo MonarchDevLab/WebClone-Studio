@@ -3,8 +3,9 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import * as cheerio from 'cheerio';
-import got from 'got';
 import { IpcChannel } from '../shared/ipc-channels';
+import { HttpClient } from './browser/http-client';
+import { buildDefaultUserAgent } from '../shared/version';
 import { CloneSettings, AnalyzeResult, SiteMeta, SiteMapNode } from '../shared/types';
 import { TechDetector } from './analyzers/tech-detector';
 import { DesignAnalyzer } from './analyzers/design-analyzer';
@@ -81,22 +82,28 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
 
       // 1. Adım: Offscreen Chromium ile sayfayı render et (SPA desteği + JS globals + Tasarım Tokenları + Ekran Görüntüsü)
       try {
-        const renderResult = await pageRenderer.render(url, { timeoutMs: 18000 });
+        const allowLocalhostTargets = Boolean(settingsStore.get().allowLocalhostTargets);
+        const renderResult = await pageRenderer.render(url, {
+          timeoutMs: 18000,
+          allowLocalhostTargets,
+        });
         htmlBody = renderResult.html;
         globals = renderResult.globals;
         renderedDesignTokens = renderResult.designTokens;
+        rawHeaders = renderResult.responseHeaders || {};
         lastAnalyzeScreenshot = renderResult.screenshot || null;
       } catch (renderError) {
-        console.warn(`[IPC] Offscreen render uyarısı (${url}), statik HTTP fallback devrede:`, renderError);
+        console.warn(`[IPC] Offscreen render uyarısı (${url}), HttpClient fallback devrede:`, renderError);
         try {
-          const res = await got(url, { 
-            timeout: { request: 8000 },
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) WebCloneStudio/1.0',
-            },
-            throwHttpErrors: false,
+          const allowLocalhostTargets = Boolean(settingsStore.get().allowLocalhostTargets);
+          const res = await HttpClient.fetchText({
+            url,
+            timeoutMs: 8000,
+            maxRetries: 0,
+            headers: { 'user-agent': buildDefaultUserAgent() },
+            allowLocalhostTargets,
           });
-          htmlBody = res.body;
+          htmlBody = res.text;
           rawHeaders = res.headers;
         } catch (httpFallbackErr) {
           console.warn('[IPC] Statik HTTP fallback isteği de başarısız oldu:', httpFallbackErr);
@@ -121,13 +128,17 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
         html: htmlBody,
         headers: rawHeaders,
         globals,
+        allowLocalhostTargets: Boolean(settingsStore.get().allowLocalhostTargets),
       });
 
       // 4. Adım: Tasarım Tokenları
       const designTokens = await designAnalyzer.analyze(url, renderedDesignTokens);
 
-      // 5. Adım: Güvenlik Taraması
-      const security = await securityScanner.scan(url);
+      // 5. Adım: Güvenlik Taraması (mevcut main-frame başlıklarını yeniden kullanır)
+      const security = await securityScanner.scan(url, {
+        existingHeaders: rawHeaders,
+        allowLocalhostTargets: Boolean(settingsStore.get().allowLocalhostTargets),
+      });
 
       // 6. Adım: Hızlı Site Haritası (1. Derinlik)
       let sitemap: SiteMapNode = {

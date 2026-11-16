@@ -33,6 +33,14 @@ describe('StealthScripts Generator', () => {
     expect(script).toContain('HTMLCanvasElement');
   });
 
+  it('should cloak Function.prototype.toString, suppress dialogs, and use real PRNG canvas noise', () => {
+    const script = generateStealthScript(12345);
+    expect(script).toContain('[native code]');
+    expect(script).toContain('nextNoiseBit');
+    expect(script).not.toContain('^ 1) ^ 1');
+    expect(script).toContain('window.alert');
+  });
+
   it('should be valid JavaScript that can be parsed without syntax error', () => {
     const script = generateStealthScript();
     // Function constructor syntax check

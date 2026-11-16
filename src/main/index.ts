@@ -1,27 +1,30 @@
 import { app, BrowserWindow } from 'electron';
 import { createWindow } from './window';
 import { registerIpcHandlers } from './ipc-handlers';
+import { WindowPool } from './browser/window-pool';
+import { PreviewServer } from './server/preview-server';
 
-/**
- * Uygulama hazır olduğunda pencereyi oluşturur ve IPC handler'larını kaydeder.
- */
-app.whenReady().then(() => {
-  const mainWindow = createWindow();
-  registerIpcHandlers(mainWindow);
+app
+  .whenReady()
+  .then(() => {
+    const mainWindow = createWindow();
+    registerIpcHandlers(mainWindow);
 
-  // macOS desteği - pencere yoksa ve uygulamaya tıklanırsa yeni pencere aç
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  })
+  .catch((err) => {
+    console.error('[Main] Application startup error:', err);
   });
-}).catch((err) => {
-  console.error('[Main] Uygulama başlatma hatası:', err);
+
+app.on('before-quit', () => {
+  WindowPool.getInstance().destroyAll();
+  void PreviewServer.getInstance().stop();
 });
 
-/**
- * Tüm pencereler kapatıldığında macOS hariç uygulamadan çık.
- */
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
