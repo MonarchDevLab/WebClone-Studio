@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, Folder, Globe, Zap, Filter, Check, RefreshCw, Download, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { APP_VERSION, buildDefaultUserAgent } from '@shared/version';
 import { toast } from 'sonner';
 
 export const SettingsPage: React.FC = () => {
   const [defaultDir, setDefaultDir] = useState<string>('');
-  const [userAgent, setUserAgent] = useState<string>('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 WebCloneStudio/1.0');
+  const [userAgent, setUserAgent] = useState<string>(buildDefaultUserAgent());
   const [defaultThreads, setDefaultThreads] = useState<number>(5);
   const [defaultRateLimit, setDefaultRateLimit] = useState<number>(200);
   const [downloadImages, setDownloadImages] = useState<boolean>(true);
@@ -422,7 +423,7 @@ export const SettingsPage: React.FC = () => {
         {/* Hakkında & Geliştirici Bilgisi */}
         <div className="bg-surface-2 border border-white/[0.07] rounded-xl p-5 flex items-center justify-between">
           <div>
-            <div className="text-xs font-bold text-text-primary tracking-wide">WebClone Studio v1.0.0</div>
+            <div className="text-xs font-bold text-text-primary tracking-wide">WebClone Studio v{APP_VERSION}</div>
             <div className="text-[11px] text-text-dim mt-0.5">Yüksek Başarımlı Mimari Tasarım & Web Klonlama Motoru</div>
           </div>
           <div className="text-right">

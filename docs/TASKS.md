@@ -1,10 +1,17 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] SİSTEM HAZIR. PROJE BEKLENİYOR.
+- [~] WebClone Studio v2.0 Master Geliştirme Planı (8 Faz / 24 İş Paketi) kullanıcı REVIEW onayında (`docs/plans/2026-11-11-webclone-v2-master-plan.md`).
 
 ## SIRADAKİ
-- [ ] Yeni özellik veya analiz talepleri beklenecek.
+- [ ] Faz 0: Electron 45.x yükseltmesi, `got` kaldırımı, `node:sqlite` dışsallaştırma ve `src/shared/{version,format,validators}.ts` tekilleştirmesi (`WP-0.1..0.2`).
+- [ ] Faz 1: Zero-Trust güvenlik sertleştirmesi (`url-guard`, `path-guard`, `ipc-guard`, CSP, `ProjectStore` kök silme kilidi, `SingleFile` path-guard, `PreviewServer` XSS yaması) (`WP-1.1..1.4`).
+- [ ] Faz 2: Domain bazlı `SessionManager`, BoringSSL `HttpClient` (`session.fetch`), sıcak offscreen `WindowPool` ve `PageRenderer` Shadow DOM / CDP `loadingFinished` onarımı (`WP-2.1..2.3`).
+- [ ] Faz 3: `node:sqlite` WAL tabanlı `CrawlCheckpointDb` (çökme kurtarma + artımlı ETag/SHA-256 diff) ve `CrawlerEngine` / `ipc-handlers` modüler SRP ayrıştırması (`WP-3.1..3.3`).
+- [ ] Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`), göreli ESM koruma, `/_sw-replay.js` Service Worker çevrimdışı replay, HTTP 206 Range ve WACZ 1.1.1 arşivleyici (`WP-4.1..4.3`).
+- [ ] Faz 5: Ağ tekrarsız `TechDetector`, OKLCH + Tailwind v4 `@theme` token çıkarımı, çok bölümlü `ComponentExporter`, asenkron `SourcemapReconstructor` ve Next.js RSC state çıkarımı (`WP-5.1..5.3`).
+- [ ] Faz 6: 6 sekmeli `ArtifactExplorerPage`, `100 ms` toplu IPC telemetri, `React.lazy` kod bölme, `< 10 KB` `TitleBar` logosu ve tam WCAG 2.2 AA (`tablist`, `useFocusTrap`, `@theme` tokenları) (`WP-6.1..6.3`).
+- [ ] Faz 7: Yerel HTTP fixture entegrasyon paketi, Playwright `_electron` E2E testleri, gerçek `Portable.exe` süreç doğrulaması ve GitHub Actions CI/CD boru hattı (`WP-7.1..7.2`).
 
 ## BLOKLU
 - Yok.

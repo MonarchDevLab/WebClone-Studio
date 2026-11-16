@@ -1,4 +1,5 @@
 import { ProjectManifest } from '../../shared/types';
+import { APP_ORG_SIGNATURE, APP_VERSION } from '../../shared/version';
 
 /**
  * İndirilen projenin kök dizinine koyulacak insan okunabilir README.md dosyasını üretir.
@@ -66,7 +67,7 @@ ${fileIndexList}
 - **Hata ve İstisna Günlüğü:** \`_meta/errors.log\`
 
 ---
-*WebClone Studio v1.0.0 — Monolith Works / MonarchDevLab tarafından geliştirilmiştir.*
+*WebClone Studio v${APP_VERSION} - ${APP_ORG_SIGNATURE} tarafından geliştirilmiştir.*
 `;
   }
 }

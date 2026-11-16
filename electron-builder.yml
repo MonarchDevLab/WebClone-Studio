@@ -15,6 +15,8 @@ files:
   - "!**/*.pem"
   - "!**/*.key"
   - "!**/*.md"
+asarUnpack:
+  - "**/node_modules/source-map/lib/mappings.wasm"
 win:
   target:
     - target: portable
@@ -24,6 +26,16 @@ win:
     - target: msi
       arch: [x64]
   icon: resources/icon.ico
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+linux:
+  category: Development
+  target:
+    - target: AppImage
+      arch: [x64]
 portable:
   artifactName: "WebClone-Studio-Portable.exe"
   requestExecutionLevel: user

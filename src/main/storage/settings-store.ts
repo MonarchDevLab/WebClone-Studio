@@ -4,6 +4,8 @@ import fs from 'fs';
 import os from 'os';
 
 import { AppSettings } from '../../shared/types';
+import { buildDefaultUserAgent } from '../../shared/version';
+import { sanitizeSettingsPatch } from '../../shared/validators';
 export type { AppSettings };
 
 function resolveDefaultDownloadDir(): string {
@@ -36,7 +38,7 @@ function resolveAppDataDir(): string {
 
 const DEFAULT_SETTINGS: AppSettings = {
   defaultOutputDir: resolveDefaultDownloadDir(),
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 WebCloneStudio/1.0',
+  userAgent: buildDefaultUserAgent(),
   defaultThreads: 5,
   defaultRateLimit: 200,
   defaultDownloadImages: true,
@@ -48,6 +50,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultCrawlSubdomains: false,
   defaultDownloadExternalAssets: true,
   defaultReverseEngineering: true,
+  allowLocalhostTargets: false,
+  defaultExportWacz: false,
 };
 
 export class SettingsStore {

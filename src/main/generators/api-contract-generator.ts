@@ -1,4 +1,5 @@
 import { CapturedApiEndpoint } from '../cloner/reverse-engineering/api-interceptor';
+import { APP_VERSION } from '../../shared/version';
 
 export interface OpenApiSpec {
   openapi: string;
@@ -19,7 +20,7 @@ export class ApiContractGenerator {
       openapi: '3.1.0',
       info: {
         title: targetHost ? `${targetHost} API Sözleşmesi` : 'WebClone Extracted API Specification',
-        version: '1.0.0',
+        version: APP_VERSION,
         description: 'WebClone Studio otonom ağ dinleyicisi tarafından tersine mühendislikle yakalanmış ve derlenmiş API uç noktaları.',
       },
       paths: {},

@@ -160,6 +160,8 @@ export interface CloneSettings {
   maxFileSize: number;
   userAgent: string;
   reverseEngineering?: boolean;
+  ignoreSslErrors?: boolean;
+  exportWacz?: boolean;
 }
 
 /** Klonlama süreci ilerleme durumu */
@@ -276,6 +278,8 @@ export interface ProjectInfo {
   totalSize: number;
   screenshotPath?: string;
   outputPath: string;
+  hasIncompleteCheckpoint?: boolean;
+  hasWacz?: boolean;
 }
 
 /** Disk alan bilgisi */
@@ -309,6 +313,59 @@ export interface AppSettings {
   defaultCrawlSubdomains?: boolean;
   defaultDownloadExternalAssets?: boolean;
   defaultReverseEngineering?: boolean;
+  allowLocalhostTargets?: boolean;
+  defaultExportWacz?: boolean;
+}
+
+export interface TelemetryBatchPayload {
+  progress?: CloneProgress;
+  addedFiles: FileAddedEvent[];
+  logs: CloneLogEntry[];
+  warningCountDelta: number;
+}
+
+export interface DiffChangeItem {
+  url: string;
+  changeType: 'ADDED' | 'MODIFIED' | 'REMOVED';
+  oldSha256?: string | null;
+  newSha256?: string | null;
+}
+
+export interface DiffSummary {
+  projectDir: string;
+  comparedAt: string;
+  added: number;
+  modified: number;
+  removed: number;
+  unchanged: number;
+  items: DiffChangeItem[];
+}
+
+export interface ProjectArtifactSummary {
+  projectDir: string;
+  projectName: string;
+  sourceUrl: string;
+  hasWacz: boolean;
+  waczPath?: string;
+  hasStandaloneHtml: boolean;
+  standalonePath?: string;
+  hasMhtml: boolean;
+  hasSystemMap: boolean;
+  canResume: boolean;
+  openApiEndpointCount: number;
+  exportedComponents: string[];
+  reconstructedSourceFiles: string[];
+  adaptiveEntityGroups: number;
+  hasDesignTokensTheme: boolean;
+  hasExtractedState: boolean;
+  lastDiffSummary?: DiffSummary;
+}
+
+export interface ArtifactReadResult {
+  content: string;
+  mimeType: string;
+  truncated: boolean;
+  sizeBytes: number;
 }
 
 /** GitHub güncelleme durumu ve sürüm bilgisi */

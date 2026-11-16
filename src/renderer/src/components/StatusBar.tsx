@@ -2,6 +2,7 @@ import React from 'react';
 import { useAnalyzeStore } from '../stores/analyze-store';
 import { useCloneStore } from '../stores/clone-store';
 import { formatSpeed, formatDuration } from '../lib/utils';
+import { APP_VERSION } from '@shared/version';
 
 export const StatusBar: React.FC = () => {
   const { isAnalyzing } = useAnalyzeStore();
@@ -56,7 +57,7 @@ export const StatusBar: React.FC = () => {
           </span>
         ) : (
           <span className="text-text-dim text-[10px] uppercase font-mono tracking-wider">
-            v1.0.0 &bull; Portable
+            v{APP_VERSION} &bull; Portable
           </span>
         )}
       </div>

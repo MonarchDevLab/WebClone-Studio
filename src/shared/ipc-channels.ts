@@ -10,10 +10,13 @@ export enum IpcChannel {
   CLONE_START = 'clone:start',
   CLONE_PAUSE = 'clone:pause',
   CLONE_RESUME = 'clone:resume',
+  CLONE_RESUME_CHECKPOINT = 'clone:resume-checkpoint',
+  CLONE_DIFF = 'clone:diff',
   CLONE_CANCEL = 'clone:cancel',
   CLONE_PROGRESS = 'clone:progress',
   CLONE_FILE_ADDED = 'clone:file-added',
   CLONE_LOG = 'clone:log',
+  CLONE_TELEMETRY_BATCH = 'clone:telemetry-batch',
   CLONE_COMPLETE = 'clone:complete',
   CLONE_ERROR = 'clone:error',
   
@@ -24,11 +27,14 @@ export enum IpcChannel {
   // Shell
   SHELL_OPEN_FOLDER = 'shell:open-folder',
   SHELL_OPEN_FILE = 'shell:open-file',
+  SHELL_OPEN_EXTERNAL = 'shell:open-external',
   
-  // Projects
+  // Projects & Artifacts
   PROJECTS_LIST = 'projects:list',
   PROJECTS_DELETE = 'projects:delete',
   PROJECTS_OPEN = 'projects:open',
+  ARTIFACTS_SUMMARY = 'artifacts:summary',
+  ARTIFACTS_READ = 'artifacts:read',
 
   // Settings
   SETTINGS_GET = 'settings:get',
@@ -36,6 +42,7 @@ export enum IpcChannel {
 
   // Export & Dossier
   EXPORT_SYSTEM_MAP = 'export:system-map',
+  EXPORT_WACZ = 'export:wacz',
   DIALOG_SAVE_FILE = 'dialog:save-file',
 
   // Local Preview Server

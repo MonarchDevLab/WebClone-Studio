@@ -1,6 +1,7 @@
 import got from 'got';
 import { app } from 'electron';
 import { AppUpdateInfo, AppUpdateAsset } from '../../shared/types';
+import { APP_VERSION } from '../../shared/version';
 
 export class UpdateChecker {
   private static GITHUB_REPO = 'MonarchDevLab/WebClone-Studio';
@@ -14,8 +15,7 @@ export class UpdateChecker {
         return app.getVersion();
       }
     } catch {}
-    // Fallback veya geliştirme ortamı sürümü
-    return '1.0.0';
+    return APP_VERSION;
   }
 
   /**

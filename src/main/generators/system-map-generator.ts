@@ -1,4 +1,5 @@
 import { AnalyzeResult, SiteMapNode } from '../../shared/types';
+import { APP_ORG_SIGNATURE, APP_VERSION } from '../../shared/version';
 
 /**
  * Hedef web sitesinin tüm mimarisini, tasarım sistemini, CSS tokenlarını,
@@ -33,7 +34,7 @@ export class SystemMapGenerator {
     lines.push('');
     lines.push(`> **Rapor Üretim Tarihi:** ${formattedDate}  `);
     lines.push(`> **Hedef Canlı URL:** \`${rootUrl}\`  `);
-    lines.push(`> **Motor:** WebClone Studio v1.0.0 (Monolith Works / MonarchDevLab)  `);
+    lines.push(`> **Motor:** WebClone Studio v${APP_VERSION} (${APP_ORG_SIGNATURE})  `);
     lines.push(`> **Hedef:** Bu doküman, web sitesinin piksel piksel aynısını modern bir React / Next.js / Tailwind CSS yığınında yeniden inşa etmek için gereken tüm tasarım token'larını, bileşen mimarisini ve kaynak kod şablonlarını eksiksiz içerir.`);
     lines.push('');
     lines.push('---');

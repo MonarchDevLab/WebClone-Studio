@@ -45,6 +45,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Coverage, Test Reports & Agent Workspaces
+coverage/
+playwright-report/
+test-results/
+.trail/
+.hive/
+
 # OS & Editor
 .DS_Store
 Thumbs.db

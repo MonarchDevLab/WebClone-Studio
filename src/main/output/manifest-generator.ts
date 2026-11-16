@@ -1,5 +1,6 @@
 import { ProjectManifest, CloneSettings, TechSignature } from '../../shared/types';
-import { formatBytes, formatDuration } from '../utils/format-utils';
+import { formatBytes, formatDuration } from '../../shared/format';
+import { APP_GENERATOR_SIGNATURE, APP_ORG_SIGNATURE, APP_VERSION } from '../../shared/version';
 
 export interface ManifestOptions {
   projectName: string;
@@ -44,8 +45,8 @@ export class ManifestGenerator {
       : 0;
 
     return {
-      version: '1.0',
-      generator: 'WebClone Studio v1.0.0 (Monolith Works / MonarchDevLab)',
+      version: APP_VERSION,
+      generator: `${APP_GENERATOR_SIGNATURE} v${APP_VERSION} (${APP_ORG_SIGNATURE})`,
 
       project: {
         name: options.projectName,

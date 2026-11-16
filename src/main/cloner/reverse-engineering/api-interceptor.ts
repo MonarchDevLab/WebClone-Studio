@@ -18,7 +18,7 @@ export interface MockEndpointEntry {
   status: number;
   contentType: string;
   data: any;
-  updatedAt: number;
+  updatedAt?: number;
 }
 
 export type MockDatabase = Record<string, Record<string, MockEndpointEntry>>;

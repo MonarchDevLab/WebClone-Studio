@@ -3,6 +3,7 @@ import { Plus, FolderOpen, Trash2, HardDrive, Files, AppWindow, Globe } from 'lu
 import { useUiStore } from '../stores/ui-store';
 import { useProjectStore } from '../stores/project-store';
 import { formatBytes } from '../lib/utils';
+import { APP_VERSION } from '@shared/version';
 import { toast } from 'sonner';
 
 export const Sidebar: React.FC = () => {
@@ -171,7 +172,7 @@ export const Sidebar: React.FC = () => {
           <span className="font-mono font-bold text-success-hover">{formatBytes(totalSize)}</span>
         </div>
         <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] text-text-dim">
-          <span>WebClone Studio v1.0</span>
+          <span>WebClone Studio v{APP_VERSION}</span>
           <span className="font-medium text-text-muted hover:text-accent-hover transition-colors">Monolith Works</span>
         </div>
       </div>
