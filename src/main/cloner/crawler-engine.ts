@@ -799,10 +799,17 @@ export class CrawlerEngine extends EventEmitter {
           .join('\n');
         await this.organizer.writeMetaFile('errors.log', errorLogContent);
 
-        // 4.1 Çevrimdışı 404 Sayfası: Orijinal sitede ölü olan linkler için şık bilgilendirme sayfası
+        // 4.1 Çevrimdışı 404 Sayfası: Orijinal sitede ölü olan linkler için bilgilendirme sayfası
+        const escape404Html = (raw: string) =>
+          (raw || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
         const deadLinksList = this.failedUrlsList
           .filter(item => item.error.includes('404'))
-          .map(item => `<li><code>${item.url}</code></li>`)
+          .map(item => `<li><code>${escape404Html(item.url)}</code></li>`)
           .join('\n');
 
         if (deadLinksList) {

@@ -18,6 +18,9 @@ import { PageRenderer } from './browser/page-renderer';
 import { SystemMapGenerator } from './generators/system-map-generator';
 import { PreviewServer } from './server/preview-server';
 import { UpdateChecker } from './services/update-checker';
+import { assertSafeShellOpenFile } from './security/path-guard';
+import { handleSecure } from './security/ipc-guard';
+import { validateHttpUrlShape } from '../shared/validators';
 
 // Aktif çalışan klonlama işlerini tutar
 const activeJobs = new Map<string, CrawlerEngine>();
@@ -331,18 +334,30 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
     }
   });
 
-  // 7.1 SHELL_OPEN_FILE: Dosyayı varsayılan uygulamada açar
-  ipcMain.handle(IpcChannel.SHELL_OPEN_FILE, async (_event, filePath: string) => {
+  // 7.1 SHELL_OPEN_FILE: Yalnız güvenli ve izinli çıktı dosyalarını varsayılan uygulamada açar
+  handleSecure(IpcChannel.SHELL_OPEN_FILE, async (_event, filePath: string) => {
     try {
-      const normalizedPath = path.normalize(filePath.trim());
-      if (fs.existsSync(normalizedPath)) {
-        await shell.openPath(normalizedPath);
-        return true;
-      }
-      return false;
+      const safePath = await assertSafeShellOpenFile(filePath);
+      await shell.openPath(safePath);
+      return true;
     } catch (error: any) {
-      console.error('[IPC] Dosya Açma Hatası:', error);
-      throw error;
+      console.error('[IPC] Dosya Açma Engellendi/Hatası:', error);
+      return false;
+    }
+  });
+
+  // 7.2 SHELL_OPEN_EXTERNAL: Yalnız https:// harici bağlantıları varsayılan tarayıcıda açar
+  handleSecure(IpcChannel.SHELL_OPEN_EXTERNAL, async (_event, externalUrl: string) => {
+    try {
+      const parsed = validateHttpUrlShape(externalUrl);
+      if (parsed.protocol !== 'https:') {
+        return false;
+      }
+      await shell.openExternal(parsed.toString());
+      return true;
+    } catch (error: any) {
+      console.error('[IPC] Harici URL Açma Hatası:', error);
+      return false;
     }
   });
 
@@ -436,34 +451,33 @@ export function registerIpcHandlers(mainWindow?: BrowserWindow) {
     }
   });
 
-  // 13. SERVER_START_PREVIEW: Klonlanan siteyi 127.0.0.1 üzerinde yerel sunucuda yayına alır ve tarayıcıda açar
-  ipcMain.handle(IpcChannel.SERVER_START_PREVIEW, async (_event, targetPath: string) => {
-    try {
-      let folderToServe = targetPath.trim();
-      if (fs.existsSync(folderToServe) && fs.statSync(folderToServe).isFile()) {
-        folderToServe = path.dirname(folderToServe);
-      }
-      const siteSubdir = path.join(folderToServe, 'site');
-      if (fs.existsSync(siteSubdir) && fs.statSync(siteSubdir).isDirectory()) {
-        folderToServe = siteSubdir;
-      }
-
-      const serverUrl = await PreviewServer.getInstance().start(folderToServe);
-      await shell.openExternal(serverUrl);
-      return { success: true, url: serverUrl };
-    } catch (error: any) {
-      console.error('[IPC] Önizleme Sunucusu Hatası:', error);
+  // 13. SERVER_START_PREVIEW: Klonlanan siteyi 127.0.0.1 üzerinde yerel sunucuda yayına alır ve isteğe bağlı harici tarayıcıda açar
+  handleSecure(
+    IpcChannel.SERVER_START_PREVIEW,
+    async (_event, payload: string | { targetPath: string; openExternal?: boolean }) => {
+      const rawTarget = typeof payload === 'string' ? payload : payload?.targetPath || '';
+      const openExternal = typeof payload === 'string' ? true : payload?.openExternal !== false;
       try {
-        const indexFile = path.join(targetPath, 'site', 'index.html');
-        if (fs.existsSync(indexFile)) {
-          await shell.openPath(indexFile);
-        } else {
-          await shell.openPath(targetPath);
+        let folderToServe = rawTarget.trim();
+        if (fs.existsSync(folderToServe) && fs.statSync(folderToServe).isFile()) {
+          folderToServe = path.dirname(folderToServe);
         }
-      } catch {}
-      return { success: false, error: error.message };
+        const siteSubdir = path.join(folderToServe, 'site');
+        if (fs.existsSync(siteSubdir) && fs.statSync(siteSubdir).isDirectory()) {
+          folderToServe = siteSubdir;
+        }
+
+        const serverUrl = await PreviewServer.getInstance().start(folderToServe);
+        if (openExternal) {
+          await shell.openExternal(serverUrl);
+        }
+        return { success: true, url: serverUrl };
+      } catch (error: any) {
+        console.error('[IPC] Önizleme Sunucusu Hatası:', error);
+        return { success: false, error: error.message };
+      }
     }
-  });
+  );
 
   // 14. SERVER_STOP_PREVIEW: Önizleme sunucusunu durdurur
   ipcMain.handle(IpcChannel.SERVER_STOP_PREVIEW, async () => {

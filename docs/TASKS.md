@@ -1,11 +1,9 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] WebClone Studio v2.0 Master Geliştirme Planı (8 Faz / 24 İş Paketi) kullanıcı REVIEW onayında (`docs/plans/2026-11-11-webclone-v2-master-plan.md`).
+- [~] WebClone Studio v2.0 Faz 1..7 uygulaması (`/goal`) - Faz 2 hazırlanıyor (`docs/plans/2026-11-11-webclone-v2-master-plan.md`).
 
 ## SIRADAKİ
-- [ ] Faz 0: Electron 45.x yükseltmesi, `got` kaldırımı, `node:sqlite` dışsallaştırma ve `src/shared/{version,format,validators}.ts` tekilleştirmesi (`WP-0.1..0.2`).
-- [ ] Faz 1: Zero-Trust güvenlik sertleştirmesi (`url-guard`, `path-guard`, `ipc-guard`, CSP, `ProjectStore` kök silme kilidi, `SingleFile` path-guard, `PreviewServer` XSS yaması) (`WP-1.1..1.4`).
 - [ ] Faz 2: Domain bazlı `SessionManager`, BoringSSL `HttpClient` (`session.fetch`), sıcak offscreen `WindowPool` ve `PageRenderer` Shadow DOM / CDP `loadingFinished` onarımı (`WP-2.1..2.3`).
 - [ ] Faz 3: `node:sqlite` WAL tabanlı `CrawlCheckpointDb` (çökme kurtarma + artımlı ETag/SHA-256 diff) ve `CrawlerEngine` / `ipc-handlers` modüler SRP ayrıştırması (`WP-3.1..3.3`).
 - [ ] Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`), göreli ESM koruma, `/_sw-replay.js` Service Worker çevrimdışı replay, HTTP 206 Range ve WACZ 1.1.1 arşivleyici (`WP-4.1..4.3`).
@@ -17,6 +15,7 @@
 - Yok.
 
 ## TAMAMLANDI
+- [x] 2026-11-16 - Faz 0: Electron 45.3.2 (Chromium 156, Node 24.22 `node:sqlite`), `electron-vite` 5, `electron-builder` 26, `src/shared/{version,format,validators}.ts` tekilleştirmesi ve sürüm tutarlılığı (`c2a533b`).
 - [x] 2026-10-26 - docs(readme): synchronize bilingual README with Ponytail Ultra v1.2.0 capabilities, diagrams, and benchmarks
 - [x] 2026-10-26 - test(suite): verify ponytail ultra optimizations and update docs
 - [x] 2026-10-26 - feat(rewriter): inject client-side fetch/xhr offline mock shim (8ac4924)

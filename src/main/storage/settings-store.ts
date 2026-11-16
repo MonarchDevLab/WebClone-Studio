@@ -88,11 +88,7 @@ export class SettingsStore {
         if (parsed && typeof parsed === 'object') {
           return {
             ...DEFAULT_SETTINGS,
-            ...parsed,
-            defaultThreads: typeof parsed.defaultThreads === 'number' ? Math.max(1, Math.min(parsed.defaultThreads, 20)) : DEFAULT_SETTINGS.defaultThreads,
-            defaultRateLimit: typeof parsed.defaultRateLimit === 'number' ? Math.max(0, Math.min(parsed.defaultRateLimit, 5000)) : DEFAULT_SETTINGS.defaultRateLimit,
-            userAgent: typeof parsed.userAgent === 'string' && parsed.userAgent.trim().length > 0 ? parsed.userAgent.trim() : DEFAULT_SETTINGS.userAgent,
-            defaultOutputDir: typeof parsed.defaultOutputDir === 'string' && parsed.defaultOutputDir.trim().length > 0 ? parsed.defaultOutputDir.trim() : DEFAULT_SETTINGS.defaultOutputDir,
+            ...sanitizeSettingsPatch(parsed),
           };
         }
       }
@@ -107,9 +103,10 @@ export class SettingsStore {
   }
 
   public set(newSettings: Partial<AppSettings>): AppSettings {
+    const sanitized = sanitizeSettingsPatch(newSettings);
     this.currentSettings = {
       ...this.currentSettings,
-      ...newSettings,
+      ...sanitized,
     };
 
     // Asenkron ve bloke etmeyen disk kaydı

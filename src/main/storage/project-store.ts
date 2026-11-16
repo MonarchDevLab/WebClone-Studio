@@ -4,6 +4,7 @@ import { shell } from 'electron';
 import { ProjectInfo, ProjectManifest } from '../../shared/types';
 import { SettingsStore } from './settings-store';
 import { PreviewServer } from '../server/preview-server';
+import { assertDeletableProjectDir } from '../security/path-guard';
 
 export class ProjectStore {
   private static instance: ProjectStore;
@@ -45,6 +46,11 @@ export class ProjectStore {
                 ? path.join(projectDir, screenshotRelative)
                 : undefined;
 
+              const exportsDir = path.join(projectDir, '_exports');
+              const hasWacz =
+                fs.existsSync(exportsDir) &&
+                (await fs.promises.readdir(exportsDir)).some((name) => name.endsWith('.wacz'));
+
               projects.push({
                 id: manifest.project?.slug || entry.name,
                 name: manifest.project?.name || entry.name,
@@ -57,6 +63,7 @@ export class ProjectStore {
                 totalSize: manifest.statistics?.totalSizeBytes || 0,
                 screenshotPath: (screenshotAbsPath && fs.existsSync(screenshotAbsPath)) ? screenshotAbsPath : undefined,
                 outputPath: projectDir,
+                hasWacz,
               });
             } catch (err) {
               console.warn(`[ProjectStore] Manifest okunamadı (${manifestPath}):`, err);
@@ -76,24 +83,7 @@ export class ProjectStore {
   public async deleteProject(projectPath: string): Promise<boolean> {
     try {
       const settings = SettingsStore.getInstance().get();
-      const baseDir = path.resolve(settings.defaultOutputDir);
-      const targetDir = path.resolve(projectPath);
-
-      // Kök dizin silme engeli
-      if (targetDir === path.parse(targetDir).root) {
-        console.error('[ProjectStore] Güvenlik engeli: Kök sürücü silinemez:', projectPath);
-        return false;
-      }
-
-      // BaseDir sınır kontrolü veya doğrulanmış WebClone manifest.json kontrolü
-      const relative = path.relative(baseDir, targetDir);
-      const isInsideBase = !relative.startsWith('..') && !path.isAbsolute(relative);
-      const hasManifest = fs.existsSync(path.join(targetDir, 'manifest.json'));
-
-      if (!isInsideBase && !hasManifest) {
-        console.error('[ProjectStore] Güvenlik engeli: Yetkisiz proje silme girişimi reddedildi:', projectPath);
-        return false;
-      }
+      const targetDir = await assertDeletableProjectDir(projectPath, settings.defaultOutputDir);
 
       if (fs.existsSync(targetDir)) {
         await fs.promises.rm(targetDir, { recursive: true, force: true });
@@ -101,7 +91,7 @@ export class ProjectStore {
       }
       return false;
     } catch (e) {
-      console.error('[ProjectStore] Proje silme hatası:', e);
+      console.error('[ProjectStore] Proje silme engellendi veya başarısız:', e);
       return false;
     }
   }
