@@ -5,6 +5,7 @@ import { ProjectInfo, ProjectManifest } from '../../shared/types';
 import { SettingsStore } from './settings-store';
 import { PreviewServer } from '../server/preview-server';
 import { assertDeletableProjectDir } from '../security/path-guard';
+import { CrawlCheckpointDb } from './crawl-checkpoint-db';
 
 export class ProjectStore {
   private static instance: ProjectStore;
@@ -50,6 +51,7 @@ export class ProjectStore {
               const hasWacz =
                 fs.existsSync(exportsDir) &&
                 (await fs.promises.readdir(exportsDir)).some((name) => name.endsWith('.wacz'));
+              const hasIncompleteCheckpoint = CrawlCheckpointDb.hasIncompleteCheckpoint(projectDir);
 
               projects.push({
                 id: manifest.project?.slug || entry.name,
@@ -64,9 +66,36 @@ export class ProjectStore {
                 screenshotPath: (screenshotAbsPath && fs.existsSync(screenshotAbsPath)) ? screenshotAbsPath : undefined,
                 outputPath: projectDir,
                 hasWacz,
+                hasIncompleteCheckpoint,
               });
             } catch (err) {
               console.warn(`[ProjectStore] Manifest okunamadı (${manifestPath}):`, err);
+            }
+          } else if (CrawlCheckpointDb.hasIncompleteCheckpoint(projectDir)) {
+            const db = new CrawlCheckpointDb(projectDir);
+            try {
+              const latest = db.getLatestRun();
+              if (latest) {
+                let parsedDomain = entry.name;
+                try {
+                  parsedDomain = new URL(latest.root_url).hostname;
+                } catch {}
+                projects.push({
+                  id: entry.name,
+                  name: parsedDomain,
+                  slug: entry.name,
+                  url: latest.root_url,
+                  domain: parsedDomain,
+                  createdAt: latest.started_at,
+                  totalFiles: latest.pages_done + latest.assets_done,
+                  totalSize: latest.total_bytes,
+                  outputPath: projectDir,
+                  hasIncompleteCheckpoint: true,
+                  hasWacz: false,
+                });
+              }
+            } finally {
+              db.close();
             }
           }
         }

@@ -7,6 +7,7 @@ export interface FileOrganizerConfig {
   baseOutputDir: string;
   projectName?: string;
   targetUrl: string;
+  existingProjectDir?: string;
 }
 
 export interface FolderStructure {
@@ -17,7 +18,7 @@ export interface FolderStructure {
 }
 
 /**
- * İndirilen sitelerin kusursuz, gezilebilir ve offline çalışabilir dosya düzenini yönetir.
+ * Organizes cloned site files and reverse-engineering metadata into deterministic directories.
  */
 export class FileOrganizer {
   private config: FileOrganizerConfig;
@@ -25,12 +26,17 @@ export class FileOrganizer {
 
   constructor(config: FileOrganizerConfig) {
     this.config = config;
-    const dateSlug = new Date().toISOString().split('T')[0];
-    const rawName = config.projectName?.trim() || new URL(config.targetUrl).hostname;
-    const safeName = sanitizeFilename(rawName.replace(/[^a-zA-Z0-9.-]/g, '_')) || 'site';
-    const projectFolderName = `${safeName}_${dateSlug}`;
-    
-    const projectDir = path.join(config.baseOutputDir, projectFolderName);
+    let projectDir: string;
+    if (config.existingProjectDir) {
+      projectDir = path.resolve(config.existingProjectDir);
+    } else {
+      const dateSlug = new Date().toISOString().split('T')[0];
+      const rawName = config.projectName?.trim() || new URL(config.targetUrl).hostname;
+      const safeName = sanitizeFilename(rawName.replace(/[^a-zA-Z0-9.-]/g, '_')) || 'site';
+      const projectFolderName = `${safeName}_${dateSlug}`;
+      projectDir = path.join(config.baseOutputDir, projectFolderName);
+    }
+
     const metaDir = path.join(projectDir, '_meta');
     const screenshotsDir = path.join(projectDir, '_screenshots');
     const siteDir = path.join(projectDir, 'site');

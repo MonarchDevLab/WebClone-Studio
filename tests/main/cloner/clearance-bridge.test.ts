@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AssetDownloader } from '../../../src/main/cloner/asset-downloader';
-import { isWafChallenge } from '../../../src/main/cloner/crawler-engine';
+import { isWafChallenge } from '../../../src/main/cloner/page-worker';
 
 describe('ClearanceBridge & WAF Escalation', () => {
   describe('AssetDownloader Cookie Storage', () => {

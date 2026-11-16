@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import { createWindow } from './window';
-import { registerIpcHandlers } from './ipc-handlers';
+import { registerIpcHandlers } from './ipc';
 import { WindowPool } from './browser/window-pool';
 import { PreviewServer } from './server/preview-server';
 
