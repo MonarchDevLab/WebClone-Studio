@@ -1,10 +1,9 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] WebClone Studio v2.0 Faz 4..7 uygulaması (`/goal`) - Faz 4 (Klonlama sadakati, `/_sw-replay.js`, HTTP 206 Range ve WACZ 1.1.1) başlatılıyor.
+- [~] WebClone Studio v2.0 Faz 4..7 uygulaması (`/goal`) - Faz 5 (Analizörler ve Üreticiler: Tekrarsız TechDetector, OKLCH + Tailwind v4 `@theme`, Çok-Bölümlü ComponentExporter, Asenkron Sourcemap ve Next.js RSC Extraction) başlatılıyor.
 
 ## SIRADAKİ
-- [ ] Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`), göreli ESM koruma, `/_sw-replay.js` Service Worker çevrimdışı replay, HTTP 206 Range ve WACZ 1.1.1 arşivleyici (`WP-4.1..4.3`).
 - [ ] Faz 5: Ağ tekrarsız `TechDetector`, OKLCH + Tailwind v4 `@theme` token çıkarımı, çok bölümlü `ComponentExporter`, asenkron `SourcemapReconstructor` ve Next.js RSC state çıkarımı (`WP-5.1..5.3`).
 - [ ] Faz 6: 6 sekmeli `ArtifactExplorerPage`, `100 ms` toplu IPC telemetri, `React.lazy` kod bölme, `< 10 KB` `TitleBar` logosu ve tam WCAG 2.2 AA (`tablist`, `useFocusTrap`, `@theme` tokenları) (`WP-6.1..6.3`).
 - [ ] Faz 7: Yerel HTTP fixture entegrasyon paketi, Playwright `_electron` E2E testleri, gerçek `Portable.exe` süreç doğrulaması ve GitHub Actions CI/CD boru hattı (`WP-7.1..7.2`).
@@ -13,7 +12,8 @@
 - Yok.
 
 ## TAMAMLANDI
-- [x] 2026-11-16 - Faz 3: `node:sqlite` WAL `CrawlCheckpointDb` (çökme kurtarma ve artımlı ETag/SHA-256 diff), `CrawlerEngine` -> `CrawlerOrchestrator`/`PageWorker`/`CloneFinalizer` ayrıştırması, `ipc-handlers` -> `src/main/ipc/*.ipc.ts` domain yönlendiricileri ve 100ms toplu telemetri.
+- [x] 2026-11-16 - Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`, kanonik sorgu hash), göreli ESM modül yolu koruması, `[data-bg]`/`[data-background]` CSS rewrite, `/_sw-replay.js` Service Worker replay, HTTP `206 Partial Content` Range streaming ve saf-TS WACZ 1.1.1 arşivleyici (`WP-4.1..4.3`).
+- [x] 2026-11-16 - Faz 3: `node:sqlite` WAL `CrawlCheckpointDb` (çökme kurtarma ve artımlı ETag/SHA-256 diff), `CrawlerEngine` -> `CrawlerOrchestrator`/`PageWorker`/`CloneFinalizer` ayrıştırması, `ipc-handlers` -> `src/main/ipc/*.ipc.ts` domain yönlendiricileri ve 100ms toplu telemetri (`7134827`).
 - [x] 2026-11-16 - Faz 2: Domain bazlı `SessionManager`, BoringSSL `HttpClient` (`session.fetch`), `got` kaldırımı + `cheerio/slim` (`out/main` `291 KB`), sıcak `WindowPool`, `PageRenderer` (`getHTML` Shadow DOM, `Network.loadingFinished`) ve deterministik `stealth-scripts` (`7df562d`).
 - [x] 2026-11-16 - Faz 1: Zero-Trust güvenlik sertleştirmesi (`url-guard`, `path-guard`, `ipc-guard`, CSP, daraltılmış Preload, `ProjectStore` kök silme kilidi, `SingleFile` path-guard, `PreviewServer` XSS/symlink yaması) (`70757de`).
 - [x] 2026-11-16 - Faz 0: Electron 45.3.2 (Chromium 156, Node 24.22 `node:sqlite`), `electron-vite` 5, `electron-builder` 26, `src/shared/{version,format,validators}.ts` tekilleştirmesi ve sürüm tutarlılığı (`c2a533b`).

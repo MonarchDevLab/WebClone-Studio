@@ -15,6 +15,7 @@ import { SystemMapGenerator } from '../generators/system-map-generator';
 import { ApiContractGenerator } from '../generators/api-contract-generator';
 import { ComponentExporter } from '../generators/component-exporter';
 import { SingleFileExporter } from '../generators/singlefile-exporter';
+import { WaczExporter } from '../generators/wacz-exporter';
 import { ManifestGenerator } from '../output/manifest-generator';
 import { ReadmeGenerator } from '../output/readme-generator';
 
@@ -280,6 +281,10 @@ export class CloneFinalizer {
           input.mhtmlSnapshot,
           'utf-8'
         );
+      }
+
+      if (input.settings.exportWacz) {
+        await WaczExporter.exportProject(folders.projectDir);
       }
     } catch {}
 

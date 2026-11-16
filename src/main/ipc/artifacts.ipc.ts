@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { ArtifactReadResult, DiffSummary, ProjectArtifactSummary, ProjectManifest } from '../../shared/types';
+import { WaczExporter } from '../generators/wacz-exporter';
 import { handleSecure } from '../security/ipc-guard';
 import { assertInsideRoot } from '../security/path-guard';
 import { CrawlCheckpointDb } from '../storage/crawl-checkpoint-db';
@@ -163,6 +164,14 @@ export function registerArtifactsIpc(_ctx: IpcRuntimeContext): void {
       } finally {
         await handle.close();
       }
+    }
+  );
+
+  handleSecure<string, { filePath: string; sizeBytes: number; sha256: string }>(
+    IpcChannel.EXPORT_WACZ,
+    async (_event, projectDir) => {
+      const safeProject = await fs.promises.realpath(path.resolve(projectDir));
+      return WaczExporter.exportProject(safeProject);
     }
   );
 }

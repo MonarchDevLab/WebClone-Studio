@@ -616,13 +616,31 @@ export class CrawlerOrchestrator extends EventEmitter {
       if (!this.urlToLocalPathMap.has(noHash)) {
         this.urlToLocalPathMap.set(noHash, localPath);
       }
-      const noQuery = noHash.split('?')[0];
-      if (!this.urlToLocalPathMap.has(noQuery)) {
-        this.urlToLocalPathMap.set(noQuery, localPath);
-      }
-      const slashToggle = noQuery.endsWith('/') ? noQuery.slice(0, -1) : `${noQuery}/`;
-      if (!this.urlToLocalPathMap.has(slashToggle)) {
-        this.urlToLocalPathMap.set(slashToggle, localPath);
+
+      let isDynamicProxy = false;
+      try {
+        const parsed = new URL(noHash);
+        isDynamicProxy = /\/(?:_next\/image|_ipx|cdn-cgi\/image)(?:\/|$)/i.test(parsed.pathname);
+        if (parsed.search) {
+          const sorted = new URLSearchParams(
+            Array.from(parsed.searchParams.entries()).sort()
+          ).toString();
+          const canonicalSorted = `${parsed.origin}${parsed.pathname}?${sorted}`;
+          if (!this.urlToLocalPathMap.has(canonicalSorted)) {
+            this.urlToLocalPathMap.set(canonicalSorted, localPath);
+          }
+        }
+      } catch {}
+
+      if (!isDynamicProxy) {
+        const noQuery = noHash.split('?')[0];
+        if (!this.urlToLocalPathMap.has(noQuery)) {
+          this.urlToLocalPathMap.set(noQuery, localPath);
+        }
+        const slashToggle = noQuery.endsWith('/') ? noQuery.slice(0, -1) : `${noQuery}/`;
+        if (!this.urlToLocalPathMap.has(slashToggle)) {
+          this.urlToLocalPathMap.set(slashToggle, localPath);
+        }
       }
     };
 

@@ -121,14 +121,16 @@ export class FileOrganizer {
 
       // Dosya adı ve uzantı ayıklama
       let rawFilename = path.basename(parsed.pathname) || 'asset';
-      // URL parametrelerini dosya adından temizle
       rawFilename = rawFilename.split('?')[0].split('#')[0];
 
       let ext = path.extname(rawFilename);
-      let baseName = path.basename(rawFilename, ext);
+      const baseName = path.basename(rawFilename, ext);
+      const isDynamicImageProxy =
+        /\/(?:_next\/image|_ipx|cdn-cgi\/image)(?:\/|$)/i.test(parsed.pathname) ||
+        (assetType === 'image' && !ext && parsed.search.length > 1);
 
-      // Eksik uzantı tamamlama
-      if (!ext) {
+      // Leave extension empty on dynamic image proxies so AssetDownloader appends the true MIME extension (.webp/.avif/.png)
+      if (!ext && !isDynamicImageProxy) {
         if (assetType === 'css') ext = '.css';
         else if (assetType === 'js') ext = '.js';
         else if (assetType === 'font') ext = '.woff2';
@@ -139,10 +141,35 @@ export class FileOrganizer {
         else if (assetType === 'media') ext = '.mp4';
       }
 
+      // Canonical sorted query hash prevents collision between /_next/image?url=a&w=640 vs url=b&w=1200
+      const sortedParams = new URLSearchParams(Array.from(parsed.searchParams.entries()).sort()).toString();
+      const canonicalIdentity = `${parsed.origin}${parsed.pathname}${sortedParams ? `?${sortedParams}` : ''}`;
+      const shortHash = crypto.createHash('md5').update(canonicalIdentity).digest('hex').slice(0, 8);
+
       const safeBase = sanitizeFilename(baseName).slice(0, 40) || 'file';
-      const safeExt = sanitizeFilename(ext) || '';
-      // İsim çakışmalarını önleyen benzersiz 8 haneli MD5 hash
-      const shortHash = crypto.createHash('md5').update(assetUrl).digest('hex').slice(0, 8);
+      const safeExt = ext ? sanitizeFilename(ext) : '';
+
+      // Preserve relative directory hierarchy for same-origin JS modules so relative ESM imports (`./chunk.js`) resolve
+      if (!isExternal && assetType === 'js' && !parsed.search) {
+        const subSegments = parsed.pathname
+          .replace(/^\/+/, '')
+          .split('/')
+          .filter((s) => s && s !== '.' && s !== '..')
+          .map((s) => sanitizeFilename(s))
+          .filter(Boolean);
+        const jsRelParts = subSegments.length > 0 ? subSegments : [`${safeBase}_${shortHash}${safeExt || '.js'}`];
+        if (!path.extname(jsRelParts[jsRelParts.length - 1])) {
+          jsRelParts[jsRelParts.length - 1] = `${jsRelParts[jsRelParts.length - 1]}.js`;
+        }
+        const relPath = path.join('assets', 'js', ...jsRelParts);
+        const relativePathFromSiteRoot = path.posix.join('assets', 'js', ...jsRelParts);
+        return {
+          absolutePath: path.join(this.folders.siteDir, relPath),
+          relativePathFromSiteRoot,
+          isExternal: false,
+        };
+      }
+
       const finalFileName = `${safeBase}_${shortHash}${safeExt}`;
 
       let relPath: string;

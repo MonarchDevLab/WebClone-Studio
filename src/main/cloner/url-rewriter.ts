@@ -13,6 +13,16 @@ export interface UrlRewriteContext {
  * İndirilen sayfaların HTML ve CSS içerisindeki tüm linkleri offline çalışabilir relative yollara dönüştürür.
  * Kayıpsız arama (fuzzy match), SVG use sprite'ları, srcset ve lazy-load desteği sunar.
  */
+function isQuerySensitiveAssetUrl(rawUrl: string): boolean {
+  try {
+    const u = new URL(rawUrl);
+    if (!u.search || u.search.length <= 1) return false;
+    return /\/(?:_next\/image|_ipx|cdn-cgi\/image)(?:\/|$)/i.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
+
 export class UrlRewriter {
   /**
    * urlMap içinde çok katmanlı akıllı arama yapar (Query param, hash, trailing slash toleransı).
@@ -27,15 +37,28 @@ export class UrlRewriter {
     const noHash = targetUrl.split('#')[0];
     if (urlMap.has(noHash)) return urlMap.get(noHash);
 
-    // 3. Query Parametresi (?) Temizlenmiş Eşleşme
+    // 2.1 Sıralı Query Parametresi Eşleşmesi (/_next/image?url=...&w=... sırasından bağımsız)
+    try {
+      const u = new URL(noHash);
+      if (u.search) {
+        const sorted = new URLSearchParams(Array.from(u.searchParams.entries()).sort()).toString();
+        const canonical = `${u.origin}${u.pathname}?${sorted}`;
+        if (urlMap.has(canonical)) return urlMap.get(canonical);
+      }
+    } catch {}
+
+    // 3. Query Parametresi (?) Temizlenmiş Eşleşme (dinamik proxy uç noktalarında asla birleştirme)
     const noQuery = noHash.split('?')[0];
-    if (urlMap.has(noQuery)) return urlMap.get(noQuery);
+    if (!isQuerySensitiveAssetUrl(noHash) && urlMap.has(noQuery)) {
+      return urlMap.get(noQuery);
+    }
 
     // 4. Trailing Slash (/) Toleransı
     const slashToggled = noQuery.endsWith('/') ? noQuery.slice(0, -1) : `${noQuery}/`;
-    if (urlMap.has(slashToggled)) return urlMap.get(slashToggled);
+    if (!isQuerySensitiveAssetUrl(noHash) && urlMap.has(slashToggled)) {
+      return urlMap.get(slashToggled);
+    }
 
-    // ponytail: O(1) origin+pathname lookup replaces O(N) map scan; registerUrlMapping indexes noQuery keys at insert time
     return undefined;
   }
 
@@ -98,6 +121,11 @@ export class UrlRewriter {
       $(selector).each((_, elem) => {
         const val = $(elem).attr(attr);
         if (!val || val.startsWith('#') || val.startsWith('javascript:') || val.startsWith('data:') || val.startsWith('mailto:') || val.startsWith('tel:')) {
+          return;
+        }
+
+        if ((attr === 'data-bg' || attr.startsWith('data-background')) && /url\(/i.test(val)) {
+          $(elem).attr(attr, UrlRewriter.rewriteCss(val, context));
           return;
         }
 
@@ -198,7 +226,7 @@ export class UrlRewriter {
       $(elem).html(rewrittenCss);
     });
 
-    // 6. Service Worker Etkisizleştirme ve Offline Fetch API Mock Shim
+    // 6. Service Worker Replay & Dual Fetch/XHR Offline Mock Shim
     const hasMocks = context.mockApiDb && Object.keys(context.mockApiDb).length > 0;
     const safeMockJson = hasMocks
       ? JSON.stringify(context.mockApiDb).replace(/<\//g, '<\\/')
@@ -206,31 +234,68 @@ export class UrlRewriter {
     const fetchShimCode = hasMocks
       ? `
   var __wcMocks = ${safeMockJson};
+  function __wcLookupMock(reqUrl, method) {
+    try {
+      var parsed = new URL(reqUrl, window.location.href);
+      var pathKey = (parsed.pathname || '/').replace(/\\/+$/, '') || '/';
+      var upper = (method || 'GET').toUpperCase();
+      return (__wcMocks[pathKey] && __wcMocks[pathKey][upper]) || (__wcMocks[pathKey + '/'] && __wcMocks[pathKey + '/'][upper]) || null;
+    } catch (e) { return null; }
+  }
   if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
     var __origFetch = window.fetch.bind(window);
     window.fetch = function(input, init) {
-      try {
-        var reqUrl = typeof input === 'string' ? input : (input && input.url ? input.url : String(input));
-        var parsed = new URL(reqUrl, window.location.href);
-        var pathKey = (parsed.pathname || '/').replace(/\\/+$/, '') || '/';
-        var method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
-        var hit = (__wcMocks[pathKey] && __wcMocks[pathKey][method]) || (__wcMocks[pathKey + '/'] && __wcMocks[pathKey + '/'][method]);
-        if (hit) {
-          var bodyStr = typeof hit.data === 'string' ? hit.data : JSON.stringify(hit.data);
-          return Promise.resolve(new Response(bodyStr, { status: hit.status || 200, headers: { 'Content-Type': hit.contentType || 'application/json' } }));
-        }
-      } catch (e) {}
+      var reqUrl = typeof input === 'string' ? input : (input && input.url ? input.url : String(input));
+      var method = ((init && init.method) || (input && input.method) || 'GET');
+      var hit = __wcLookupMock(reqUrl, method);
+      if (hit) {
+        var bodyStr = typeof hit.data === 'string' ? hit.data : JSON.stringify(hit.data);
+        return Promise.resolve(new Response(bodyStr, { status: hit.status || 200, headers: { 'Content-Type': hit.contentType || 'application/json' } }));
+      }
       return __origFetch(input, init);
+    };
+  }
+  if (typeof window !== 'undefined' && typeof window.XMLHttpRequest === 'function') {
+    var __origOpen = XMLHttpRequest.prototype.open;
+    var __origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(method, url) {
+      this.__wcMethod = method;
+      this.__wcUrl = url;
+      return __origOpen.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.send = function() {
+      var hit = this.__wcUrl ? __wcLookupMock(this.__wcUrl, this.__wcMethod || 'GET') : null;
+      if (hit) {
+        var self = this;
+        var bodyStr = typeof hit.data === 'string' ? hit.data : JSON.stringify(hit.data);
+        setTimeout(function() {
+          try {
+            Object.defineProperty(self, 'readyState', { configurable: true, value: 4 });
+            Object.defineProperty(self, 'status', { configurable: true, value: hit.status || 200 });
+            Object.defineProperty(self, 'responseText', { configurable: true, value: bodyStr });
+            Object.defineProperty(self, 'response', { configurable: true, value: bodyStr });
+            if (typeof self.onreadystatechange === 'function') self.onreadystatechange(new Event('readystatechange'));
+            if (typeof self.onload === 'function') self.onload(new ProgressEvent('load'));
+          } catch (e) {}
+        }, 0);
+        return;
+      }
+      return __origSend.apply(this, arguments);
     };
   }`
       : '';
 
     const swBypassScript = `
 <script>
-  /* WebClone Studio Offline Service Worker & Fetch Mock Shim */
+  /* WebClone Studio Offline Service Worker & Dual Fetch/XHR Mock Shim */
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register = function() { return new Promise(function(){}); };
-    navigator.serviceWorker.getRegistrations = function() { return Promise.resolve([]); };
+    var __origSwReg = typeof navigator.serviceWorker.register === 'function' ? navigator.serviceWorker.register.bind(navigator.serviceWorker) : null;
+    if (__origSwReg && typeof location !== 'undefined' && location.protocol && location.protocol.indexOf('http') === 0) {
+      __origSwReg('/_sw-replay.js', { scope: '/' }).catch(function(){});
+    }
+    var __mockReg = { scope: '/', installing: null, waiting: null, active: { state: 'activated', scriptURL: '/_sw-replay.js' }, update: function() { return Promise.resolve(); }, unregister: function() { return Promise.resolve(true); }, addEventListener: function() {}, removeEventListener: function() {} };
+    navigator.serviceWorker.register = function() { return Promise.resolve(__mockReg); };
+    navigator.serviceWorker.getRegistrations = function() { return Promise.resolve([__mockReg]); };
   }${fetchShimCode}
 </script>`;
     if ($('head').length > 0) {

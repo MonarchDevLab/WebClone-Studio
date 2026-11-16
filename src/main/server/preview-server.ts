@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { findMockResponse, MockDatabase } from '../cloner/reverse-engineering/api-interceptor';
 import { assertInsideRoot } from '../security/path-guard';
+import { generateSwReplayScript } from './sw-replay-script';
 
 const MIME_MAP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -54,6 +55,9 @@ export class PreviewServer {
   private currentUrl: string | null = null;
   private startingPromise: Promise<string> | null = null;
   private mockDbCache: MockDatabase | null = null;
+  private urlMapCache: Map<string, string> = new Map();
+  private urlMapRawCache: Record<string, string> = {};
+  private swReplaySource: string = generateSwReplayScript();
 
   public static getInstance(): PreviewServer {
     if (!PreviewServer.instance) {
@@ -78,6 +82,41 @@ export class PreviewServer {
     return null;
   }
 
+  private async loadUrlMap(rootDir: string): Promise<{ index: Map<string, string>; raw: Record<string, string> }> {
+    const urlMapPaths = [
+      path.join(rootDir, '_meta', 'url-map.json'),
+      path.join(rootDir, '..', '_meta', 'url-map.json'),
+    ];
+    for (const mapPath of urlMapPaths) {
+      try {
+        if (fs.existsSync(mapPath)) {
+          const rawStr = await fs.promises.readFile(mapPath, 'utf-8');
+          const parsed = JSON.parse(rawStr) as Record<string, string>;
+          const index = new Map<string, string>();
+          if (parsed && typeof parsed === 'object') {
+            for (const [k, v] of Object.entries(parsed)) {
+              if (typeof v !== 'string') continue;
+              index.set(k, v);
+              try {
+                const u = new URL(k, 'http://127.0.0.1');
+                if (u.search) {
+                  const sorted = new URLSearchParams(u.search);
+                  sorted.sort();
+                  const canonicalKey = `${u.pathname}?${sorted.toString()}`;
+                  if (!index.has(canonicalKey)) {
+                    index.set(canonicalKey, v);
+                  }
+                }
+              } catch {}
+            }
+            return { index, raw: parsed };
+          }
+        }
+      } catch {}
+    }
+    return { index: new Map(), raw: {} };
+  }
+
   /**
    * Starts the loopback preview server on an ephemeral port for folderPath.
    */
@@ -96,6 +135,9 @@ export class PreviewServer {
       await this.stop();
       this.currentRoot = rootDir;
       this.mockDbCache = await this.loadMockDb(rootDir);
+      const urlMapLoaded = await this.loadUrlMap(rootDir);
+      this.urlMapCache = urlMapLoaded.index;
+      this.urlMapRawCache = urlMapLoaded.raw;
 
       return await new Promise<string>((resolve, reject) => {
         const srv = http.createServer(async (req, res) => {
@@ -103,7 +145,7 @@ export class PreviewServer {
           res.setHeader('X-Content-Type-Options', 'nosniff');
           res.setHeader('Access-Control-Allow-Origin', serverOrigin);
           res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
-          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
 
           if (req.method === 'OPTIONS') {
             res.writeHead(204);
@@ -121,8 +163,55 @@ export class PreviewServer {
               return;
             }
 
-            const relRequest = pathname.replace(/^\/+/, '');
+            if (pathname === '/_sw-replay.js') {
+              res.writeHead(200, {
+                'Content-Type': 'application/javascript; charset=utf-8',
+                'Service-Worker-Allowed': '/',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-Content-Type-Options': 'nosniff',
+              });
+              res.end(req.method === 'HEAD' ? undefined : this.swReplaySource);
+              return;
+            }
+
+            if (pathname === '/_meta/url-map.json') {
+              const payload = JSON.stringify(this.urlMapRawCache);
+              res.writeHead(200, {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-Content-Type-Options': 'nosniff',
+              });
+              res.end(req.method === 'HEAD' ? undefined : payload);
+              return;
+            }
+
+            if (pathname === '/_meta/api-endpoints.json') {
+              const payload = JSON.stringify(this.mockDbCache || {});
+              res.writeHead(200, {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-Content-Type-Options': 'nosniff',
+              });
+              res.end(req.method === 'HEAD' ? undefined : payload);
+              return;
+            }
+
+            const requestKey = `${pathname}${parsedReq.search}`;
+            let mappedRelPath = parsedReq.search ? this.urlMapCache.get(requestKey) : undefined;
+            if (!mappedRelPath && parsedReq.search) {
+              const sorted = new URLSearchParams(parsedReq.search);
+              sorted.sort();
+              mappedRelPath = this.urlMapCache.get(`${pathname}?${sorted.toString()}`);
+            }
+
+            const relRequest = (mappedRelPath || pathname).replace(/^\/+/, '');
             let targetPath = path.resolve(this.currentRoot, relRequest);
+            if (mappedRelPath && !fs.existsSync(targetPath)) {
+              const siteFallback = path.resolve(this.currentRoot, 'site', relRequest);
+              if (fs.existsSync(siteFallback)) {
+                targetPath = siteFallback;
+              }
+            }
 
             try {
               targetPath = await assertInsideRoot(this.currentRoot, targetPath, true);
@@ -209,9 +298,79 @@ export class PreviewServer {
 
             const ext = path.extname(safeTargetPath).toLowerCase();
             const contentType = MIME_MAP[ext] || 'application/octet-stream';
+            const stat = await fs.promises.stat(safeTargetPath);
+            const rangeHeader = req.headers.range;
+
+            if (rangeHeader && typeof rangeHeader === 'string' && rangeHeader.startsWith('bytes=')) {
+              const rangeMatch = rangeHeader.match(/^bytes=(\d*)-(\d*)$/);
+              if (!rangeMatch || (!rangeMatch[1] && !rangeMatch[2])) {
+                res.writeHead(416, {
+                  'Content-Range': `bytes */${stat.size}`,
+                  'Accept-Ranges': 'bytes',
+                });
+                res.end();
+                return;
+              }
+
+              const startStr = rangeMatch[1];
+              const endStr = rangeMatch[2];
+              const start = startStr
+                ? parseInt(startStr, 10)
+                : Math.max(0, stat.size - parseInt(endStr, 10));
+              const end = startStr
+                ? endStr
+                  ? Math.min(stat.size - 1, parseInt(endStr, 10))
+                  : stat.size - 1
+                : stat.size - 1;
+
+              if (
+                Number.isNaN(start) ||
+                Number.isNaN(end) ||
+                start < 0 ||
+                start > end ||
+                start >= stat.size
+              ) {
+                res.writeHead(416, {
+                  'Content-Range': `bytes */${stat.size}`,
+                  'Accept-Ranges': 'bytes',
+                });
+                res.end();
+                return;
+              }
+
+              const chunkLength = end - start + 1;
+              res.writeHead(206, {
+                'Content-Type': contentType,
+                'Accept-Ranges': 'bytes',
+                'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+                'Content-Length': String(chunkLength),
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-Content-Type-Options': 'nosniff',
+              });
+
+              if (req.method === 'HEAD') {
+                res.end();
+                return;
+              }
+
+              const rangeStream = fs.createReadStream(safeTargetPath, { start, end });
+              rangeStream.on('error', () => {
+                if (!res.headersSent) {
+                  res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+                }
+                res.end();
+              });
+              res.on('close', () => {
+                rangeStream.destroy();
+              });
+              rangeStream.pipe(res);
+              return;
+            }
 
             res.writeHead(200, {
               'Content-Type': contentType,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': String(stat.size),
               'Cache-Control': 'no-cache, no-store, must-revalidate',
               'X-Content-Type-Options': 'nosniff',
             });

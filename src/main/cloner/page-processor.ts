@@ -23,7 +23,7 @@ export const DATA_EXTENSIONS = new Set([
 ]);
 
 export const MEDIA_EXTENSIONS = new Set([
-  'mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v', 'flac', 'aac', 'avi', 'mkv'
+  'mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4v', 'flac', 'aac', 'avi', 'mkv', 'vtt'
 ]);
 
 export const IMAGE_EXTENSIONS = new Set([
@@ -82,7 +82,7 @@ export class PageProcessor {
         if (cleanPath.length < 5 || cleanPath.length > 500) return;
         
         // Mantıklı bir asset uzantısına benzemiyorsa atla
-        const validExt = /\.(png|jpe?g|gif|webp|svg|woff2?|ttf|eot|mp4|webm|mp3|wav|pdf|json)(\?.*)?$/i;
+        const validExt = /\.(png|jpe?g|gif|webp|avif|svg|woff2?|ttf|eot|otf|mp4|webm|mp3|wav|vtt|wasm|mjs|pdf|json)(\?.*)?$/i;
         if (!validExt.test(cleanPath)) return;
 
         const urlObj = new URL(cleanPath, jsUrl);
@@ -93,12 +93,14 @@ export class PageProcessor {
           let type: DiscoveredAsset['type'] = 'other';
           const ext = urlObj.pathname.split('.').pop()?.toLowerCase() || '';
 
-          if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico'].includes(ext)) {
+          if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'avif', 'ico'].includes(ext)) {
             type = 'image';
           } else if (['woff', 'woff2', 'ttf', 'eot', 'otf'].includes(ext)) {
-            type = 'data';
-          } else if (['mp4', 'webm', 'mp3', 'wav', 'ogg'].includes(ext)) {
+            type = 'font';
+          } else if (['mp4', 'webm', 'mp3', 'wav', 'ogg', 'vtt'].includes(ext)) {
             type = 'media';
+          } else if (['wasm', 'mjs'].includes(ext)) {
+            type = ext === 'mjs' ? 'js' : 'other';
           } else if (['json'].includes(ext)) {
             type = 'data';
           }
@@ -114,16 +116,15 @@ export class PageProcessor {
       }
     };
 
-    // 1. Düz URL path'leri arama (örn: "/assets/fonts/myfont.woff2")
-    const pathRegex = /(?:["'])(?:\/|https?:\/\/)[^"'\s]+\.(?:png|jpe?g|gif|webp|svg|woff2?|ttf|eot|mp4|webm|mp3|wav|pdf|json)(?:\?[^"']*)?(?:["'])/gi;
+    // 1. Düz URL path'leri arama (örn: "/assets/fonts/myfont.woff2", "/assets/engine.wasm")
+    const pathRegex = /(?:["'])(?:\/|https?:\/\/)[^"'\s]+\.(?:png|jpe?g|gif|webp|avif|svg|woff2?|ttf|eot|otf|mp4|webm|mp3|wav|vtt|wasm|mjs|pdf|json)(?:\?[^"']*)?(?:["'])/gi;
     let match: RegExpExecArray | null;
     while ((match = pathRegex.exec(jsCode)) !== null) {
       addAsset(match[0]);
     }
     
-    // 2. Webpack publicPath + string concat (örn: p + "assets/img.png")
-    // Çok basit statik analiz, tırnak içindeki .png vs leri arayalım, başında slash olmasa bile js klasörüne göredir.
-    const relativeRegex = /(?:["'])([a-zA-Z0-9_\-]+\/(?:[a-zA-Z0-9_\-/]+)\.(?:png|jpe?g|gif|webp|svg|woff2?|ttf|eot|mp4|webm|mp3|wav|pdf|json))(?:["'])/gi;
+    // 2. Webpack/Vite relative asset & chunk paths
+    const relativeRegex = /(?:["'])(?:\.\.?\/)?([a-zA-Z0-9_\-]+\/(?:[a-zA-Z0-9_\-/]+)\.(?:png|jpe?g|gif|webp|avif|svg|woff2?|ttf|eot|otf|mp4|webm|mp3|wav|vtt|wasm|mjs|pdf|json))(?:\?[^"']*)?(?:["'])/gi;
     while ((match = relativeRegex.exec(jsCode)) !== null) {
       addAsset(match[1]);
     }
