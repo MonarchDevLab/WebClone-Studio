@@ -51,40 +51,35 @@ export class SecurityScanner {
       csp = true;
     }
 
-    let robotsTxt = false;
-    try {
-      const robotsUrl = `${parsedUrl.protocol}//${parsedUrl.host}/robots.txt`;
-      const res = await HttpClient.fetchBuffer({
-        url: robotsUrl,
+    const [robotsOk, sitemapOk] = await Promise.all([
+      HttpClient.fetchBuffer({
+        url: `${parsedUrl.protocol}//${parsedUrl.host}/robots.txt`,
         method: 'HEAD',
         timeoutMs: 3000,
         maxRetries: 0,
         headers: { 'user-agent': ua },
         allowLocalhostTargets,
-      });
-      if (res.statusCode === 200) robotsTxt = true;
-    } catch {}
-
-    let sitemap = false;
-    try {
-      const sitemapUrl = `${parsedUrl.protocol}//${parsedUrl.host}/sitemap.xml`;
-      const res = await HttpClient.fetchBuffer({
-        url: sitemapUrl,
+      })
+        .then((res) => res.statusCode === 200)
+        .catch(() => false),
+      HttpClient.fetchBuffer({
+        url: `${parsedUrl.protocol}//${parsedUrl.host}/sitemap.xml`,
         method: 'HEAD',
         timeoutMs: 3000,
         maxRetries: 0,
         headers: { 'user-agent': ua },
         allowLocalhostTargets,
-      });
-      if (res.statusCode === 200) sitemap = true;
-    } catch {}
+      })
+        .then((res) => res.statusCode === 200)
+        .catch(() => false),
+    ]);
 
     return {
       https,
       hsts,
       csp,
-      robotsTxt,
-      sitemap,
+      robotsTxt: robotsOk,
+      sitemap: sitemapOk,
       headers: formattedHeaders,
     };
   }

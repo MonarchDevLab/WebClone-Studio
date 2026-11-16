@@ -33,7 +33,7 @@ export const TECH_SIGNATURES: TechSignatureRule[] = [
   { name: 'KeystoneJS', category: 'CMS', headers: { 'x-keystone-version': /.*/ } },
 
   // Framework
-  { name: 'Next.js', category: 'Framework', headers: { 'x-powered-by': /Next\.js/i }, html: [/_next/i], jsVars: ['__NEXT_DATA__'] },
+  { name: 'Next.js', category: 'Framework', headers: { 'x-powered-by': /Next\.js/i }, html: [/_next/i, /__next_f\.push/i], jsVars: ['__NEXT_DATA__', '__next_f'] },
   { name: 'Nuxt', category: 'Framework', jsVars: ['__NUXT__'], html: [/_nuxt/i] },
   { name: 'React', category: 'Framework', jsVars: ['React'], html: [/data-reactroot/i] },
   { name: 'Vue', category: 'Framework', jsVars: ['Vue', '__VUE__'] },
@@ -59,7 +59,7 @@ export const TECH_SIGNATURES: TechSignatureRule[] = [
   { name: 'ASP.NET', category: 'Framework', headers: { 'x-aspnet-version': /.*/, 'x-powered-by': /ASP\.NET/i } },
 
   // CSS Framework
-  { name: 'Tailwind CSS', category: 'CSS Framework', html: [/\b(sm|md|lg|xl|2xl):[a-z0-9-]+/i, /\btext-(center|left|right)\b/i, /\bflex\b/i] },
+  { name: 'Tailwind CSS', category: 'CSS Framework', html: [/\b(sm|md|lg|xl|2xl):[a-z0-9-]+\b/i, /\b(items|justify)-(center|between|start|end)\b/i, /\b(px|py|mx|my|gap)-\d+\b/i] },
   { name: 'Bootstrap', category: 'CSS Framework', html: [/\bcontainer-fluid\b/i, /\bcol-[a-z]{2}-\d+\b/i], scripts: [/bootstrap(?:\.min)?\.js/i] },
   { name: 'Bulma', category: 'CSS Framework', html: [/\bhas-text-centered\b/i, /\bis-primary\b/i] },
   { name: 'Foundation', category: 'CSS Framework', meta: { foundation: /.*/ }, html: [/\blarge-\d+ columns\b/i] },

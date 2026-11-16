@@ -38,4 +38,19 @@ describe('extractFrameworkState', () => {
     const result = extractFrameworkState(html);
     expect(result.initialState).toEqual({ auth: { user: 'admin' } });
   });
+
+  it('extracts Next.js App Router self.__next_f RSC Flight payloads and supports shared Cheerio instance', async () => {
+    const cheerio = await import('cheerio');
+    const html = `
+      <html><body>
+        <script>self.__next_f.push([1,"0:{\"title\":\"RSC Home\"}\n"]);</script>
+        <script>self.__next_f.push([1,"1:[\"$\",\"div\",null,{}]"]);</script>
+      </body></html>
+    `;
+    const $ = cheerio.load(html);
+    const result = extractFrameworkState(html, $);
+    expect(result.nextRscPayloads).toBeDefined();
+    expect(Array.isArray(result.nextRscPayloads)).toBe(true);
+    expect(result.nextRscPayloads.length).toBe(2);
+  });
 });

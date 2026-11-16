@@ -213,9 +213,10 @@ export class CloneFinalizer {
 
     if (input.settings.reverseEngineering && collectedCssList.length > 0) {
       try {
-        const { tokens, tailwindConfig } = extractDesignTokensFromCss(collectedCssList);
+        const { tokens, tailwindConfig, tailwindV4Theme } = extractDesignTokensFromCss(collectedCssList);
         await input.organizer.writeMetaFile('tailwind.config.js', tailwindConfig);
         await input.organizer.writeMetaFile('design-tokens.json', tokens);
+        await input.organizer.writeMetaFile('tokens.theme.css', tailwindV4Theme);
       } catch {}
     }
 

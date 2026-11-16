@@ -9,6 +9,7 @@ export interface TechDetectorInput {
   headers?: Record<string, any>;
   globals?: string[];
   allowLocalhostTargets?: boolean;
+  skipNetworkFallback?: boolean;
 }
 
 export class TechDetector {
@@ -28,12 +29,12 @@ export class TechDetector {
       scores.set(techName, current);
     };
 
-    let htmlBody = pageData?.html || '';
+    let htmlBody = pageData?.html ?? '';
     let headers: Record<string, any> = pageData?.headers || {};
     const globals = pageData?.globals || [];
 
-    // Fetch via HttpClient ONLY when caller supplied neither rendered nor static HTML
-    if (!htmlBody) {
+    // Fetch via HttpClient ONLY when caller supplied neither rendered nor static HTML and did not opt out
+    if (pageData?.html === undefined && !pageData?.skipNetworkFallback) {
       try {
         const res = await HttpClient.fetchText({
           url,

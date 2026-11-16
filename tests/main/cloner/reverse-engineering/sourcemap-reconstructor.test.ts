@@ -111,3 +111,24 @@ test('PageProcessor.extractSourceMapUrl extracts relative and inline source maps
   const noMapJs = 'console.log("no map");';
   expect(PageProcessor.extractSourceMapUrl(noMapJs, 'https://example.com/test.js')).toBeNull();
 });
+
+test('reconstructSourceTree maps relative ../src paths to _up_/src inside outputDir and strips ?query params', async () => {
+  const outDir = path.join(__dirname, 'test-out-up-query');
+  try {
+    const dummyMap = JSON.stringify({
+      version: 3,
+      sources: ['../src/shared/helper.ts', 'src/App.tsx?v=42'],
+      sourcesContent: ['export const ok = true;', 'export default function App() {}'],
+    });
+    await reconstructSourceTree(dummyMap, outDir);
+
+    expect(
+      fs.readFileSync(path.join(outDir, '_up_', 'src', 'shared', 'helper.ts'), 'utf-8')
+    ).toBe('export const ok = true;');
+    expect(fs.readFileSync(path.join(outDir, 'src', 'App.tsx'), 'utf-8')).toBe(
+      'export default function App() {}'
+    );
+  } finally {
+    fs.rmSync(outDir, { recursive: true, force: true });
+  }
+});

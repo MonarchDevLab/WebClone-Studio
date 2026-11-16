@@ -1,10 +1,9 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] WebClone Studio v2.0 Faz 4..7 uygulaması (`/goal`) - Faz 5 (Analizörler ve Üreticiler: Tekrarsız TechDetector, OKLCH + Tailwind v4 `@theme`, Çok-Bölümlü ComponentExporter, Asenkron Sourcemap ve Next.js RSC Extraction) başlatılıyor.
+- [~] WebClone Studio v2.0 Faz 4..7 uygulaması (`/goal`) - Faz 6 (İş İstasyonu UI/UX, 6 sekmeli `ArtifactExplorerPage`, `React.lazy`, `< 10 KB` logo ve WCAG 2.2 AA) başlatılıyor.
 
 ## SIRADAKİ
-- [ ] Faz 5: Ağ tekrarsız `TechDetector`, OKLCH + Tailwind v4 `@theme` token çıkarımı, çok bölümlü `ComponentExporter`, asenkron `SourcemapReconstructor` ve Next.js RSC state çıkarımı (`WP-5.1..5.3`).
 - [ ] Faz 6: 6 sekmeli `ArtifactExplorerPage`, `100 ms` toplu IPC telemetri, `React.lazy` kod bölme, `< 10 KB` `TitleBar` logosu ve tam WCAG 2.2 AA (`tablist`, `useFocusTrap`, `@theme` tokenları) (`WP-6.1..6.3`).
 - [ ] Faz 7: Yerel HTTP fixture entegrasyon paketi, Playwright `_electron` E2E testleri, gerçek `Portable.exe` süreç doğrulaması ve GitHub Actions CI/CD boru hattı (`WP-7.1..7.2`).
 
@@ -12,7 +11,8 @@
 - Yok.
 
 ## TAMAMLANDI
-- [x] 2026-11-16 - Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`, kanonik sorgu hash), göreli ESM modül yolu koruması, `[data-bg]`/`[data-background]` CSS rewrite, `/_sw-replay.js` Service Worker replay, HTTP `206 Partial Content` Range streaming ve saf-TS WACZ 1.1.1 arşivleyici (`WP-4.1..4.3`).
+- [x] 2026-11-16 - Faz 5: Ağ tekrarsız `TechDetector` (`skipNetworkFallback`), `/\bflex\b/` sahte pozitif temizliği, `<sitemapindex>` + hiyerarşik `SiteMapper`, CSS Color 4 (`oklch`/`oklab`/`display-p3`) + luminans rol sınıflandırması, Tailwind v4 `@theme` (`tokens.theme.css`), çok-bölümlü `ComponentExporter` + parantez-duyarlı inline style, asenkron `_up_/` `SourcemapReconstructor` ve Next.js `__next_f` RSC çıkarımı (`WP-5.1..5.3`).
+- [x] 2026-11-16 - Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`, kanonik sorgu hash), göreli ESM modül yolu koruması, `[data-bg]`/`[data-background]` CSS rewrite, `/_sw-replay.js` Service Worker replay, HTTP `206 Partial Content` Range streaming ve saf-TS WACZ 1.1.1 arşivleyici (`a46e7cf`).
 - [x] 2026-11-16 - Faz 3: `node:sqlite` WAL `CrawlCheckpointDb` (çökme kurtarma ve artımlı ETag/SHA-256 diff), `CrawlerEngine` -> `CrawlerOrchestrator`/`PageWorker`/`CloneFinalizer` ayrıştırması, `ipc-handlers` -> `src/main/ipc/*.ipc.ts` domain yönlendiricileri ve 100ms toplu telemetri (`7134827`).
 - [x] 2026-11-16 - Faz 2: Domain bazlı `SessionManager`, BoringSSL `HttpClient` (`session.fetch`), `got` kaldırımı + `cheerio/slim` (`out/main` `291 KB`), sıcak `WindowPool`, `PageRenderer` (`getHTML` Shadow DOM, `Network.loadingFinished`) ve deterministik `stealth-scripts` (`7df562d`).
 - [x] 2026-11-16 - Faz 1: Zero-Trust güvenlik sertleştirmesi (`url-guard`, `path-guard`, `ipc-guard`, CSP, daraltılmış Preload, `ProjectStore` kök silme kilidi, `SingleFile` path-guard, `PreviewServer` XSS/symlink yaması) (`70757de`).

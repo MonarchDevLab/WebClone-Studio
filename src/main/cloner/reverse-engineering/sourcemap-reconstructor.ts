@@ -1,7 +1,24 @@
 import { SourceMapConsumer } from 'source-map';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 
+function sanitizeSourcePath(rawSource: string): string {
+  // Strip query string and fragment identifiers (?v=123, #hash) from Vite/Rollup virtual paths
+  let cleanPath = rawSource.split('?')[0].split('#')[0];
+  cleanPath = cleanPath.replace(/^([a-z][a-z0-9+.-]*):\/\/\/?/i, '$1/');
+  cleanPath = cleanPath.replace(/^([a-zA-Z]:)?[/\\]+/, '');
+
+  const segments = cleanPath
+    .split(/[/\\]+/)
+    .filter((seg) => seg && seg !== '.')
+    .map((seg) => (seg === '..' ? '_up_' : seg.replace(/[<>:"|?*]/g, '_')));
+
+  return segments.join('/');
+}
+
+/**
+ * Asynchronously reconstructs original source files from a SourceMap v3 JSON payload.
+ */
 export async function reconstructSourceTree(mapContent: string, outputDir: string): Promise<void> {
   const mapData = JSON.parse(mapContent);
   if (!mapData.mappings) {
@@ -13,22 +30,21 @@ export async function reconstructSourceTree(mapContent: string, outputDir: strin
     const resolvedOutDir = path.resolve(outputDir);
     const outDirWithSep = resolvedOutDir.endsWith(path.sep) ? resolvedOutDir : resolvedOutDir + path.sep;
 
-    consumer.sources.forEach((source) => {
+    for (const source of consumer.sources) {
       const content = consumer.sourceContentFor(source, true);
-      if (content) {
-        let cleanPath = source.replace(/^([a-z]+):\/\/\/?/, '$1/');
-        // Strip leading slashes and Windows drive letters
-        cleanPath = cleanPath.replace(/^([a-zA-Z]:)?[\/\\]+/, '');
-        const fullPath = path.resolve(resolvedOutDir, cleanPath);
+      if (!content) continue;
 
-        if (!fullPath.startsWith(outDirWithSep)) {
-          return;
-        }
+      const relativeClean = sanitizeSourcePath(source);
+      if (!relativeClean) continue;
 
-        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-        fs.writeFileSync(fullPath, content, 'utf-8');
+      const fullPath = path.resolve(resolvedOutDir, relativeClean);
+      if (!fullPath.startsWith(outDirWithSep)) {
+        continue;
       }
-    });
+
+      await fs.promises.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.promises.writeFile(fullPath, content, 'utf-8');
+    }
   } finally {
     consumer.destroy();
   }

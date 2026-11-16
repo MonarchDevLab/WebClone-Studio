@@ -5,86 +5,175 @@ import { HttpClient } from '../browser/http-client';
 import { buildDefaultUserAgent } from '../../shared/version';
 
 export class SiteMapper {
+  private async parseSitemapXml(
+    sitemapUrl: string,
+    originHostname: string,
+    allowLocalhostTargets: boolean | undefined,
+    visitedSitemaps: Set<string>,
+    collectedUrls: Set<string>,
+    depth: number
+  ): Promise<void> {
+    if (depth > 2 || visitedSitemaps.has(sitemapUrl) || collectedUrls.size >= 500) {
+      return;
+    }
+    visitedSitemaps.add(sitemapUrl);
+
+    const ua = buildDefaultUserAgent();
+    try {
+      const res = await HttpClient.fetchText({
+        url: sitemapUrl,
+        timeoutMs: 4000,
+        maxRetries: 0,
+        headers: { 'user-agent': ua },
+        allowLocalhostTargets,
+      });
+
+      if (res.statusCode !== 200 || !res.text.includes('<loc>')) return;
+
+      const $ = cheerio.load(res.text, { xmlMode: true });
+      const childSitemaps: string[] = [];
+
+      $('sitemap > loc').each((_, el) => {
+        const loc = $(el).text().trim();
+        if (loc) childSitemaps.push(loc);
+      });
+
+      $('url > loc, sitemapindex > sitemap > loc, loc').each((_, el) => {
+        const foundUrl = $(el).text().trim();
+        if (!foundUrl) return;
+        try {
+          const parsed = new URL(foundUrl);
+          if (parsed.hostname !== originHostname) return;
+          if (/\.xml(?:$|\?)/i.test(parsed.pathname)) {
+            if (!childSitemaps.includes(foundUrl)) {
+              childSitemaps.push(foundUrl);
+            }
+          } else if (collectedUrls.size < 500) {
+            collectedUrls.add(foundUrl);
+          }
+        } catch {}
+      });
+
+      for (const childUrl of childSitemaps.slice(0, 8)) {
+        try {
+          if (new URL(childUrl).hostname === originHostname) {
+            await this.parseSitemapXml(
+              childUrl,
+              originHostname,
+              allowLocalhostTargets,
+              visitedSitemaps,
+              collectedUrls,
+              depth + 1
+            );
+          }
+        } catch {}
+      }
+    } catch {}
+  }
+
   /**
-   * XML sitemap veya robots.txt üzerinden sayfaları hızlıca çeker.
+   * XML sitemap (including nested <sitemapindex>) üzerinden sayfaları hızlıca çeker.
    */
   private async tryFetchXmlSitemap(
     origin: string,
     allowLocalhostTargets?: boolean
   ): Promise<string[] | null> {
+    const originHostname = new URL(origin).hostname;
     const candidates = [`${origin}/sitemap.xml`, `${origin}/sitemap_index.xml`];
-    const ua = buildDefaultUserAgent();
-    for (const sitemapUrl of candidates) {
-      try {
-        const res = await HttpClient.fetchText({
-          url: sitemapUrl,
-          timeoutMs: 4000,
-          maxRetries: 0,
-          headers: { 'user-agent': ua },
-          allowLocalhostTargets,
-        });
+    const visitedSitemaps = new Set<string>();
+    const collectedUrls = new Set<string>();
 
-        if (res.statusCode === 200 && res.text.includes('<loc>')) {
-          const urls: string[] = [];
-          const $ = cheerio.load(res.text, { xmlMode: true });
-          $('loc').each((_, el) => {
-            const foundUrl = $(el).text().trim();
-            if (foundUrl && !foundUrl.endsWith('.xml')) {
-              try {
-                if (new URL(foundUrl).hostname === new URL(origin).hostname) {
-                  urls.push(foundUrl);
-                }
-              } catch {}
-            }
-          });
-          if (urls.length > 0) {
-            return Array.from(new Set(urls));
-          }
-        }
-      } catch {}
+    for (const sitemapUrl of candidates) {
+      await this.parseSitemapXml(
+        sitemapUrl,
+        originHostname,
+        allowLocalhostTargets,
+        visitedSitemaps,
+        collectedUrls,
+        0
+      );
+      if (collectedUrls.size > 0) {
+        return Array.from(collectedUrls);
+      }
     }
     return null;
   }
 
-  async map(baseUrl: string, maxDepth: number = 2, maxPages: number = 60): Promise<SiteMapNode> {
+  private buildHierarchicalTree(
+    baseUrl: string,
+    baseUrlObj: URL,
+    urls: string[],
+    maxDepth: number
+  ): SiteMapNode {
+    const rootNode: SiteMapNode = {
+      url: baseUrl,
+      title: baseUrlObj.hostname,
+      depth: 0,
+      statusCode: 200,
+      mimeType: 'text/html',
+      size: 35000,
+      assetCount: 15,
+      children: [],
+    };
+
+    const nodeIndex = new Map<string, SiteMapNode>();
+    nodeIndex.set('/', rootNode);
+
+    for (const u of urls) {
+      if (u === baseUrl || u === `${baseUrl}/`) continue;
+      try {
+        const parsed = new URL(u);
+        const segments = parsed.pathname.split('/').filter(Boolean);
+        if (segments.length === 0) continue;
+
+        let parentNode = rootNode;
+        let currentKey = '';
+        const limitDepth = Math.min(segments.length, Math.max(1, maxDepth));
+
+        for (let i = 0; i < limitDepth; i++) {
+          const isLeaf = i === limitDepth - 1;
+          currentKey += `/${segments[i]}`;
+          let existing = nodeIndex.get(currentKey);
+          if (!existing) {
+            const nodeUrl = isLeaf ? u : `${baseUrlObj.origin}${currentKey}/`;
+            existing = {
+              url: nodeUrl,
+              title: isLeaf ? parsed.pathname : `${currentKey}/`,
+              depth: i + 1,
+              statusCode: 200,
+              mimeType: 'text/html',
+              size: isLeaf ? 25000 : 0,
+              assetCount: isLeaf ? 10 : 0,
+              children: [],
+            };
+            nodeIndex.set(currentKey, existing);
+            parentNode.children.push(existing);
+          } else if (isLeaf) {
+            existing.url = u;
+            existing.title = parsed.pathname;
+          }
+          parentNode = existing;
+        }
+      } catch {}
+    }
+
+    return rootNode;
+  }
+
+  async map(
+    baseUrl: string,
+    maxDepth: number = 2,
+    maxPages: number = 60,
+    options?: { allowLocalhostTargets?: boolean }
+  ): Promise<SiteMapNode> {
     const baseUrlObj = new URL(baseUrl);
     const origin = baseUrlObj.origin;
+    const allowLocalhostTargets = Boolean(options?.allowLocalhostTargets);
 
-    // 1. Öncelik: /sitemap.xml kontrolü (Varsa tam ve eksiksiz harita)
-    const xmlUrls = await this.tryFetchXmlSitemap(origin);
+    // 1. Öncelik: /sitemap.xml (ve <sitemapindex>) kontrolü
+    const xmlUrls = await this.tryFetchXmlSitemap(origin, allowLocalhostTargets);
     if (xmlUrls && xmlUrls.length > 0) {
-      const selectedUrls = xmlUrls.slice(0, maxPages);
-      const rootNode: SiteMapNode = {
-        url: baseUrl,
-        title: baseUrlObj.hostname,
-        depth: 0,
-        statusCode: 200,
-        mimeType: 'text/html',
-        size: 35000,
-        assetCount: 15,
-        children: [],
-      };
-
-      // URL'leri derinliğe göre gruplayıp çocuk düğüm olarak ekle
-      for (const u of selectedUrls) {
-        if (u === baseUrl || u === `${baseUrl}/`) continue;
-        try {
-          const parsed = new URL(u);
-          const depth = parsed.pathname.split('/').filter(Boolean).length || 1;
-          rootNode.children.push({
-            url: u,
-            title: parsed.pathname,
-            depth: Math.min(depth, maxDepth),
-            statusCode: 200,
-            mimeType: 'text/html',
-            size: 25000,
-            assetCount: 10,
-            children: [],
-          });
-        } catch {}
-      }
-
-      return rootNode;
+      return this.buildHierarchicalTree(baseUrl, baseUrlObj, xmlUrls.slice(0, maxPages), maxDepth);
     }
 
     // 2. Fallback: GET tabanlı kontrollü gezinti
@@ -105,6 +194,7 @@ export class SiteMapper {
           timeoutMs: 5000,
           maxRetries: 0,
           headers: { 'user-agent': buildDefaultUserAgent() },
+          allowLocalhostTargets,
         });
 
         const contentType = res.mimeType || 'text/html';

@@ -72,9 +72,12 @@ export function registerAnalyzeIpc(ctx: IpcRuntimeContext): void {
       headers: rawHeaders,
       globals,
       allowLocalhostTargets,
+      skipNetworkFallback: true,
     });
 
-    const designTokens = await ctx.designAnalyzer.analyze(url, renderedDesignTokens);
+    const designTokens = await ctx.designAnalyzer.analyze(url, renderedDesignTokens, {
+      allowLocalhostTargets,
+    });
 
     const security = await ctx.securityScanner.scan(url, {
       existingHeaders: rawHeaders,
@@ -92,7 +95,7 @@ export function registerAnalyzeIpc(ctx: IpcRuntimeContext): void {
       children: [],
     };
     try {
-      sitemap = await ctx.siteMapper.map(url, 3, 500);
+      sitemap = await ctx.siteMapper.map(url, 3, 500, { allowLocalhostTargets });
     } catch (e) {
       console.warn('[IPC] Site haritası uyarısı:', e);
     }

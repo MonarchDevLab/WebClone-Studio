@@ -1,5 +1,6 @@
 /**
- * CSS dosyalarından ve stillerden CSS Değişkenleri, Renkler, Fontlar ve Tailwind konfigürasyonu çıkarır.
+ * CSS dosyalarından ve stillerden CSS Değişkenleri, Renkler (CSS Color 4 dahil), Fontlar
+ * ve Tailwind v3 JS / Tailwind v4 `@theme` CSS konfigürasyonu çıkarır.
  */
 export interface ExtractedDesignTokens {
   variables: Record<string, string>;
@@ -10,6 +11,31 @@ export interface ExtractedDesignTokens {
 export interface TokenExtractionResult {
   tokens: ExtractedDesignTokens;
   tailwindConfig: string;
+  tailwindV4Theme: string;
+}
+
+const COLOR_FUNCTION_REGEX = /\b(?:oklch|oklab|color|rgba?|hsla?)\([^)]+\)/gi;
+
+function isColorValue(val: string): boolean {
+  const trimmed = val.trim().toLowerCase();
+  return (
+    trimmed.startsWith('#') ||
+    trimmed.startsWith('rgb') ||
+    trimmed.startsWith('hsl') ||
+    trimmed.startsWith('oklch(') ||
+    trimmed.startsWith('oklab(') ||
+    trimmed.startsWith('color(')
+  );
+}
+
+function normalizeTokenKey(rawKey: string): string {
+  const stripped = rawKey
+    .replace(/^--/, '')
+    .replace(/-(color|colour)$/i, '')
+    .replace(/[^a-zA-Z0-9-_]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return stripped || 'token';
 }
 
 export function extractDesignTokensFromCss(cssContents: string[]): TokenExtractionResult {
@@ -30,7 +56,7 @@ export function extractDesignTokensFromCss(cssContents: string[]): TokenExtracti
     }
   }
 
-  // 2. Renkleri Tara (Hex)
+  // 2. Hex ve CSS Color 4 renklerini tara (oklch, oklab, color(display-p3 ...), rgb, hsl)
   const hexRegex = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
   let hexMatch: RegExpExecArray | null;
   while ((hexMatch = hexRegex.exec(combinedCss)) !== null) {
@@ -41,15 +67,24 @@ export function extractDesignTokensFromCss(cssContents: string[]): TokenExtracti
     colorCountMap.set(hex, (colorCountMap.get(hex) || 0) + 1);
   }
 
-  // Değişkenlerdeki renkleri de ekle
-  for (const val of Object.values(variables)) {
-    if (val.startsWith('#')) {
-      const lower = val.toLowerCase();
-      colorCountMap.set(lower, (colorCountMap.get(lower) || 0) + 5);
+  const funcRegex = new RegExp(COLOR_FUNCTION_REGEX.source, 'gi');
+  let funcMatch: RegExpExecArray | null;
+  while ((funcMatch = funcRegex.exec(combinedCss)) !== null) {
+    const norm = funcMatch[0].replace(/\s+/g, ' ').trim();
+    if (!norm.includes('var(')) {
+      colorCountMap.set(norm, (colorCountMap.get(norm) || 0) + 1);
     }
   }
 
-  // 3. Font Ailelerini Tara (font-family: ...)
+  // Değişkenlerdeki renklere ağırlık ver
+  for (const val of Object.values(variables)) {
+    if (isColorValue(val)) {
+      const normalized = val.startsWith('#') ? val.toLowerCase() : val.replace(/\s+/g, ' ').trim();
+      colorCountMap.set(normalized, (colorCountMap.get(normalized) || 0) + 5);
+    }
+  }
+
+  // 3. Font Ailelerini Tara
   const fontRegex = /font-family\s*:\s*([^;}]+)/gi;
   let fontMatch: RegExpExecArray | null;
   while ((fontMatch = fontRegex.exec(combinedCss)) !== null) {
@@ -63,22 +98,24 @@ export function extractDesignTokensFromCss(cssContents: string[]): TokenExtracti
     .sort((a, b) => b[1] - a[1])
     .map(([color]) => color);
 
-  // 4. Tailwind Config Şablonu Üret
+  // 4. Tailwind v3 JS Config + Tailwind v4 @theme CSS Token Çıktısı
   const tailwindColorExtend: Record<string, string> = {};
 
   for (const [key, val] of Object.entries(variables)) {
-    if (val.startsWith('#') || val.startsWith('rgb') || val.startsWith('hsl')) {
-      const cleanKey = key.replace(/^--/, '').replace(/-(color|colour)/i, '');
+    if (isColorValue(val)) {
+      const cleanKey = normalizeTokenKey(key);
       tailwindColorExtend[cleanKey] = val;
     }
   }
 
-  sortedColors.slice(0, 10).forEach((color, idx) => {
-    const colorKey = `custom-${idx + 1}`;
+  sortedColors.slice(0, 12).forEach((color, idx) => {
+    const colorKey = `palette-${idx + 1}`;
     if (!Object.values(tailwindColorExtend).includes(color)) {
       tailwindColorExtend[colorKey] = color;
     }
   });
+
+  const fontList = fontSet.size > 0 ? Array.from(fontSet).slice(0, 3) : ['"Inter", "sans-serif"'];
 
   const tailwindConfig = `/** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -90,7 +127,7 @@ module.exports = {
     extend: {
       colors: ${JSON.stringify(tailwindColorExtend, null, 8).replace(/^}/m, '      }')},
       fontFamily: {
-        sans: [${fontSet.size > 0 ? Array.from(fontSet).slice(0, 3).map(f => JSON.stringify(f)).join(', ') : '"Inter", "sans-serif"'}],
+        sans: [${fontList.map((f) => JSON.stringify(f)).join(', ')}],
       }
     }
   },
@@ -98,12 +135,21 @@ module.exports = {
 };
 `;
 
+  const themeLines: string[] = ['@import "tailwindcss";', '', '@theme {'];
+  for (const [colorKey, colorVal] of Object.entries(tailwindColorExtend)) {
+    const propName = colorKey.startsWith('color-') ? `--${colorKey}` : `--color-${colorKey}`;
+    themeLines.push(`  ${propName}: ${colorVal};`);
+  }
+  themeLines.push(`  --font-sans: ${fontList[0]};`);
+  themeLines.push('}', '');
+
   return {
     tokens: {
       variables,
-      colors: sortedColors,
+      colors: sortedColors.slice(0, 50),
       fontFamilies: Array.from(fontSet),
     },
     tailwindConfig,
+    tailwindV4Theme: themeLines.join('\n'),
   };
 }
