@@ -6,7 +6,7 @@ import { APP_VERSION } from '@shared/version';
 
 export const StatusBar: React.FC = () => {
   const { isAnalyzing } = useAnalyzeStore();
-  const { isCloning, isPaused, progress } = useCloneStore();
+  const { isCloning, isPaused, progress, warningCount } = useCloneStore();
 
   // Durum belirleme
   const isBusy = isAnalyzing || (isCloning && !isPaused);
@@ -49,8 +49,16 @@ export const StatusBar: React.FC = () => {
         </div>
       )}
 
-      {/* Sağ: ETA & Durum */}
-      <div className="flex items-center justify-end min-w-[120px]">
+      {/* Sağ: ETA, Uyarı & Durum */}
+      <div className="flex items-center justify-end gap-3 min-w-[140px]">
+        {warningCount > 0 && (
+          <span
+            className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-warning/15 text-warning-hover border border-warning/30"
+            title="İndirme sırasında atlanan HTTP uyarısı (örn. 404)"
+          >
+            Uyarı: {warningCount}
+          </span>
+        )}
         {isCloning && progress ? (
           <span className="text-warning-hover font-mono text-[11px]">
             Kalan: {progress.eta ? formatDuration(progress.eta) : 'Hesaplanıyor...'}

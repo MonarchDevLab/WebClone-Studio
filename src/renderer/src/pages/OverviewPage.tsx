@@ -1,19 +1,13 @@
 import React from 'react';
 import {
-  Globe, Shield, CheckCircle2, XCircle, Layers, Palette,
-  Type, ExternalLink, Cpu, Download, Activity, Zap, Smartphone,
-  FileText, Copy, FileDown
+  Globe, Shield, Palette, Type, ExternalLink, Cpu, Download, Activity, Smartphone,
+  FileText, Copy, FileDown, XCircle
 } from 'lucide-react';
 import { useAnalyzeStore } from '../stores/analyze-store';
 import { useUiStore } from '../stores/ui-store';
+import { OverviewEmptyState } from '../components/overview/OverviewEmptyState';
+import { OverviewSecurityPaletteSection } from '../components/overview/OverviewSecurityPaletteSection';
 import { toast } from 'sonner';
-
-const DEMO_SITES = [
-  { name: 'React.dev', url: 'https://react.dev', desc: 'Modern React Docs' },
-  { name: 'Tailwind CSS', url: 'https://tailwindcss.com', desc: 'Tasarım Sistemi & Utility' },
-  { name: 'Vite', url: 'https://vite.dev', desc: 'Frontend Build Motoru' },
-  { name: 'GitHub', url: 'https://github.com', desc: 'Platform Mimarisi' },
-];
 
 export const OverviewPage: React.FC = () => {
   const { analyzeResult, url, setUrl, startAnalysis, isAnalyzing, error } = useAnalyzeStore();
@@ -87,64 +81,7 @@ export const OverviewPage: React.FC = () => {
   }
 
   if (!analyzeResult) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[500px] text-center p-8 animate-in fade-in duration-300">
-        {/* Canlı Radar / Sinyal İkonu */}
-        <div className="relative mb-5">
-          <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-white/[0.1] flex items-center justify-center text-accent-hover shadow-2xl shadow-accent/10 relative z-10">
-            <Globe size={32} className="animate-pulse" />
-          </div>
-          <div className="absolute inset-0 rounded-2xl bg-accent/20 blur-xl animate-ping opacity-25" />
-        </div>
-
-        <h3 className="text-base font-bold text-text-primary mb-1.5">Web Sitesi Analizi Bekleniyor</h3>
-        <p className="text-xs text-text-muted max-w-lg leading-relaxed mb-6">
-          Yukarıdaki adres çubuğuna hedef web sitesini girin veya aşağıdaki hazır platformlardan birini seçerek analizi anında başlatın.
-        </p>
-
-        {/* Hızlı Demo Seçenekleri (Quick Launchpad) */}
-        <div className="w-full max-w-lg mb-8">
-          <div className="text-[10px] uppercase font-mono text-text-dim tracking-wider mb-2.5">
-            Örnek Sitelerle Hemen Test Edin
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            {DEMO_SITES.map((demo) => (
-              <button
-                key={demo.url}
-                onClick={() => handleDemoClick(demo.url)}
-                className="flex flex-col items-start p-3 bg-surface-2 hover:bg-surface-3 border border-white/[0.07] hover:border-accent/40 rounded-xl text-left transition-all cursor-pointer group shadow-sm active:scale-95"
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="text-xs font-bold text-text-primary group-hover:text-accent-hover transition-colors">
-                    {demo.name}
-                  </span>
-                  <Zap size={12} className="text-accent-hover opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <span className="text-[10px] text-text-dim font-mono truncate w-full">
-                  {demo.desc}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Sistem Yetenekleri Hapları */}
-        <div className="flex items-center gap-2.5 flex-wrap justify-center">
-          <span className="px-3 py-1 text-[11px] font-mono bg-accent/10 text-accent-hover border border-accent/20 rounded-lg">
-            6 Katmanlı Tespit
-          </span>
-          <span className="px-3 py-1 text-[11px] font-mono bg-secondary/10 text-secondary-hover border border-secondary/20 rounded-lg">
-            Computed CSS Tokens
-          </span>
-          <span className="px-3 py-1 text-[11px] font-mono bg-success/10 text-success-hover border border-success/20 rounded-lg">
-            XML Sitemap Desteği
-          </span>
-          <span className="px-3 py-1 text-[11px] font-mono bg-warning/10 text-warning-hover border border-warning/20 rounded-lg">
-            Offline Klonlama
-          </span>
-        </div>
-      </div>
-    );
+    return <OverviewEmptyState onSelectDemo={handleDemoClick} />;
   }
 
   const { technologies, designTokens, security, meta } = analyzeResult;
@@ -293,7 +230,7 @@ export const OverviewPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('tech')}
-          aria-label={`Teknoloji Yığını sekmesine git — ${technologies.length} teknoloji tespit edildi`}
+          aria-label={`Teknoloji Yığını sekmesine git: ${technologies.length} teknoloji tespit edildi`}
           className="text-left w-full bg-surface-2 border border-white/[0.07] hover:border-accent/40 rounded-2xl p-4.5 cursor-pointer transition-all hover:shadow-lg relative overflow-hidden group"
         >
           <div className="flex justify-between items-start mb-3">
@@ -374,134 +311,12 @@ export const OverviewPage: React.FC = () => {
 
       </div>
 
-      {/* 3. İki Sütunlu Detay Kartları */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        
-        {/* Güvenlik Detayları */}
-        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-text-primary uppercase tracking-wider">
-              <Shield size={15} className="text-success-hover" />
-              <span>Güvenlik & Protokol Durumu</span>
-            </div>
-            <span className="text-[10px] text-text-dim font-mono">Header Analizi</span>
-          </div>
-
-          <div className="space-y-2.5 text-xs font-mono">
-            <div className="flex justify-between items-center py-2 px-3 bg-overlay rounded-xl border border-white/[0.04]">
-              <span className="text-text-secondary">HTTPS Şifreleme:</span>
-              <span className={`flex items-center gap-1 font-bold ${security?.https ? 'text-success-hover' : 'text-error-hover'}`}>
-                {security?.https ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                {security?.https ? 'Aktif' : 'Pasif'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center py-2 px-3 bg-overlay rounded-xl border border-white/[0.04]">
-              <span className="text-text-secondary">HSTS Politikası:</span>
-              <span className={`flex items-center gap-1 font-bold ${security?.hsts ? 'text-success-hover' : 'text-text-dim'}`}>
-                {security?.hsts ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                {security?.hsts ? 'Tanımlı' : 'Yok'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center py-2 px-3 bg-overlay rounded-xl border border-white/[0.04]">
-              <span className="text-text-secondary">Content-Security-Policy (CSP):</span>
-              <span className={`flex items-center gap-1 font-bold ${security?.csp ? 'text-success-hover' : 'text-text-dim'}`}>
-                {security?.csp ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                {security?.csp ? 'Tanımlı' : 'Yok'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center py-2 px-3 bg-overlay rounded-xl border border-white/[0.04]">
-              <span className="text-text-secondary">robots.txt Dosyası:</span>
-              <span className={`flex items-center gap-1 font-bold ${security?.robotsTxt ? 'text-success-hover' : 'text-text-dim'}`}>
-                {security?.robotsTxt ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                {security?.robotsTxt ? 'Mevcut' : 'Yok'}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center py-2 px-3 bg-overlay rounded-xl border border-white/[0.04]">
-              <span className="text-text-secondary">sitemap.xml Dosyası:</span>
-              <span className={`flex items-center gap-1 font-bold ${security?.sitemap ? 'text-success-hover' : 'text-text-dim'}`}>
-                {security?.sitemap ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                {security?.sitemap ? 'Mevcut' : 'Yok'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Renk Paleti Detayı */}
-        <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-text-primary uppercase tracking-wider">
-              <Palette size={15} className="text-warning-hover" />
-              <span>Tasarım Renk Paleti</span>
-            </div>
-            <button
-              onClick={copyAllTokensAsCss}
-              title="Tüm renkleri :root CSS formatında panoya kopyala"
-              className="text-[10px] text-accent-hover hover:underline font-mono cursor-pointer"
-            >
-              CSS Değişkeni Olarak Kopyala
-            </button>
-          </div>
-
-          <div className="grid grid-cols-5 gap-2.5 pt-1">
-            {(designTokens?.colors?.slice(0, 10) || []).map((color, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => copyToClipboard(color.hex)}
-                aria-label={`${color.hex} (${color.role || 'renk'}) rengini panoya kopyala`}
-                className="group relative flex flex-col items-center cursor-pointer p-2 bg-overlay hover:bg-surface-3 border border-white/[0.05] rounded-xl transition-all hover:scale-105"
-                title={`${color.hex} (${color.role || 'renk'})`}
-              >
-                <div
-                  className="w-full h-8 rounded-lg border border-white/[0.1] shadow-inner mb-1.5"
-                  style={{ backgroundColor: color.hex }}
-                />
-                <span className="text-[10px] font-mono text-text-secondary group-hover:text-accent-hover truncate w-full text-center">
-                  {color.hex}
-                </span>
-                <span className="text-[9px] text-text-dim uppercase font-mono">
-                  {color.role}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-      </div>
-
-      {/* 4. Tipografi Skalası */}
-      <div className="bg-surface-2 border border-white/[0.07] rounded-2xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-bold text-text-primary uppercase tracking-wider">
-            <Type size={15} className="text-secondary-hover" />
-            <span>Tipografi Skalası & Font Aileleri</span>
-          </div>
-          <span className="text-[10px] text-text-dim font-mono">Computed Typography</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-          {(designTokens?.typography || []).map((typo, i) => (
-            <div key={i} className="flex items-center justify-between p-3.5 bg-overlay border border-white/[0.05] rounded-xl">
-              <div className="min-w-0 flex-1 pr-3">
-                <span className="text-[9px] uppercase font-mono font-bold text-secondary-hover tracking-wider block mb-0.5">
-                  {typo.role}
-                </span>
-                <span className="text-sm font-semibold text-text-primary truncate block" style={{ fontFamily: typo.fontFamily }}>
-                  {typo.fontFamily}
-                </span>
-              </div>
-              <div className="text-right font-mono text-[11px] text-text-muted flex-shrink-0">
-                <div className="text-accent-hover font-semibold">{typo.fontSize} / {typo.lineHeight}</div>
-                <div className="text-text-dim text-[10px]">Ağırlık: {typo.fontWeight}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <OverviewSecurityPaletteSection
+        security={security}
+        designTokens={designTokens}
+        onCopyHex={copyToClipboard}
+        onCopyAllTokens={copyAllTokensAsCss}
+      />
 
     </div>
   );

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type TabType = 'overview' | 'tech' | 'sitemap' | 'clone' | 'settings';
+export type TabType = 'overview' | 'tech' | 'sitemap' | 'clone' | 'explorer' | 'settings';
 
 interface UiState {
   activeTab: TabType;

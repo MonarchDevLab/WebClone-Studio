@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { 
   CloneSettings, CloneProgress, FileAddedEvent, CloneLogEntry, 
-  CloneErrorEvent, CloneCompleteEvent 
+  CloneErrorEvent, CloneCompleteEvent, TelemetryBatchPayload
 } from '@shared/types';
 import { DEFAULT_DEPTH, DEFAULT_CONCURRENT, DEFAULT_RATE_LIMIT, DEFAULT_MAX_FILE_SIZE, DEFAULT_USER_AGENT } from '../lib/constants';
 
@@ -12,6 +12,7 @@ interface CloneState {
   files: FileAddedEvent[];
   logs: CloneLogEntry[];
   errors: CloneErrorEvent[];
+  warningCount: number;
   settings: CloneSettings;
   outputPath: string;
   projectName: string;
@@ -27,6 +28,7 @@ interface CloneState {
   updateProgress: (progress: CloneProgress) => void;
   addFile: (file: FileAddedEvent) => void;
   addLog: (log: CloneLogEntry) => void;
+  applyTelemetryBatch: (batch: TelemetryBatchPayload) => void;
   addError: (error: CloneErrorEvent) => void;
   setComplete: (result: CloneCompleteEvent) => void;
   clearLogs: () => void;
@@ -40,6 +42,7 @@ export const useCloneStore = create<CloneState>((set, get) => ({
   files: [],
   logs: [],
   errors: [],
+  warningCount: 0,
   settings: {
     mode: 'static',
     maxDepth: DEFAULT_DEPTH,
@@ -59,6 +62,8 @@ export const useCloneStore = create<CloneState>((set, get) => ({
     maxFileSize: DEFAULT_MAX_FILE_SIZE,
     userAgent: DEFAULT_USER_AGENT,
     reverseEngineering: true,
+    ignoreSslErrors: false,
+    exportWacz: false,
   },
   outputPath: '',
   projectName: '',
@@ -78,6 +83,7 @@ export const useCloneStore = create<CloneState>((set, get) => ({
       errors: [],
       logs: [],
       files: [],
+      warningCount: 0,
       progress: null
     });
 
@@ -135,6 +141,22 @@ export const useCloneStore = create<CloneState>((set, get) => ({
     next.push(log);
     return { logs: next };
   }),
+  applyTelemetryBatch: (batch) => set((state) => {
+    const nextFiles =
+      batch.addedFiles?.length > 0
+        ? [...state.files, ...batch.addedFiles].slice(-200)
+        : state.files;
+    const nextLogs =
+      batch.logs?.length > 0
+        ? [...state.logs, ...batch.logs].slice(-500)
+        : state.logs;
+    return {
+      progress: batch.progress ?? state.progress,
+      files: nextFiles,
+      logs: nextLogs,
+      warningCount: state.warningCount + (batch.warningCountDelta || 0),
+    };
+  }),
   addError: (error) => set((state) => {
     const next = state.errors.length >= 100 ? state.errors.slice(-99) : state.errors.slice();
     next.push(error);
@@ -150,6 +172,7 @@ export const useCloneStore = create<CloneState>((set, get) => ({
     files: [],
     logs: [],
     errors: [],
+    warningCount: 0,
     jobId: null,
     outputPath: '',
     openFolderOnComplete: true,

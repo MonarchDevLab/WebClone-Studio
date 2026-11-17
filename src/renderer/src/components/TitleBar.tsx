@@ -1,6 +1,6 @@
 import React from 'react';
 import { APP_NAME } from '../lib/constants';
-import logoUrl from '../assets/logo.png';
+import logoUrl from '../assets/logo-64.png';
 import { useUiStore } from '../stores/ui-store';
 
 export const TitleBar: React.FC = () => {

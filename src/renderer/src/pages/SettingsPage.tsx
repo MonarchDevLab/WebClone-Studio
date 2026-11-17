@@ -17,8 +17,10 @@ export const SettingsPage: React.FC = () => {
   const [crawlSubdomains, setCrawlSubdomains] = useState<boolean>(false);
   const [downloadExternalAssets, setDownloadExternalAssets] = useState<boolean>(true);
   const [reverseEngineering, setReverseEngineering] = useState<boolean>(true);
+  const [allowLocalhostTargets, setAllowLocalhostTargets] = useState<boolean>(false);
+  const [defaultExportWacz, setDefaultExportWacz] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentVersion, setCurrentVersion] = useState<string>('1.1.0');
+  const [currentVersion, setCurrentVersion] = useState<string>(APP_VERSION);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
   const [updateInfo, setUpdateInfo] = useState<any>(null);
 
@@ -41,6 +43,8 @@ export const SettingsPage: React.FC = () => {
             if (s.defaultCrawlSubdomains !== undefined) setCrawlSubdomains(s.defaultCrawlSubdomains);
             if (s.defaultDownloadExternalAssets !== undefined) setDownloadExternalAssets(s.defaultDownloadExternalAssets);
             if (s.defaultReverseEngineering !== undefined) setReverseEngineering(s.defaultReverseEngineering);
+            if (s.allowLocalhostTargets !== undefined) setAllowLocalhostTargets(s.allowLocalhostTargets);
+            if (s.defaultExportWacz !== undefined) setDefaultExportWacz(s.defaultExportWacz);
           }
           if (window.electronAPI?.getAppVersion) {
             const ver = await window.electronAPI.getAppVersion();
@@ -103,6 +107,8 @@ export const SettingsPage: React.FC = () => {
           defaultCrawlSubdomains: crawlSubdomains,
           defaultDownloadExternalAssets: downloadExternalAssets,
           defaultReverseEngineering: reverseEngineering,
+          allowLocalhostTargets,
+          defaultExportWacz,
         });
         toast.success('Ayarlar başarıyla kaydedildi!');
       } catch (err: any) {
@@ -331,6 +337,26 @@ export const SettingsPage: React.FC = () => {
               />
               <span>Gelişmiş Tersine Mühendislik (Kaynak Kod Kurtarma, SPA State & Dinamik API Mock Yakalama)</span>
             </label>
+
+            <label className="flex items-center gap-2.5 text-xs text-text-secondary cursor-pointer">
+              <input
+                type="checkbox"
+                checked={defaultExportWacz}
+                onChange={(e) => setDefaultExportWacz(e.target.checked)}
+                className="rounded accent-secondary-hover"
+              />
+              <span>Her klonlama sonunda standart WACZ 1.1.1 arşivi (.wacz) otomatik oluştur</span>
+            </label>
+
+            <label className="flex items-center gap-2.5 text-xs text-text-secondary cursor-pointer">
+              <input
+                type="checkbox"
+                checked={allowLocalhostTargets}
+                onChange={(e) => setAllowLocalhostTargets(e.target.checked)}
+                className="rounded accent-warning-hover"
+              />
+              <span>Yerel geliştirme hedeflerine izin ver (localhost / 127.0.0.1 tarama izni)</span>
+            </label>
           </div>
         </div>
 
@@ -338,7 +364,7 @@ export const SettingsPage: React.FC = () => {
         <div className="bg-surface-2 border border-white/[0.07] rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-accent-primary/10 border border-accent-primary/20 rounded-lg flex items-center justify-center text-accent-hover">
+              <div className="w-9 h-9 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent-hover">
                 <RefreshCw className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
               </div>
               <div>
@@ -367,9 +393,9 @@ export const SettingsPage: React.FC = () => {
           {updateInfo && (
             <div className="pt-3 border-t border-white/[0.06]">
               {updateInfo.hasUpdate ? (
-                <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-2.5">
+                <div className="p-3.5 rounded-lg bg-success/10 border border-success/20 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                    <div className="flex items-center gap-2 text-success-hover text-xs font-semibold">
                       <Sparkles className="w-4 h-4" />
                       <span>Yeni Sürüm Hazır: v{updateInfo.latestVersion}</span>
                       {updateInfo.releaseName && (
@@ -378,17 +404,18 @@ export const SettingsPage: React.FC = () => {
                     </div>
                     {updateInfo.htmlUrl && (
                       <button
+                        type="button"
                         onClick={() => {
-                          if (window.electronAPI?.openBrowser) {
-                            window.electronAPI.openBrowser(updateInfo.htmlUrl);
+                          if (window.electronAPI?.openExternalUrl) {
+                            void window.electronAPI.openExternalUrl(updateInfo.htmlUrl);
                           } else {
-                            window.open(updateInfo.htmlUrl, '_blank');
+                            window.open(updateInfo.htmlUrl, '_blank', 'noopener,noreferrer');
                           }
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium bg-emerald-500 text-black hover:bg-emerald-400 transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium bg-success text-black hover:bg-success-hover transition-colors cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        <span>GitHub'dan İndir</span>
+                        <span>GitHub&apos;dan İndir</span>
                       </button>
                     )}
                   </div>
@@ -399,18 +426,18 @@ export const SettingsPage: React.FC = () => {
                   )}
                 </div>
               ) : updateInfo.error ? (
-                <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg">
+                <div className="flex items-center gap-2 text-xs text-error-hover bg-error/10 border border-error/20 p-3 rounded-lg">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{updateInfo.error}</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-between text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg">
+                <div className="flex items-center justify-between text-xs text-success-hover bg-success/10 border border-success/20 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                     <span>WebClone Studio güncel. En son sürümü (v{currentVersion}) kullanıyorsunuz.</span>
                   </div>
                   {updateInfo.totalDownloads !== undefined && (
-                    <span className="text-[11px] font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-mono text-success-hover bg-success/20 px-2 py-0.5 rounded">
                       Toplam İndirme: {updateInfo.totalDownloads.toLocaleString()}
                     </span>
                   )}

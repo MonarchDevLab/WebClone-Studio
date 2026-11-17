@@ -80,7 +80,7 @@ declare global {
 }
 
 export function useIpc() {
-  const { updateProgress, addFile, addLog, setComplete, addError } = useCloneStore();
+  const { updateProgress, addFile, addLog, applyTelemetryBatch, setComplete, addError } = useCloneStore();
   const { fetchProjects } = useProjectStore();
 
   useEffect(() => {
@@ -90,17 +90,30 @@ export function useIpc() {
 
     fetchProjects();
 
-    const unsubProgress = api.onProgress?.((data) => {
-      updateProgress(data);
-    });
+    const hasBatch = typeof api.onTelemetryBatch === 'function';
+    const unsubTelemetryBatch = hasBatch
+      ? api.onTelemetryBatch!((batch) => {
+          applyTelemetryBatch(batch);
+        })
+      : undefined;
 
-    const unsubFileAdded = api.onFileAdded?.((data) => {
-      addFile(data);
-    });
+    const unsubProgress = !hasBatch
+      ? api.onProgress?.((data) => {
+          updateProgress(data);
+        })
+      : undefined;
 
-    const unsubLog = api.onLog?.((data) => {
-      addLog(data);
-    });
+    const unsubFileAdded = !hasBatch
+      ? api.onFileAdded?.((data) => {
+          addFile(data);
+        })
+      : undefined;
+
+    const unsubLog = !hasBatch
+      ? api.onLog?.((data) => {
+          addLog(data);
+        })
+      : undefined;
 
     const unsubComplete = api.onComplete?.((data) => {
       setComplete(data);
@@ -131,13 +144,14 @@ export function useIpc() {
     });
 
     return () => {
+      unsubTelemetryBatch?.();
       unsubProgress?.();
       unsubFileAdded?.();
       unsubLog?.();
       unsubComplete?.();
       unsubError?.();
     };
-  }, [updateProgress, addFile, addLog, setComplete, addError, fetchProjects]);
+  }, [updateProgress, addFile, addLog, applyTelemetryBatch, setComplete, addError, fetchProjects]);
 
   return {
     isElectron: Boolean(window.electronAPI),

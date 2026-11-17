@@ -22,7 +22,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, level = 0 }) => {
         role={hasChildren ? 'button' : undefined}
         tabIndex={hasChildren ? 0 : undefined}
         aria-expanded={hasChildren ? isExpanded : undefined}
-        aria-label={hasChildren ? `${node.url} — ${isExpanded ? 'daralt' : 'genişlet'}` : undefined}
+        aria-label={hasChildren ? `${node.url}: ${isExpanded ? 'daralt' : 'genişlet'}` : undefined}
         className={`flex items-center gap-2.5 py-1.5 px-3 rounded-lg hover:bg-surface-3 group transition-colors ${hasChildren ? 'cursor-pointer' : ''}`}
         style={{ paddingLeft: `${level * 20 + 12}px` }}
         onClick={toggle}

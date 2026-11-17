@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Search, LayoutDashboard, Cpu, Network, CloudDownload, Settings, 
+  Search, LayoutDashboard, Cpu, Network, CloudDownload, Layers, Settings, 
   Terminal, Download, CornerDownLeft, Globe, FileDown, Copy
 } from 'lucide-react';
 import { useUiStore } from '../stores/ui-store';
 import { useAnalyzeStore } from '../stores/analyze-store';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { toast } from 'sonner';
 
 interface CommandItem {
@@ -26,6 +27,9 @@ export const CommandPaletteModal: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(isCommandPaletteOpen, dialogRef, closeCommandPalette);
 
   // Global Ctrl+K / Cmd+K dinleyici
   useEffect(() => {
@@ -79,7 +83,15 @@ export const CommandPaletteModal: React.FC = () => {
       category: 'Sayfalar',
       icon: CloudDownload,
       action: () => { setActiveTab('clone'); closeCommandPalette(); },
-      shortcut: 'Tab 4',
+      shortcut: 'Ctrl+4',
+    },
+    {
+      id: 'tab-explorer',
+      title: 'Artefakt Gezgini Sayfasına Git',
+      category: 'Sayfalar',
+      icon: Layers,
+      action: () => { setActiveTab('explorer'); closeCommandPalette(); },
+      shortcut: 'Ctrl+5',
     },
     {
       id: 'tab-settings',
@@ -87,7 +99,7 @@ export const CommandPaletteModal: React.FC = () => {
       category: 'Sayfalar',
       icon: Settings,
       action: () => { setActiveTab('settings'); closeCommandPalette(); },
-      shortcut: 'Tab 5',
+      shortcut: 'Ctrl+6',
     },
     {
       id: 'act-clone-wizard',
@@ -205,7 +217,9 @@ export const CommandPaletteModal: React.FC = () => {
       aria-label="Komut Paleti"
     >
       <div 
-        className="w-full max-w-xl bg-surface-2/95 border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden text-text-primary"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="w-full max-w-xl bg-surface-2/95 border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden text-text-primary focus:outline-none"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >

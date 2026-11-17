@@ -3,7 +3,7 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
 // @ts-ignore: Asset import handled by Vite
-import icon from '../../resources/icon.png?asset';
+import icon from '../../resources/icon-256.png?asset';
 
 /**
  * Checks whether navigation stays within the trusted application shell origin.

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export const Sidebar: React.FC = () => {
   const { setActiveTab } = useUiStore();
-  const { projects, activeProjectId, isLoading, fetchProjects, openProject, deleteProject, setActiveProject } = useProjectStore();
+  const { projects, activeProjectId, isLoading, fetchProjects, openProject, deleteProject, selectAndHydrateProject } = useProjectStore();
 
   useEffect(() => {
     fetchProjects();
@@ -103,14 +103,29 @@ export const Sidebar: React.FC = () => {
             >
               <button
                 type="button"
-                onClick={() => setActiveProject(project.id)}
-                aria-label={`${project.name} projesini seç — ${project.totalFiles} dosya, ${formatBytes(project.totalSize)}`}
+                onClick={() => {
+                  void selectAndHydrateProject(project);
+                  setActiveTab('explorer');
+                }}
+                aria-label={`${project.name} projesini seç: ${project.totalFiles} dosya, ${formatBytes(project.totalSize)}`}
                 className="flex items-center gap-2.5 min-w-0 text-left flex-1 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
               >
                 <div className="w-2 h-2 rounded-full bg-success-hover shadow-sm shadow-success-hover/50 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="truncate text-xs font-medium text-text-primary group-hover:text-accent-hover transition-colors">
-                    {project.name}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-xs font-medium text-text-primary group-hover:text-accent-hover transition-colors">
+                      {project.name}
+                    </span>
+                    {project.hasIncompleteCheckpoint && (
+                      <span className="px-1 py-0.2 text-[9px] font-mono rounded bg-warning/20 text-warning-hover border border-warning/30 flex-shrink-0">
+                        Yarım
+                      </span>
+                    )}
+                    {project.hasWacz && (
+                      <span className="px-1 py-0.2 text-[9px] font-mono rounded bg-accent/15 text-accent-hover border border-accent/30 flex-shrink-0">
+                        WACZ
+                      </span>
+                    )}
                   </div>
                   <div className="text-[10px] text-text-dim font-mono">
                     {project.totalFiles} dosya &bull; {formatBytes(project.totalSize)}

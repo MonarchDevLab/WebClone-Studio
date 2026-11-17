@@ -1,20 +1,28 @@
 import { create } from 'zustand';
-import { ProjectInfo } from '@shared/types';
+import { ProjectArtifactSummary, ProjectInfo } from '@shared/types';
 
 interface ProjectState {
   projects: ProjectInfo[];
   activeProjectId: string | null;
+  selectedProject: ProjectInfo | null;
+  activeArtifactSummary: ProjectArtifactSummary | null;
+  isArtifactLoading: boolean;
   isLoading: boolean;
-  
+
   fetchProjects: () => Promise<void>;
   openProject: (projectPath: string) => Promise<boolean>;
   deleteProject: (projectPath: string) => Promise<boolean>;
   setActiveProject: (id: string) => void;
+  selectAndHydrateProject: (project: ProjectInfo) => Promise<void>;
+  refreshActiveArtifacts: () => Promise<void>;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   projects: [],
   activeProjectId: null,
+  selectedProject: null,
+  activeArtifactSummary: null,
+  isArtifactLoading: false,
   isLoading: false,
 
   fetchProjects: async () => {
@@ -48,6 +56,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       try {
         const success = await window.electronAPI.deleteProject(projectPath);
         if (success) {
+          const { selectedProject } = get();
+          if (selectedProject?.outputPath === projectPath) {
+            set({ activeProjectId: null, selectedProject: null, activeArtifactSummary: null });
+          }
           await get().fetchProjects();
         }
         return success;
@@ -60,4 +72,34 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setActiveProject: (id: string) => set({ activeProjectId: id }),
+
+  selectAndHydrateProject: async (project: ProjectInfo) => {
+    set({
+      activeProjectId: project.id,
+      selectedProject: project,
+      isArtifactLoading: true,
+    });
+
+    if (window.electronAPI?.getArtifactSummary) {
+      try {
+        const summary = await window.electronAPI.getArtifactSummary(project.outputPath);
+        if (get().activeProjectId === project.id) {
+          set({ activeArtifactSummary: summary, isArtifactLoading: false });
+        }
+      } catch (err) {
+        console.error('Artefakt özeti yüklenemedi:', err);
+        if (get().activeProjectId === project.id) {
+          set({ activeArtifactSummary: null, isArtifactLoading: false });
+        }
+      }
+    } else {
+      set({ isArtifactLoading: false });
+    }
+  },
+
+  refreshActiveArtifacts: async () => {
+    const current = get().selectedProject;
+    if (!current) return;
+    await get().selectAndHydrateProject(current);
+  },
 }));
