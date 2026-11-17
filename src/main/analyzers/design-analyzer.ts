@@ -116,10 +116,14 @@ export class DesignAnalyzer {
   async analyze(
     url: string,
     precomputedTokens?: DesignTokens,
-    options?: { allowLocalhostTargets?: boolean }
+    options?: { allowLocalhostTargets?: boolean; fallbackHtml?: string }
   ): Promise<DesignTokens> {
     if (precomputedTokens && precomputedTokens.colors?.length > 0) {
       return precomputedTokens;
+    }
+
+    if (options?.fallbackHtml !== undefined) {
+      return this.analyzeHtmlStatic(options.fallbackHtml);
     }
 
     try {

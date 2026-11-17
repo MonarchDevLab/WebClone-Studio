@@ -1,0 +1,54 @@
+name: CI Verification Pipeline
+
+on:
+  push:
+    branches: [main, master, "feat/**"]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Zero-leakage static guard
+        shell: bash
+        run: |
+          if git grep -n -E 'C:\\Users\\|/Users/[A-Za-z0-9._-]+/' -- ':!.github' ':!node_modules'; then
+            echo "Detected local user profile path leakage in tracked files"
+            exit 1
+          fi
+
+      - name: Run unit and integration tests
+        run: npm test
+
+      - name: Build production bundles
+        run: npm run build
+
+      - name: Run Playwright Electron E2E (Windows)
+        if: runner.os == 'Windows'
+        run: npm run test:e2e
+
+      - name: Run Playwright Electron E2E (Linux Xvfb)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:e2e

@@ -7,14 +7,14 @@ import { APP_ORG_SIGNATURE, APP_VERSION } from '../../shared/version';
 export class ReadmeGenerator {
   public static generate(manifest: ProjectManifest): string {
     const techList = manifest.technologies.length > 0
-      ? manifest.technologies.map(t => `- **${t.category}:** ${t.name}${t.version ? ` (${t.version})` : ''} — %${t.confidence} güven`).join('\n')
+      ? manifest.technologies.map(t => `- **${t.category}:** ${t.name}${t.version ? ` (${t.version})` : ''} - %${t.confidence} güven`).join('\n')
       : '- Belirgin teknoloji imzası tespit edilemedi.';
 
     const fileIndexList = Object.entries(manifest.fileIndex)
       .map(([key, val]) => `- **${key.toUpperCase()}:** ${val.count} dosya (${(val.sizeBytes / (1024 * 1024)).toFixed(2)} MB)`)
       .join('\n');
 
-    return `# ${manifest.project.name} — Offline Web Kopyası
+    return `# ${manifest.project.name} - Offline Web Kopyası
 
 Bu klasör **WebClone Studio** (Monolith Works / MonarchDevLab) tarafından otomatik olarak oluşturulmuştur. Tüm iç sayfalar ve statik varlıklar (CSS, JS, Resimler, Fontlar) offline çalışacak şekilde indirilmiş ve linkler yerel yollara uyarlanmıştır.
 

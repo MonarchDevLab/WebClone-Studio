@@ -1,59 +1,48 @@
 # HANDOFF
 
 ## Anlık Durum
-"Ultimate Web Clone" planı ve ileri seviye eklemeler tam başarıyla uygulandı ve proje Ouroboros protokolü kapsamında tamamlandı.
-1. **İleri Seviye ve Ultimate Özellikler:**
-   - **Ultra-Stealth CDP Enjeksiyon Motoru (`stealth-scripts.ts`):** Scrapling ve modern anti-bot atlatma standartlarında `navigator.webdriver` (prototype-clean), `window.chrome` (runtime/app/csi), `navigator.permissions.query`, WebGL (NVIDIA/Intel), gerçekçi pencere geometrisi (`outerWidth/Height` offscreen düzeltmesi) ve canvas/audio mikro-gürültüsü enjeksiyonu.
-   - **Clearance Bridge & Çerez Senkronizasyonu (`AssetDownloader` & `PageRenderer`):** Chromium offscreen render motoru Cloudflare Turnstile ve bot meydan okumalarını aştığında `cf_clearance`, `__cf_bm` ve session çerezlerini toplar, `AssetDownloader`'ın HTTP başlıklarına enjekte eder. Alt varlıklar Cloudflare 403 engeline takılmadan indirilir.
-   - **Otomatik WAF Eskalasyonu (`CrawlerEngine`):** Statik indirmede 403/503 Cloudflare/WAF meydan okuması (`challenge-running`, `Turnstile`) algılandığında indirme iptal edilmez; otomatik Ultra-Stealth Chromium render motoruna eskalasyon yapılarak çerezler yenilenir ve klonlama kesintisiz sürer.
-   - **Self-Healing / Adaptif Semantik Çıkarıcı (`AdaptiveExtractor`):** Minify veya hash sınıflı (Tailwind, CSS Modules) DOM ağaçlarında sınıf isimlerine bağımlı kalmadan ana içerik bloğunu, tekrarlayan veri kartlarını (ürün, makale) ve sayfalama/yükleme tetikleyicilerini çıkarıp `_meta/adaptive-entities.json` üretir.
-   - **Otonom Durum Gezgini (State Explorer):** Chromium render aşamasında `aria-expanded="false"`, `role="tab"`, `details summary` ve akordeon menüleri güvenle tıklayarak gizli dinamik DOM durumlarını açar ve yakalar.
-   - **OpenAPI 3.1 & TypeScript Generator:** Yakalanan dinamik API ağ trafiğinden (`_meta/api-endpoints.json`) otomatik standart `_meta/openapi.json` ve tip güvenli `_meta/api-types.d.ts` sözleşmeleri üretir.
-   - **Tek Dosya Arşivleyici & Native CDP MHTML (`SingleFileExporter` & `PageRenderer`):** Klonlanan sayfayı tüm CSS, JS, font (WOFF2 Base64) ve görselleriyle `_exports/index.standalone.html` ve Chromium CDP `Page.captureSnapshot` ile %100 kayıpsız `_exports/index.mhtml` olarak sunar.
-   - **Kilitli İçerik & Kalıcı Oturum Yakalama (`persist:webclone` Auth Session):** Klonlama Kurulum Sihirbazı içerisinden tek tuşla açılan etkileşimli oturum penceresinde giriş yapıldığında çerezler `persist:webclone` oturumundan hem `PageRenderer` hem `AssetDownloader` katmanına aktarılır.
-   - **İstemci Tarafı Offline Fetch Mock Shim (`UrlRewriter`):** Yakalanan API uç noktaları (`_meta/api-endpoints.json`) sayfa içine XSS-güvenli `window.fetch` yakalayıcısı olarak gömülür; klonlanan SPA internet bağlantısı olmadan da dinamik veri çağrılarını yanıtlar.
-   - **Ponytail Ultra Bellek ve CPU Mimarisi (`CrawlerEngine` & `UrlRewriter`):** Ham HTML sayfaları RAM'de biriktirilmeden doğrudan diske akıtılır (`pagesToRewrite` yalnız dosya yolu tutar), içerik-adresli SHA-256 hash ile mükerrer görsel/font indirmeleri tekilleştirilir, `UrlRewriter.findMappedLocalPath` $O(1)$ karmaşıklıkta çalışır ve çift çıkarıcı (`StructuredDataExtractor`) kaldırılıp `AdaptiveExtractor` tek geçişli hale getirilmiştir.
-   - **Infinite Scroll:** Dinamik yüklenen içerikler (lazy-load) için native Chromium auto-scroll (aşağı/yukarı) entegre edildi.
-   - **Shadow DOM Piercing:** Web components ve shadow-root kullanan modern siteler için DOM ayrıştırma algoritması Chromium `getInnerHTML` API'si ile derinlemesine delindi.
-   - **Structured Data & React Export:** Sayfadaki liste/grid yapıları (Cheerio ile) analiz edilip `_meta/structured-data.json` olarak çıkartılıyor; temizlenmiş HTML yapısı `_components/` altında kullanıma hazır React `.tsx` bileşenlerine dönüştürülüyor.
-   - **Obfuscation Bypass:** İndirilen `.js` dosyalarındaki (Webpack/Vite chunk'ları vb.) gizli asset uzantıları (`.woff2`, `.png`, `.json` vb.) regex ve AST analiziyle bulunup crawler kuyruğuna otomatik ekleniyor.
-2. **Güvenlik:** ReDoS açığı `escapeWildcardToRegExp` ile kapatıldı, IPC kanal beyaz listesi zırhlandı, Chromium sandbox aktifleştirildi, preview server null-byte injection koruması eklendi, HTML/CSS rapor üreticisine sanitizasyon (`safeHex`, `safeCssValue`, `escapeHtml`) eklendi.
-3. **Bellek & Performans:** Crawler queue O(1) pointer tabanlı dequeue'ya çevrildi, IPC handler aktif iş havuzu temizliği yapıldı, Zustand clone-store array operasyonları optimize edildi, SiteMapPage ağaç yapısı lazy-expand ile hafifletildi, EBUSY dosya kilitlenmeleri çözüldü.
-4. **Mimari & Sağlamlık:** XML sitemap `xmlMode: true` ile Cheerio üzerinden parse edildi, asenkron I/O ve atomik dosya yazımı (`.tmp`) uygulandı, CSS hash temizliği ve harici protokol izolasyonu yapıldı.
-5. **Portable Paket:** Güncel kodlarla taşınabilir paket (`dist/WebClone-Studio-Portable.exe`, ~77MB) tamamen bağımsız (Playwright/Puppeteer vb. gerektirmeyen) native Electron altyapısıyla 0 hata ile derlenmeye hazır.
-6. **Eksiksiz İndirme & Hibrit SPA Kurtarma:** Statik modda çekilen sayfalar boş React/Vue/Next iskeletiyse otomatik Chromium render motoru devreye sokuluyor, geçersiz/süresi dolmuş SSL sertifikaları için tolerans sağlandı.
+WebClone Studio v2.0.0 kapsamlı mimari dönüşüm planı (Faz 0..7) tamamlandı, birim/entegrasyon ve gerçek Electron 45 Playwright E2E testlerinden geçti ve `WebClone-Studio-Portable.exe` canlı süreç testiyle doğrulandı.
 
-1. **Dağıtım ve Kurulum Paketleri (Windows x64 - v1.1.0):**
-   - **Setup Kurulumu:** `dist/WebClone-Studio-Setup-1.1.0.exe` (~77.3MB)
-   - **Portable Sürüm:** `dist/WebClone-Studio-Portable.exe` (~76.9MB)
-   - **Kurumsal MSI:** `dist/WebClone-Studio-1.1.0.msi` (~87.5MB)
-   - **Boyut Optimizasyonu:** `app.asar` 43.7MB'tan 9.53MB'a, `locales/` 40.25MB'tan 1.02MB'a, açılmış ayak izi 310MB'tan 238MB'a indirildi.
-2. **GitHub Güncelleme Entegrasyonu:**
-   - `UpdateChecker` servisi ve `SettingsPage` içi Güncelleme Merkezi kuruldu.
-   - GitHub Releases API üzerinden yeni sürüm denetimi ve indirme bağlantıları bağlandı.
-3. **Dokümantasyon & Kurumsal Kimlik:**
-   - GitHub için Türkçe & İngilizce, sıfır emojili, profesyonel `README.md` güncellendi.
-   - Hero banner (`resources/banner.png`) 3D mekanik siber örümcek botu ve neon veri küresiyle derlendi.
-   - Masaüstü arayüz vitrini (`resources/ui_showcase.png`), yapay zeka halüsinasyonları ve kavis bozulmalarından arındırılarak Chromium DirectWrite motoruyla 1376x768 16:9 piksel keskinliğinde yeniden üretildi.
+1. **Çalışma Zamanı ve Ağ/Tarayıcı Mimarisi (`WP-0`, `WP-2`):**
+   - **Electron 45.3.2 & Node 24.22:** `electron-vite` 5, `electron-builder` 26 ve yerleşik `node:sqlite` (`DatabaseSync`) üzerine kurulu sıfır harici C++ (`node-gyp`) eklentili mimari.
+   - **BoringSSL `session.fetch` (`src/main/browser/http-client.ts` & `session-manager.ts`):** `got` tamamen kaldırıldı (`0` kullanım); tüm statik indirmeler ve önizlemeler domain-izole Chromium session partition'ları (`persist:webclone_<sha256>`) üzerinden TLS JA4 uyumlu olarak yapılır.
+   - **Sıcak `WindowPool` & `PageRenderer`:** En fazla 3 adet offscreen BrowserWindow yeniden kullanılır; Declarative Shadow DOM `getHTML({ serializableShadowRoots: true })`, CDP `Network.requestWillBeSent` + `loadingFinished` tam payload yakalama, deterministik parmak izi temizliği (`stealth-scripts.ts`) ve compositor zaman aşımı koruması içerir.
+
+2. **Güvenlik Sertleştirmesi (`WP-1`):**
+   - **Zero-Trust Muhafızları (`src/main/security/`):** SSRF/DNS-rebinding/link-local koruması (`url-guard.ts`, `will-redirect` dahil), kanonik `realpath` + silme kilidi (`path-guard.ts`), sender origin doğrulaması (`ipc-guard.ts`).
+   - **En Az Yetki Preload & CSP:** `src/preload/index.ts` içinden ham `send`/`invoke`/`on`/`removeListener` kaldırıldı; `window.ts` içinde `setWindowOpenHandler` ve `will-navigate` kilitlendi; `SingleFileExporter` ve `PreviewServer` `assertInsideRoot` ile korundu.
+
+3. **Dayanıklılık, Çökme Kurtarma ve Klonlama Sadakati (`WP-3`, `WP-4`):**
+   - **`CrawlCheckpointDb` (`node:sqlite` WAL):** `crawl_runs`, `url_queue`, `assets`, `api_mocks` ve `crawl_diffs` tabloları ile yarıda kalan klonlamaları kurtarır ve ETag/`If-None-Match` + SHA-256 artımlı fark (`MODIFIED`/`ADDED`/`REMOVED`/`unchanged`) raporlar.
+   - **Modüler Motor & IPC:** `CrawlerOrchestrator` / `PageWorker` / `CloneFinalizer` ayrıştırıldı; IPC kanalları `src/main/ipc/*.ipc.ts` yönlendiricilerine bölündü (`100 ms` toplu `CLONE_TELEMETRY_BATCH`).
+   - **Çevrimdışı Replay & WACZ 1.1.1:** `/_next/image`, `/_ipx`, `/cdn-cgi/image` için kanonik sorgu/MIME ayrımı, göreli ESM modül yolu koruması, `[data-bg]`/`[data-background]` CSS rewrite, `/_sw-replay.js` Service Worker, HTTP `206 Partial Content` Range streaming ve saf-TS WACZ 1.1.1 arşivleyici (`WaczExporter`) eklendi.
+
+4. **Analizörler, Üreticiler ve İş İstasyonu UI/UX (`WP-5`, `WP-6`):**
+   - Ağ tekrarsız `TechDetector` (`skipNetworkFallback`), `<sitemapindex>` + hiyerarşik `SiteMapper`, CSS Color 4 (`oklch`/`oklab`/`display-p3`) + luminans rol sınıflandırması, Tailwind v4 `@theme` (`_meta/tokens.theme.css`), çok-bölümlü `ComponentExporter`, asenkron `_up_/` `SourcemapReconstructor` ve Next.js `__next_f` RSC çıkarımı.
+   - 6 sekmeli `ArtifactExplorerPage` + 5 modüler alt panel, `React.lazy` + `manualChunks` (giriş JS `66.90 KB`), `< 10 KB` `logo-64.png` (`6.93 KB`) ve WAI-ARIA `tablist` + `useFocusTrap` WCAG 2.2 AA erişilebilirliği.
+
+5. **Ölçülen Çıktılar ve Paketleme (Faz 7 Doğrulaması):**
+   - **Testler:** `npm test` (24 dosya, 66 test geçti) ve `npm run test:e2e` (Playwright `_electron` 2/2 geçti).
+   - **Boyutlar:** `out/main/index.js` `330.80 KB`, `out/preload/index.js` `5.79 KB`, `app.asar` `2.24 MB` (v1.1.0 `9.50 MB` düzeyinden %76.4 küçülme), `dist/WebClone-Studio-Portable.exe` `98.53 MB` (Chromium 156 upstream `dxcompiler.dll` `24.59 MB` ve `WebClone Studio.exe` `238.55 MB` tabanı nedeniyle).
+   - **Canlı Çalıştırma:** `dist/WebClone-Studio-Portable.exe` gerçek Windows süreci olarak 6 saniye boyunca çökmeden (`HAS_EXITED_AT_6S=False`, 5 canlı alt süreç) doğrulandı.
 
 ## Kritik Komutlar
 - Development: `npm run dev`
-- Test: `npm test`
-- Build (Production): `npm run build`
-- Build (Portable): `npm run build:portable`
-- Build (Tüm Paketler): `npm run build:all`
-- Check & Lint: `npm run typecheck`
-- Clean: `rm -rf dist release node_modules out`
+- Typecheck: `npm run typecheck`
+- Unit & Integration Tests: `npm test`
+- Playwright Electron E2E: `npm run test:e2e`
+- Production Bundle: `npm run build`
+- Portable Package: `npm run build:portable`
+- All Windows Packages: `npm run build:all`
 
-## Commit Zinciri
-- **Son Commitler:**
-  - `cea0888` test(suite): verify ponytail ultra optimizations and update docs
-  - `8ac4924` feat(rewriter): inject client-side fetch/xhr offline mock shim
-  - `6484b2d` feat(browser): add native cdp mhtml snapshot and persistent auth session
-  - `14e9a64` perf(cloner): stream raw html to disk and eliminate memory accumulation
-  - `b6f31d2` refactor(cloner): remove redundant extractor and O(N) url lookup
-  - `0059ecf` docs(release): record v1.1.0 production release publication
-  - `48d773c` feat(branding): update 3D cyber-spider visual assets, banner and documentation
+## Commit Zinciri (Dal: `feat/v2-architecture-overhaul`)
+- `93b8207` `feat(renderer): add 6-tab ArtifactExplorerPage, lazy code splitting, batched telemetry, and WCAG 2.2 AA dialogs`
+- `70b4fb7` `feat(analyzers,generators): upgrade CSS Color 4 tokens, multi-landmark TSX, RSC state, and nested sitemaps`
+- `a46e7cf` `feat(cloner,archive): add query/MIME proxy fidelity, /_sw-replay.js SW, HTTP 206 Range, and pure-TS WACZ 1.1.1`
+- `7134827` `refactor(cloner,ipc): add node:sqlite WAL checkpointing and split monolith modules`
+- `7df562d` `feat(browser): unify BoringSSL session.fetch HttpClient, warm WindowPool, and remove got`
+- `70757de` `fix(security): enforce SSRF, realpath, CSP, and least-privilege preload guards`
+- `c2a533b` `build(runtime): upgrade to electron 45 and unify shared contracts`
 
 ## Riskler
 - Yok.

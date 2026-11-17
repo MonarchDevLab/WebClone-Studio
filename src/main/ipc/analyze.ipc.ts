@@ -17,6 +17,7 @@ export function registerAnalyzeIpc(ctx: IpcRuntimeContext): void {
     let globals: string[] = [];
     let renderedDesignTokens: any = null;
     let rawHeaders: Record<string, string> = {};
+    let pageRenderFailed = false;
     ctx.lastAnalyzeScreenshot = null;
 
     try {
@@ -33,6 +34,7 @@ export function registerAnalyzeIpc(ctx: IpcRuntimeContext): void {
           ? renderResult.screenshot
           : null;
     } catch (renderError) {
+      pageRenderFailed = true;
       console.warn(`[IPC] Offscreen render uyarısı (${url}), HttpClient fallback devrede:`, renderError);
       try {
         const res = await HttpClient.fetchText({
@@ -77,6 +79,7 @@ export function registerAnalyzeIpc(ctx: IpcRuntimeContext): void {
 
     const designTokens = await ctx.designAnalyzer.analyze(url, renderedDesignTokens, {
       allowLocalhostTargets,
+      fallbackHtml: pageRenderFailed ? htmlBody : undefined,
     });
 
     const security = await ctx.securityScanner.scan(url, {

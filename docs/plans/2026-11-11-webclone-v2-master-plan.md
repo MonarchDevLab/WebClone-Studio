@@ -692,13 +692,13 @@ flowchart LR
 
 ## 13. Paketleme, Boyut Bütçesi ve Çoklu Platform CI/CD
 
-| Dağıtım Bileşeni | v1.1.0 Boyutu | v2.0 Tahmini Boyutu | Fark Nedeni |
-|---|---|---|---|
-| `out/main` + `out/preload` | `1.39 MB` | `~0.62 MB` | `got` ve alt bağımlılıklarının çıkarılması |
-| `out/renderer` (JS + CSS + Font + Logo) | `2.30 MB` | `~1.25 MB` | `1.03 MB` `logo.png` -> `< 10 KB` `logo-64.webp` |
-| `app.asar` Toplam | `9.50 MB` | `~6.80 MB` | `dependencies` altından `got` + `cheerio` çift kopyasının kalkması |
-| `app.asar.unpacked` (`mappings.wasm`) | `0 MB` | `~0.24 MB` | `source-map` WebAssembly çözücüsü |
-| `WebClone-Studio-Portable.exe` (x64) | `76.9 MB` | `~77.5 - 79.8 MB` | Electron 45 Chromium güncellemesi, bütçe (`<= 80 MB`) içinde |
+| Dağıtım Bileşeni | v1.1.0 Boyutu | v2.0 Tahmini Boyutu | v2.0 Ölçülen Sonuç | Fark Nedeni |
+|---|---|---|---|---|
+| `out/main` + `out/preload` | `1.39 MB` | `~0.62 MB` | `0.33 MB` (`330.8 KB` + `5.8 KB`) | `got` kaldırımı ve `cheerio/slim` + esbuild sıkıştırması |
+| `out/renderer` (giriş JS + CSS + Logo) | `2.30 MB` | `~1.25 MB` | Giriş JS `66.9 KB`, `logo-64.png` `6.9 KB` | `React.lazy`, `manualChunks` ve 64x64 şeffaf logo |
+| `app.asar` Toplam | `9.50 MB` | `~6.80 MB` | `2.24 MB` (-%76.4) | `dependencies` temizliği, tekilleştirme |
+| `app.asar.unpacked` (`mappings.wasm`) | `0 MB` | `~0.24 MB` | `< 0.30 MB` | `source-map` WebAssembly çözücüsü |
+| `WebClone-Studio-Portable.exe` (x64) | `76.9 MB` | `~77.5 - 79.8 MB` (Electron 33 tahmini) | `98.53 MB` (`103,311,907` B) | Electron 45 / Chromium 156 upstream `dxcompiler.dll` (`24.59 MB`) ve ikili artışı (`238.55 MB`); uygulama paketi `2.24 MB` |
 
 - **`.github/workflows/ci.yml`:** Her `push` ve `pull_request` üzerinde Windows ve Ubuntu matrisinde `npm ci` -> `npm run typecheck` -> `npm run test:coverage` -> sıfır sızıntı taraması -> `npm run build` -> Playwright Electron duman testini koşar.
 - **`.github/workflows/release.yml`:** `v*.*.*` etiketlerinde Windows (`nsis`, `portable`, `msi`), macOS (`dmg` arm64/x64) ve Linux (`AppImage` x64) paketlerini derler, `SHA256SUMS.txt` üretir ve GitHub Releases kanalına yükler.

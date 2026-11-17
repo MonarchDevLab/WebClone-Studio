@@ -549,8 +549,15 @@ export class PageRenderer {
 
       let screenshot: Buffer = Buffer.alloc(0);
       if (!options.skipScreenshot) {
-        const nativeImage = await win.webContents.capturePage();
-        screenshot = nativeImage.toPNG();
+        try {
+          const nativeImage = await Promise.race([
+            win.webContents.capturePage(),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+          ]);
+          if (nativeImage) {
+            screenshot = nativeImage.toPNG();
+          }
+        } catch {}
       }
 
       let designTokens: DesignTokens = {
@@ -643,9 +650,10 @@ export class PageRenderer {
       let mhtmlSnapshot: string | undefined;
       if (options.captureMhtml && win.webContents.debugger.isAttached()) {
         try {
-          const snap = (await win.webContents.debugger.sendCommand('Page.captureSnapshot', {
-            format: 'mhtml',
-          })) as { data?: string };
+          const snap = (await Promise.race([
+            win.webContents.debugger.sendCommand('Page.captureSnapshot', { format: 'mhtml' }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+          ])) as { data?: string } | null;
           if (snap && typeof snap.data === 'string') {
             mhtmlSnapshot = snap.data;
           }

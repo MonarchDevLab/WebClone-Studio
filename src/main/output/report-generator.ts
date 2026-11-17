@@ -66,7 +66,7 @@ export class ReportGenerator {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teknoloji & Tasarım Raporu — ${safeDomain}</title>
+  <title>Teknoloji & Tasarım Raporu - ${safeDomain}</title>
   <style>
     :root {
       --bg: #08090A;
@@ -153,9 +153,9 @@ export class ReportGenerator {
     <section>
       <h2>Site Meta & Güvenlik Özeti</h2>
       <div class="meta-box">
-        <div class="meta-item"><span class="meta-label">Başlık:</span><span class="meta-value">${this.escapeHtml(result.meta?.title || '—')}</span></div>
-        <div class="meta-item"><span class="meta-label">Açıklama:</span><span class="meta-value">${this.escapeHtml(result.meta?.description || '—')}</span></div>
-        <div class="meta-item"><span class="meta-label">Dil / Encoding:</span><span class="meta-value">${this.escapeHtml(result.meta?.language || '—')} / ${this.escapeHtml(result.meta?.encoding || '—')}</span></div>
+        <div class="meta-item"><span class="meta-label">Başlık:</span><span class="meta-value">${this.escapeHtml(result.meta?.title || '-')}</span></div>
+        <div class="meta-item"><span class="meta-label">Açıklama:</span><span class="meta-value">${this.escapeHtml(result.meta?.description || '-')}</span></div>
+        <div class="meta-item"><span class="meta-label">Dil / Encoding:</span><span class="meta-value">${this.escapeHtml(result.meta?.language || '-')} / ${this.escapeHtml(result.meta?.encoding || '-')}</span></div>
         <div class="meta-item"><span class="meta-label">HTTPS:</span><span class="meta-value">${result.security?.https ? 'Aktif' : 'Pasif'}</span></div>
         <div class="meta-item"><span class="meta-label">HSTS:</span><span class="meta-value">${result.security?.hsts ? 'Var' : 'Yok'}</span></div>
         <div class="meta-item"><span class="meta-label">CSP:</span><span class="meta-value">${result.security?.csp ? 'Tanımlı' : 'Yok'}</span></div>

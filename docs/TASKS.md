@@ -1,16 +1,17 @@
 # TASKS
 
 ## ŞİMDİ
-- [~] WebClone Studio v2.0 Faz 4..7 uygulaması (`/goal`) - Faz 7 (Entegrasyon/Playwright E2E test piramidi, CI/CD workflow'ları, Portable `.exe` canlı süreç doğrulaması ve 15 maddelik final denetimi) başlatılıyor.
+- Yok (WebClone Studio v2.0.0 8 fazlı yol haritası tamamlandı ve doğrulandı).
 
 ## SIRADAKİ
-- [ ] Faz 7: Yerel HTTP fixture entegrasyon paketi, Playwright `_electron` E2E testleri, gerçek `Portable.exe` süreç doğrulaması ve GitHub Actions CI/CD boru hattı (`WP-7.1..7.2`).
+- Yok.
 
 ## BLOKLU
 - Yok.
 
 ## TAMAMLANDI
-- [x] 2026-11-16 - Faz 6: 6 sekmeli `ArtifactExplorerPage` + 5 alt panel, `Sidebar` proje/artefakt hidrasyonu, `100 ms` toplu `onTelemetryBatch` + `StatusBar` HTTP uyarı sayacı, `React.lazy` + `manualChunks` kod bölme (`index` `66.9 KB`), `< 10 KB` `logo-64.png` (`6.9 KB`) ve tam WCAG 2.2 AA (`tablist` ok tuşları, `useFocusTrap`, `@theme` tokenları) (`WP-6.1..6.3`).
+- [x] 2026-11-17 - Faz 7: Yerel HTTP fixture (`tests/fixtures/mock-target-server.ts`), tam boru hattı entegrasyon testi (`full-clone-pipeline.test.ts`), Playwright Electron 45 E2E paketi (`electron-clone-flow.spec.ts`), GitHub Actions `ci.yml` & `release.yml`, canlı `WebClone-Studio-Portable.exe` 6 sn süreç testi (`app.asar` `2.24 MB`, `Portable.exe` `98.53 MB`) ve dokümantasyon senkronizasyonu (`WP-7.1..7.2`).
+- [x] 2026-11-16 - Faz 6: 6 sekmeli `ArtifactExplorerPage` + 5 alt panel, `Sidebar` proje/artefakt hidrasyonu, `100 ms` toplu `onTelemetryBatch` + `StatusBar` HTTP uyarı sayacı, `React.lazy` + `manualChunks` kod bölme (`index` `66.9 KB`), `< 10 KB` `logo-64.png` (`6.9 KB`) ve tam WCAG 2.2 AA (`tablist` ok tuşları, `useFocusTrap`, `@theme` tokenları) (`93b8207`).
 - [x] 2026-11-16 - Faz 5: Ağ tekrarsız `TechDetector` (`skipNetworkFallback`), `/\bflex\b/` sahte pozitif temizliği, `<sitemapindex>` + hiyerarşik `SiteMapper`, CSS Color 4 (`oklch`/`oklab`/`display-p3`) + luminans rol sınıflandırması, Tailwind v4 `@theme` (`tokens.theme.css`), çok-bölümlü `ComponentExporter` + parantez-duyarlı inline style, asenkron `_up_/` `SourcemapReconstructor` ve Next.js `__next_f` RSC çıkarımı (`70b4fb7`).
 - [x] 2026-11-16 - Faz 4: Sorgu/MIME duyarlı varlık organizasyonu (`/_next/image`, kanonik sorgu hash), göreli ESM modül yolu koruması, `[data-bg]`/`[data-background]` CSS rewrite, `/_sw-replay.js` Service Worker replay, HTTP `206 Partial Content` Range streaming ve saf-TS WACZ 1.1.1 arşivleyici (`a46e7cf`).
 - [x] 2026-11-16 - Faz 3: `node:sqlite` WAL `CrawlCheckpointDb` (çökme kurtarma ve artımlı ETag/SHA-256 diff), `CrawlerEngine` -> `CrawlerOrchestrator`/`PageWorker`/`CloneFinalizer` ayrıştırması, `ipc-handlers` -> `src/main/ipc/*.ipc.ts` domain yönlendiricileri ve 100ms toplu telemetri (`7134827`).

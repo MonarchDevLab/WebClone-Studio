@@ -210,7 +210,7 @@ export interface CloneErrorEvent {
   retryCount: number;
 }
 
-/** Proje manifestosu — indirilen her sitenin kimlik kartı (manifest.json) */
+/** Proje manifestosu: indirilen her sitenin kimlik kartı (manifest.json) */
 export interface ProjectManifest {
   version: string;
   generator: string;
