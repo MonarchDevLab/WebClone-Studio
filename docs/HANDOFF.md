@@ -36,13 +36,14 @@ WebClone Studio v2.0.0 kapsamlı mimari dönüşüm planı (Faz 0..7) tamamland�
 - Portable Package: `npm run build:portable`
 - All Windows Packages: `npm run build:all`
 
-## Commit Zinciri (Dal: `feat/v2-architecture-overhaul`)
-- `93b8207` `feat(renderer): add 6-tab ArtifactExplorerPage, lazy code splitting, batched telemetry, and WCAG 2.2 AA dialogs`
-- `70b4fb7` `feat(analyzers,generators): upgrade CSS Color 4 tokens, multi-landmark TSX, RSC state, and nested sitemaps`
-- `a46e7cf` `feat(cloner,archive): add query/MIME proxy fidelity, /_sw-replay.js SW, HTTP 206 Range, and pure-TS WACZ 1.1.1`
-- `7134827` `refactor(cloner,ipc): add node:sqlite WAL checkpointing and split monolith modules`
-- `7df562d` `feat(browser): unify BoringSSL session.fetch HttpClient, warm WindowPool, and remove got`
-- `70757de` `fix(security): enforce SSRF, realpath, CSP, and least-privilege preload guards`
+## Commit Zinciri (Dal: `main`)
+- `f21af61` `test(e2e,ci): add full-pipeline integration, Playwright Electron E2E, CI/CD workflows, and v2.0 docs`
+- `4066743` `feat(renderer): add 6-tab ArtifactExplorerPage, lazy code splitting, batched telemetry, and WCAG 2.2 AA dialogs`
+- `2cfb363` `feat(analyzers,generators): upgrade CSS Color 4 tokens, multi-landmark TSX, RSC state, and nested sitemaps`
+- `bccdc80` `feat(cloner,archive): add query/MIME proxy fidelity, /_sw-replay.js SW, HTTP 206 Range, and pure-TS WACZ 1.1.1`
+- `3808d38` `refactor(cloner,ipc): add node:sqlite WAL checkpointing and split monolith modules`
+- `c56d6f6` `feat(browser): unify BoringSSL session.fetch HttpClient, warm WindowPool, and remove got`
+- `aa1471d` `fix(security): enforce SSRF, realpath, CSP, and least-privilege preload guards`
 - `c2a533b` `build(runtime): upgrade to electron 45 and unify shared contracts`
 
 ## Riskler
