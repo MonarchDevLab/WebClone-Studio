@@ -1,7 +1,7 @@
 {
   "name": "webclone-studio",
   "version": "2.0.0",
-  "description": "Modern web cloning and reverse-engineering desktop workstation",
+  "description": "Autonomous web architecture reconstruction, BoringSSL offline mirroring, SQLite WAL crash recovery, and WACZ 1.1.1 archiving workstation",
   "main": "./out/main/index.js",
   "author": "Monolith Works / MonarchDevLab",
   "license": "MIT",

@@ -21,10 +21,11 @@ WebClone Studio v2.0.0 kapsamlı mimari dönüşüm planı (Faz 0..7) tamamland�
    - Ağ tekrarsız `TechDetector` (`skipNetworkFallback`), `<sitemapindex>` + hiyerarşik `SiteMapper`, CSS Color 4 (`oklch`/`oklab`/`display-p3`) + luminans rol sınıflandırması, Tailwind v4 `@theme` (`_meta/tokens.theme.css`), çok-bölümlü `ComponentExporter`, asenkron `_up_/` `SourcemapReconstructor` ve Next.js `__next_f` RSC çıkarımı.
    - 6 sekmeli `ArtifactExplorerPage` + 5 modüler alt panel, `React.lazy` + `manualChunks` (giriş JS `66.90 KB`), `< 10 KB` `logo-64.png` (`6.93 KB`) ve WAI-ARIA `tablist` + `useFocusTrap` WCAG 2.2 AA erişilebilirliği.
 
-5. **Ölçülen Çıktılar ve Paketleme (Faz 7 Doğrulaması):**
+5. **Ölçülen Çıktılar ve Paketleme (Faz 7 & Dağıtım Doğrulaması):**
    - **Testler:** `npm test` (24 dosya, 66 test geçti) ve `npm run test:e2e` (Playwright `_electron` 2/2 geçti).
-   - **Boyutlar:** `out/main/index.js` `330.80 KB`, `out/preload/index.js` `5.79 KB`, `app.asar` `2.24 MB` (v1.1.0 `9.50 MB` düzeyinden %76.4 küçülme), `dist/WebClone-Studio-Portable.exe` `98.53 MB` (Chromium 156 upstream `dxcompiler.dll` `24.59 MB` ve `WebClone Studio.exe` `238.55 MB` tabanı nedeniyle).
-   - **Canlı Çalıştırma:** `dist/WebClone-Studio-Portable.exe` gerçek Windows süreci olarak 6 saniye boyunca çökmeden (`HAS_EXITED_AT_6S=False`, 5 canlı alt süreç) doğrulandı.
+   - **Boyutlar:** `out/main/index.js` `332.14 KB`, `out/preload/index.js` `5.79 KB`, renderer giriş JS `67.27 KB`, `logo-64.png` `6.93 KB`, `app.asar` `2.24 MB`.
+   - **Windows x64 İkilileri (`npm run build:all`):** `dist/WebClone-Studio-Portable.exe` (`98.51 MB`), `dist/WebClone-Studio-Setup-2.0.0.exe` (`108.52 MB`) ve `dist/WebClone-Studio-2.0.0.msi` (`113.18 MB`) üretildi.
+   - **Canlı Çalıştırma:** `dist/WebClone-Studio-Portable.exe` gerçek Windows süreci olarak 6 saniye boyunca çökmeden doğrulandı.
 
 ## Kritik Komutlar
 - Development: `npm run dev`

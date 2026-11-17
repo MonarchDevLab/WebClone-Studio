@@ -1,5 +1,5 @@
 import React from 'react';
-import { APP_NAME } from '../lib/constants';
+import { APP_NAME, APP_VERSION } from '@shared/version';
 import logoUrl from '../assets/logo-64.png';
 import { useUiStore } from '../stores/ui-store';
 
@@ -8,11 +8,14 @@ export const TitleBar: React.FC = () => {
 
   return (
     <div className="h-9 bg-canvas flex items-center justify-between px-4 absolute top-0 left-0 right-0 z-50 select-none drag-region">
-      {/* Sol: Uygulama Adı ve Logo */}
+      {/* Sol: Uygulama Adı, Sürüm ve Logo */}
       <div className="flex items-center gap-2">
-        <img src={logoUrl} alt="Logo" className="w-6 h-6 object-contain no-drag" />
-        <div className="text-xs font-medium text-text-muted">
-          {APP_NAME}
+        <img src={logoUrl} alt="WebClone Studio" className="w-6 h-6 object-contain no-drag" />
+        <div className="flex items-center gap-2 text-xs font-semibold text-text-primary">
+          <span>{APP_NAME}</span>
+          <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-surface-2 border border-border-subtle text-accent-hover">
+            v{APP_VERSION}
+          </span>
         </div>
       </div>
       

@@ -1,22 +1,31 @@
 import { ProjectManifest } from '../../shared/types';
-import { APP_ORG_SIGNATURE, APP_VERSION } from '../../shared/version';
+import { APP_NAME, APP_ORG_SIGNATURE, APP_TAGLINE_TR, APP_VERSION } from '../../shared/version';
 
 /**
- * İndirilen projenin kök dizinine koyulacak insan okunabilir README.md dosyasını üretir.
+ * Generates the offline project summary README.md placed in each cloned project's root folder.
  */
 export class ReadmeGenerator {
   public static generate(manifest: ProjectManifest): string {
-    const techList = manifest.technologies.length > 0
-      ? manifest.technologies.map(t => `- **${t.category}:** ${t.name}${t.version ? ` (${t.version})` : ''} - %${t.confidence} güven`).join('\n')
-      : '- Belirgin teknoloji imzası tespit edilemedi.';
+    const techList =
+      manifest.technologies.length > 0
+        ? manifest.technologies
+            .map(
+              (t) =>
+                `- **${t.category}:** ${t.name}${t.version ? ` (${t.version})` : ''} - %${t.confidence} güven`
+            )
+            .join('\n')
+        : '- Belirgin teknoloji imzası tespit edilemedi.';
 
     const fileIndexList = Object.entries(manifest.fileIndex)
-      .map(([key, val]) => `- **${key.toUpperCase()}:** ${val.count} dosya (${(val.sizeBytes / (1024 * 1024)).toFixed(2)} MB)`)
+      .map(
+        ([key, val]) =>
+          `- **${key.toUpperCase()}:** ${val.count} dosya (${(val.sizeBytes / (1024 * 1024)).toFixed(2)} MB)`
+      )
       .join('\n');
 
-    return `# ${manifest.project.name} - Offline Web Kopyası
+    return `# ${manifest.project.name} - Çevrimdışı Web Arşivi
 
-Bu klasör **WebClone Studio** (Monolith Works / MonarchDevLab) tarafından otomatik olarak oluşturulmuştur. Tüm iç sayfalar ve statik varlıklar (CSS, JS, Resimler, Fontlar) offline çalışacak şekilde indirilmiş ve linkler yerel yollara uyarlanmıştır.
+Bu proje klasörü **${APP_NAME} v${APP_VERSION}** (${APP_TAGLINE_TR} | ${APP_ORG_SIGNATURE}) tarafından oluşturulmuştur. Tüm sayfalar, varlıklar, dinamik proxy görselleri ve medya dosyaları çevrimdışı sadakatle kaydedilmiş ve yerel yollara dönüştürülmüştür.
 
 ---
 
@@ -25,25 +34,43 @@ Bu klasör **WebClone Studio** (Monolith Works / MonarchDevLab) tarafından otom
 | Parametre | Değer |
 |---|---|
 | **Orijinal URL** | [${manifest.source.url}](${manifest.source.url}) |
-| **Domain** | ${manifest.source.domain} |
-| **Klonlama Tarihi** | ${new Date(manifest.project.createdAt).toLocaleString('tr-TR')} |
-| **Tamamlanma Süresi** | ${manifest.statistics.durationHuman} |
-| **Toplam Sayfa Sayısı** | ${manifest.statistics.totalPages} |
-| **Toplam İndirilen Dosya** | ${manifest.statistics.totalFiles} |
+| **Hedef Domain** | ${manifest.source.domain} |
+| **Klonlama Modu** | ${manifest.settings?.mode === 'dynamic' ? 'Dinamik (Chromium 156 SPA)' : 'Statik (BoringSSL session.fetch)'} |
+| **Oluşturulma Tarihi** | ${new Date(manifest.project.createdAt).toLocaleString('tr-TR')} |
+| **Süre** | ${manifest.statistics.durationHuman} |
+| **Toplam Sayfa / Dosya** | ${manifest.statistics.totalPages} sayfa / ${manifest.statistics.totalFiles} dosya |
 | **Toplam Boyut** | ${manifest.statistics.totalSizeHuman} |
-| **Ortalama İndirme Hızı** | ${manifest.statistics.averageSpeedHuman} |
-| **Başarısız URL Sayısı** | ${manifest.statistics.failedUrls} |
+| **Ortalama Hız** | ${manifest.statistics.averageSpeedHuman} |
+| **Hata / Atlanan URL** | ${manifest.statistics.failedUrls} |
 
 ---
 
 ## Nasıl Görüntülenir?
 
-İndirilen web sitesini çevrimdışı gezmek için:
-1. \`${manifest.entryPoint}\` dosyasını herhangi bir modern web tarayıcısında (Chrome, Edge, Firefox, Brave vb.) açın.
-2. Ya da bu klasörde yerel bir HTTP sunucusu başlatın:
+1. **WebClone Studio Önizleme Sunucusu (Önerilen):** Uygulama içinde **Artefakt Gezgini > Önizleme** sekmesinden yerel sunucuyu başlatın. Bu mod \`/_sw-replay.js\` Service Worker, HTTP \`206\` Range video/ses akışı ve \`_meta/api-endpoints.json\` mock yanıtlarını tam olarak etkinleştirir.
+2. **Yerel Statik HTTP Sunucusu:**
 \`\`\`bash
 npx serve site
 \`\`\`
+3. **Taşınabilir Arşivler (\`_exports/\`):** Tek dosya \`_exports/index.standalone.html\`, Chromium \`_exports/index.mhtml\` veya ReplayWeb.page uyumlu \`.wacz\` paketini açın.
+
+---
+
+## Klasör Yapısı ve Tersine Mühendislik Çıktıları
+
+| Yol | Açıklama |
+|---|---|
+| \`${manifest.entryPoint}\` | Çevrimdışı web sitesinin giriş noktası |
+| \`site/_source-code/\` | SourceMap dosyalarından asenkron kurtarılan kaynak kod ağacı |
+| \`_components/*.tsx\` | HTML bölümlerinden üretilmiş React 19 TSX bileşenleri |
+| \`_meta/tokens.theme.css\` | CSS Color 4 (\`oklch\`/\`oklab\`/\`display-p3\`) ve Tailwind v4 \`@theme\` tokenları |
+| \`_meta/tailwind.config.js\` & \`design-tokens.json\` | Tasarım tokenları ve Tailwind v3 yapılandırması |
+| \`_meta/openapi.json\` & \`api-types.d.ts\` | Yakalanan ağ trafiğinden derlenen OpenAPI 3.1 ve TypeScript modelleri |
+| \`_meta/extracted-state.json\` | Next.js (\`__NEXT_DATA__\`, \`__next_f\`), Nuxt ve hydration durumları |
+| \`_meta/adaptive-entities.json\` | Yapısal semantik veri varlıkları |
+| \`_meta/SYSTEM_MAP.md\` & \`tech-report.html\` | Mimari şartname ve görsel teknoloji raporu |
+| \`_meta/crawl-state.sqlite\` | SQLite WAL kuyruk ve artımlı ETag/SHA-256 doğrulama veritabanı |
+| \`_exports/*.wacz\` | Standart WACZ 1.1.1 (WARC/1.1 + SURT CDXJ) web arşivi |
 
 ---
 
@@ -58,16 +85,7 @@ ${techList}
 ${fileIndexList}
 
 ---
-
-## Raporlar ve Ek Dosyalar
-
-- **Proje Manifestosu:** \`manifest.json\`
-- **Görsel Teknoloji & Tasarım Raporu:** \`_meta/tech-report.html\`
-- **Mimari Sistem Haritası & Şartname:** \`_meta/SYSTEM_MAP.md\`
-- **Hata ve İstisna Günlüğü:** \`_meta/errors.log\`
-
----
-*WebClone Studio v${APP_VERSION} - ${APP_ORG_SIGNATURE} tarafından geliştirilmiştir.*
+*${APP_NAME} v${APP_VERSION} - ${APP_ORG_SIGNATURE}*
 `;
   }
 }

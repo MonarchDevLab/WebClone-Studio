@@ -2,6 +2,7 @@ import { BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { is } from '@electron-toolkit/utils';
+import { APP_NAME, APP_VERSION } from '../shared/version';
 // @ts-ignore: Asset import handled by Vite
 import icon from '../../resources/icon-256.png?asset';
 
@@ -22,6 +23,7 @@ export function isAllowedAppNavigation(targetUrl: string): boolean {
  */
 export function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
+    title: `${APP_NAME} v${APP_VERSION}`,
     width: 1400,
     height: 900,
     minWidth: 1080,

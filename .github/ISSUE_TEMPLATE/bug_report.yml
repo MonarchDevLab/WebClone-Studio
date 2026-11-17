@@ -1,0 +1,40 @@
+name: Bug Report
+description: Report a defect in WebClone Studio v2.0
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clear summary of the unexpected behavior.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Application Version
+      placeholder: "2.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating System
+      options:
+        - Windows x64 (Portable)
+        - Windows x64 (Setup / MSI)
+        - macOS
+        - Linux (AppImage)
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Target mode (static / dynamic)
+        2. Settings changed
+        3. Observed behavior or console log
+    validations:
+      required: true

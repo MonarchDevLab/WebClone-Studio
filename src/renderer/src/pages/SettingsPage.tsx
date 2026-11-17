@@ -451,7 +451,7 @@ export const SettingsPage: React.FC = () => {
         <div className="bg-surface-2 border border-white/[0.07] rounded-xl p-5 flex items-center justify-between">
           <div>
             <div className="text-xs font-bold text-text-primary tracking-wide">WebClone Studio v{APP_VERSION}</div>
-            <div className="text-[11px] text-text-dim mt-0.5">Yüksek Başarımlı Mimari Tasarım & Web Klonlama Motoru</div>
+            <div className="text-[11px] text-text-dim mt-0.5">Otonom Web Mimarisi Çıkarımı, BoringSSL Yansılama & WACZ 1.1.1 İş İstasyonu</div>
           </div>
           <div className="text-right">
             <div className="text-xs font-semibold text-accent-hover">Monolith Works / MonarchDevLab</div>

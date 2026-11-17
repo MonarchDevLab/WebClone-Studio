@@ -1,6 +1,11 @@
 declare const __APP_VERSION__: string | undefined;
 
 export const APP_NAME = 'WebClone Studio';
+export const APP_TITLE = 'WebClone Studio - Web Architecture Reconstruction & Offline Mirroring';
+export const APP_TAGLINE_EN =
+  'Autonomous Web Architecture Reconstruction, BoringSSL Offline Mirroring & WACZ 1.1.1 Workstation';
+export const APP_TAGLINE_TR =
+  'Otonom Web Mimarisi Çıkarımı, BoringSSL Çevrimdışı Yansılama ve WACZ 1.1.1 İş İstasyonu';
 export const APP_GENERATOR_SIGNATURE = 'WebClone Studio';
 export const APP_ORG_SIGNATURE = 'Monolith Works / MonarchDevLab';
 
